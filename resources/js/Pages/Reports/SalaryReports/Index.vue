@@ -1059,7 +1059,8 @@ const handlePrintPdf = () => {
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">Bill Status</label>
                                         <select 
-                                            v-model="store.filters.salaryGeneratedStatus" 
+                                            v-model="store.filters.salaryGeneratedStatus"
+                                            :disabled="store.reportType === 'Bank Advice'"
                                             @change="applyFilters"
                                             class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
                                         >

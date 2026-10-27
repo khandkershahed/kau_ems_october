@@ -169,7 +169,14 @@ class SalaryReportController extends Controller
                 });
             }
         } else {
-            if ($status === 'generated') {
+            // Bank Advice is a payment instruction, never a payroll estimate.
+            // Only employees with a saved bill for the EXACT requested month/year
+            // may appear, regardless of the client's 'all' filter.
+            if ($reportType === 'Bank Advice') {
+                $query->whereHas('salaryGenerates', function ($q) use ($monthId, $year) {
+                    $q->where('monthId', $monthId)->where('salaryGenerationYear', $year);
+                });
+            } elseif ($status === 'generated') {
                 $query->whereHas('salaryGenerates', function ($q) use ($monthId, $year) {
                     $q->where('monthId', $monthId)->where('salaryGenerationYear', $year);
                 });
@@ -565,6 +572,11 @@ class SalaryReportController extends Controller
             }
 
             // Regular Salary Report transformation
+            // A Bank Advice line must correspond to exactly one frozen bill.
+            // Never show estimated/profile salary for an ungenerated employee.
+            if ($reportType === 'Bank Advice' && $user->salaryGenerates->count() !== 1) {
+                abort(422, 'Bank Advice requires exactly one saved bill for employee '.$user->id.' in '.$year.'-'.$monthId.'.');
+            }
             $salaryRecord = $user->salaryGenerates->first();
             $isGenerated = !is_null($salaryRecord);
             if ($isGenerated) {
@@ -574,6 +586,21 @@ class SalaryReportController extends Controller
                 $bankAddress = (string) $salaryRecord->bankAddress;
                 $scaleName = (string) $salaryRecord->payScale;
                 $gradeName = (string) $salaryRecord->grade;
+                if ($reportType === 'Bank Advice') {
+                    if (in_array(strtoupper(trim($bankAccountNo)), ['', 'N/A', 'STAMP'], true)) {
+                        abort(422, 'Missing/placeholder bank account in saved bill for employee '.$user->id.'.');
+                    }
+                    foreach (['totalAllowance', 'totalDeduction', 'salaryTotal'] as $moneyField) {
+                        if (!is_numeric($salaryRecord->{$moneyField})
+                            || !is_finite((float) $salaryRecord->{$moneyField})) {
+                            abort(422, 'Invalid saved bank-advice amount for employee '.$user->id.'.');
+                        }
+                    }
+                    if (abs((float) $salaryRecord->totalAllowance - (float) $salaryRecord->totalDeduction
+                        - (float) $salaryRecord->salaryTotal) > 0.011) {
+                        abort(422, 'Saved gross/deductions/net mismatch for employee '.$user->id.'.');
+                    }
+                }
             }
 
             // Allowances & Deductions

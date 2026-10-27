@@ -1,0 +1,2 @@
+﻿employee_code,user_id,result,bill_id,regular_gross,regular_deduction,regular_net,arrear_included,bank_account_id,source_hash,message
+20057,58,ready,,33136,1956,31180,0,57,6681e0b84c1d032bd68e2755b1f1ced743cb90f1719bc6b892fd27387797c244,"Regular salary only; July-September arrear excluded"

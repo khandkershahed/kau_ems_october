@@ -1,6 +1,13 @@
-KAU Historical Arrear Source Patch (READ-ONLY calculation, no DB migration)
-Patch basis: app(20261027-054346).zip.
-Change: June 2026 approved historical salary used as baseline; month-specific actual old-scale increment (historical July/Aug/Sept basic - June basic); approved fixation still required for revised Basic; verified policy still required for revised House Rent and GPF.
-WARNING: Check git diff before applying: this patch is from the attached codebase before later local Cline regular-only modifications. Only SalaryStructuredArrearService.php is replaced.
-Commands: php -l app/Services/SalaryStructuredArrearService.php; php artisan test --filter=SalaryArrearCalculatorTest
-DO NOT post payroll until preview verified and bank report reconciled.
+KAU EMS: bulk fixation reference-matched workflow
+
+This adds one command and does not change existing code or approved fixation snapshots.
+Laravel 12 auto-discovers command classes under app/Console/Commands when using default command discovery. If route:list shows no command, inspect bootstrap/app.php/console registration.
+
+Dry-run:
+php artisan kau:bulk-fixation-references
+php artisan kau:bulk-fixation-references --employee=10020
+
+Apply only with real HR authorization after CSV review and database backup:
+php artisan kau:bulk-fixation-references --apply --actor=1
+
+It skips missing/mismatched/ambiguous employee evidence and existing approvals; writes via SalaryFixationWorkflowService::approveNow. After apply, recalculate arrear previews. This command does not change October salary bills or GPF ledgers.

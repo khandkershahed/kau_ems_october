@@ -304,7 +304,7 @@ final class SalaryBillCompositionService
         $regularOnly = [
             'basic' => $regular['basic'], 'total_allowance' => $regular['total_allowance'],
             'total_deduction' => $regular['total_deduction'], 'gpf_deduction' => $regular['gpf_deduction'],
-            'net_salary' => $regular['net_salary'], 'allowances' => $regular['allowances'],
+            'net_salary' => $regular['net_salary'], 'tax_deduction' => $regular['tax_deduction'], 'allowances' => $regular['allowances'],
             'deductions' => $regular['deductions'],
         ];
         $result = [

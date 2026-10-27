@@ -89,7 +89,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
             filters: {
                 monthId: currentDate.getMonth() + 1,
                 salaryGenerationYear: currentDate.getFullYear(),
-                salaryGeneratedStatus: 'all',
+                salaryGeneratedStatus: 'generated',
                 department_office_id: '',
                 user_category_id: '',
                 pay_scale_id: '',
@@ -275,7 +275,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
             this.filters = {
                 monthId: currentDate.getMonth() + 1,
                 salaryGenerationYear: currentDate.getFullYear(),
-                salaryGeneratedStatus: 'all',
+                salaryGeneratedStatus: this.reportType === 'Bank Advice' ? 'generated' : 'all',
                 department_office_id: '',
                 user_category_id: '',
                 pay_scale_id: '',
@@ -298,6 +298,11 @@ export const useSalaryReportStore = defineStore('salaryReport', {
 
         setReportType(type) {
             this.reportType = type;
+            this.filters.salaryGeneratedStatus = (type === 'Bank Advice' || type === 'Bonus Bank Advice'
+                || type === 'Bonus Bill' || type === 'Bonus report') ? 'generated' : 'all';
+            // A previous month's/type's selection must never leak into Bank Advice.
+            this.selectedUserIds = [];
+            this.recordsCache = {};
             this.allFilteredRecords = [];
             return this.fetchReportData(1);
         },

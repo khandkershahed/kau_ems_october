@@ -48,7 +48,9 @@ const configuredGpf = (props.deductions || []).find(isGpf);
 // The server's actual resolved GPF rule is the initial UI source. In particular,
 // legacy FIXED subscriptions must not be silently displayed as Default 10%.
 const serverGpfRule = props.financial?.gpf_rule || null;
-const hasGpf = ref(!!configuredGpf && props.gpfOverride?.type !== "disabled");
+const initialHasGpf = props.gpfOverride?.type !== "disabled" &&
+    (Boolean(configuredGpf) || serverGpfRule?.type !== "disabled");
+const hasGpf = ref(initialHasGpf);
 const initialGpfMode = !hasGpf.value
     ? "default"
     : props.gpfOverride?.type ||
@@ -293,7 +295,7 @@ const reset = () => {
     additions.value = clone(initialAdds);
     deductions.value = clone(initialDeds);
     arrears.value = clone(initialArrear);
-    hasGpf.value = !!configuredGpf && props.gpfOverride?.type !== "disabled";
+    hasGpf.value = initialHasGpf;
     gpfMode.value = initialGpfMode;
     gpfAmount.value = initialGpfRate;
     reason.value = props.saved?.reason || "";

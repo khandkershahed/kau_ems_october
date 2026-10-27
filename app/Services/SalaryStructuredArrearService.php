@@ -53,7 +53,32 @@ final class SalaryStructuredArrearService
             'HOUSE_RENT_RECOVERY' => ['total' => 0, 'complete' => true, 'has_unverified_payment' => false, 'sources' => []],
             'ADDITIONAL_GPF' => ['total' => 0, 'complete' => true, 'has_unverified_payment' => false, 'sources' => []],
         ];
+        // KAU October 2026 policy: House Rent Recovery is the JULY minus JUNE
+        // historical rent difference, multiplied by three. It does not depend
+        // on the revised October rent or the approved revised fixation.
+        // Keep money as integer cents until the final result: no whole-taka
+        // rounding is permitted before the three-month multiplication.
+        $juneRentCents = $money($evidence['june_house_rent'] ?? null);
+        $julyRentCents = $money($paid['2026-07']['paid_house_rent'] ?? null);
+        if ($juneRentCents === null || $julyRentCents === null) {
+            $components['HOUSE_RENT_RECOVERY']['complete'] = false;
+        } else {
+            $components['HOUSE_RENT_RECOVERY']['total'] =
+                ($julyRentCents - $juneRentCents) * count($months);
+        }
+        // July is the only paid source required for this particular formula.
+        $components['HOUSE_RENT_RECOVERY']['has_unverified_payment'] =
+            ($paid['2026-07']['payment_verified'] ?? true) === false;
         foreach ($months as $period) {
+            $components['HOUSE_RENT_RECOVERY']['sources'][$period] = [
+                'june_house_rent' => $juneRentCents === null ? null : $juneRentCents / 100,
+                'july_house_rent' => $julyRentCents === null ? null : $julyRentCents / 100,
+                'monthly_difference' => ($juneRentCents === null || $julyRentCents === null)
+                    ? null : ($julyRentCents - $juneRentCents) / 100,
+                'july_source_record_id' => $paid['2026-07']['source_record_id'] ?? null,
+                'june_source_record_id' => $evidence['june_source_record_id'] ?? null,
+                'formula' => '(July 2026 House Rent - June 2026 House Rent) * 3',
+            ];
             $new = $money($revised[$period] ?? null);
             if ($new === null || $juneCents === null) $components['BASIC_ARREAR_GROSS']['complete'] = false;
             else $components['BASIC_ARREAR_GROSS']['total'] += $new - $juneCents;
@@ -89,7 +114,6 @@ final class SalaryStructuredArrearService
             // so unverified sources can never silently become approval-eligible.
             if (($paid[$period]['payment_verified'] ?? true) === false) {
                 $components['SPECIAL_BENEFIT_RECOVERY']['has_unverified_payment'] = true;
-                $components['HOUSE_RENT_RECOVERY']['has_unverified_payment'] = true;
                 $components['ADDITIONAL_GPF']['has_unverified_payment'] = true;
             }
             if ($special === null) $components['SPECIAL_BENEFIT_RECOVERY']['complete'] = false;
@@ -97,23 +121,8 @@ final class SalaryStructuredArrearService
             $components['SPECIAL_BENEFIT_RECOVERY']['sources'][$period] = ['amount' => $special === null ? null : $special / 100,
                 'payment_source' => $paid[$period]['source_record_id'] ?? null];
 
-            // Compare the October revised entitlement against the June old rent
-            // when the configured Khulna reference is available; otherwise
-            // preserve the existing verified month-specific entitlement behavior.
-            $housePaid = $money($paid[$period]['paid_house_rent'] ?? null);
-            $houseEntitled = $money($financial[$period]['entitled_house_rent'] ?? null);
-            $juneBaseline = $money($financial[$period]['house_rent_baseline'] ?? null);
-            // For the user-specified October-versus-June calculation,
-            // a negative internal total means payable (existing sign convention).
-            $houseReference = $juneBaseline ?? $housePaid;
-            if ($houseReference === null || $houseEntitled === null) $components['HOUSE_RENT_RECOVERY']['complete'] = false;
-            else $components['HOUSE_RENT_RECOVERY']['total'] += $houseReference - $houseEntitled;
-            $components['HOUSE_RENT_RECOVERY']['sources'][$period] = [
-                'june_or_historical_rent' => $houseReference === null ? null : $houseReference / 100,
-                'revised_entitlement' => $houseEntitled === null ? null : $houseEntitled / 100,
-                'june_baseline_used' => $juneBaseline !== null,
-                'source_record_id' => $paid[$period]['source_record_id'] ?? null,
-            ];
+            // House Rent Recovery is calculated once above from the July and
+            // June historical rents; never reclassify October rent as a source.
 
             $requiredGpf = $money($financial[$period]['required_gpf'] ?? null);
             $paidGpf = $money($paid[$period]['paid_gpf'] ?? null);
@@ -217,27 +226,17 @@ final class SalaryStructuredArrearService
         // the GPF 10% is the user-specified employee calculation rule.
         // Rates are centrally configurable and cannot fill a missing approved
         // revised fixation or a missing historical amount.
-        $rentRate = config('kau_arrear_reference_2026.khulna_house_rent_rate');
         $gpfRate = config('kau_arrear_reference_2026.revised_gpf_rate');
-        $juneRent = $evidence['june_house_rent'] ?? null;
         foreach (SalaryPayScaleArrearEngine::MONTHS as $period) {
             $revisedBasic = $evidence['revised_basics'][$period] ?? null;
             if (!is_numeric($revisedBasic) || (float) $revisedBasic <= 0) continue;
             $evidence['financial_months'][$period] ??= [];
-            if (is_numeric($rentRate) && is_numeric($juneRent)
-                && !array_key_exists('entitled_house_rent', $evidence['financial_months'][$period])) {
-                // The existing compute() expects paid - entitled for rent.
-                // To calculate October revised rent - June original rent, the
-                // revised rent is the 'paid' reference and June rent entitlement.
-                // Instead expose these as separate signed references below.
-                $evidence['financial_months'][$period]['entitled_house_rent'] =
-                    round((float) $revisedBasic * (float) $rentRate, 2, PHP_ROUND_HALF_UP);
-                $evidence['financial_months'][$period]['house_rent_baseline'] = (float) $juneRent;
-            }
             if (is_numeric($gpfRate)
                 && !array_key_exists('required_gpf', $evidence['financial_months'][$period])) {
+                // Retain paisa for the entire July-September calculation.
+                // Example: 28715 * 10% = 2871.50, NOT 2872 each month.
                 $evidence['financial_months'][$period]['required_gpf'] =
-                    round((float) $revisedBasic * (float) $gpfRate, 0, PHP_ROUND_HALF_UP);
+                    round((float) $revisedBasic * (float) $gpfRate, 2, PHP_ROUND_HALF_UP);
             }
         }
         // Step 12: month-specific, evidence-backed entitlement/payment overrides.

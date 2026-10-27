@@ -227,8 +227,8 @@ class SalaryArrearCalculatorTest extends TestCase
         $r = SalaryStructuredArrearService::compute($evidence);
         $this->assertSame(8757.0, $r['SPECIAL_BENEFIT_RECOVERY']['amount']); // 2919*3
         $this->assertSame('PAYMENT_UNVERIFIED', $r['SPECIAL_BENEFIT_RECOVERY']['status']);
-        $this->assertSame(2271.0, $r['HOUSE_RENT_RECOVERY']['amount']); // (8757-8000)*3
-        $this->assertSame('PAYMENT_UNVERIFIED', $r['HOUSE_RENT_RECOVERY']['status']);
+        $this->assertNull($r['HOUSE_RENT_RECOVERY']['amount']); // June historical rent missing
+        $this->assertSame('UNKNOWN', $r['HOUSE_RENT_RECOVERY']['status']);
     }
 
     /** Phase 3B (A-C): 20057 basic arrear amounts and directions. */
@@ -243,18 +243,32 @@ class SalaryArrearCalculatorTest extends TestCase
         $this->assertSame('SOURCE_RECONCILED', $r['SPECIAL_BENEFIT_RECOVERY']['status']);
     }
 
-    /** Phase 3B (G/H): verified house rent difference — positive payable, over-deduction payable. */
-    public function test_house_rent_difference_directions(): void
+    /** July minus June historical rent, multiplied by three without rounding taka. */
+    public function test_house_rent_july_minus_june_deduction_and_payable(): void
     {
-        $r = SalaryStructuredArrearService::compute($this->evidence20057());
-        $this->assertSame(2271.0, $r['HOUSE_RENT_RECOVERY']['amount']); // (8757-8000)*3
-        $this->assertSame('deduction', $r['HOUSE_RENT_RECOVERY']['direction']);
         $e = $this->evidence20057();
-        $e['financial_months'] = ['2026-07' => ['entitled_house_rent' => 9000],
-            '2026-08' => ['entitled_house_rent' => 9000], '2026-09' => ['entitled_house_rent' => 9000]];
+        $e['june_house_rent'] = 8340.25;
+        $e['paid_months']['2026-07']['paid_house_rent'] = 8757.50;
         $r = SalaryStructuredArrearService::compute($e);
-        $this->assertSame(729.0, $r['HOUSE_RENT_RECOVERY']['amount']); // (9000-8757)*3
+        $this->assertSame(1251.75, $r['HOUSE_RENT_RECOVERY']['amount']);
+        $this->assertSame('deduction', $r['HOUSE_RENT_RECOVERY']['direction']);
+
+        $e['june_house_rent'] = 9000;
+        $r = SalaryStructuredArrearService::compute($e);
+        $this->assertSame(727.50, $r['HOUSE_RENT_RECOVERY']['amount']);
         $this->assertSame('payable', $r['HOUSE_RENT_RECOVERY']['direction']);
+    }
+
+    public function test_gpf_and_special_benefit_preserve_paisa_before_three_month_total(): void
+    {
+        $e = $this->evidence20057();
+        foreach (['2026-07','2026-08','2026-09'] as $period) {
+            $e['financial_months'][$period]['required_gpf'] = 2871.50;
+            $e['paid_months'][$period]['paid_special_benefit'] = 2919.25;
+        }
+        $r = SalaryStructuredArrearService::compute($e);
+        $this->assertSame(2776.50, $r['ADDITIONAL_GPF']['amount']);
+        $this->assertSame(8757.75, $r['SPECIAL_BENEFIT_RECOVERY']['amount']);
     }
 
     /** Phase 3B (I/J): missing house-rent entitlement or GPF rule stays UNKNOWN. */
