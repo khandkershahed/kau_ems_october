@@ -277,6 +277,8 @@ const save = (employee) => {
                       <select v-model.number="tableRowsPerPage" class="rounded-lg border-gray-300 dark:bg-gray-900 dark:text-white text-sm">
                         <option :value="10">10</option><option :value="15">15</option>
                         <option :value="25">25</option><option :value="50">50</option>
+                        <option :value="100">100</option><option :value="500">500</option>
+                        <option :value="1000">1000</option><option :value="1500">1500</option>
                       </select>
                     </label>
                     <button class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2 rounded-lg self-end">Search</button>

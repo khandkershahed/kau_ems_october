@@ -44,7 +44,12 @@
   .footer { border-top:1px solid #d3dbe5; margin-top:16px; padding-top:7px; display:flex; justify-content:space-between; color:#536477; font-size:9px; }
   .summary-table { font-size:10px; }
   .summary-table th,.summary-table td { padding:3px 4px; font-size:9.4px; line-height:1.12; }
-  body.bulk.dense .summary-table th,body.bulk.dense .summary-table td { padding:2px 3px; font-size:8.4px; line-height:1.08; }
+  body.bulk.dense .summary-table th,body.bulk.dense .summary-table td { padding:2px 2px; font-size:6.4px; line-height:1.08; }
+  body.bulk .summary-table { table-layout:auto; font-size:6.7px; }
+  body.bulk .summary-table th,body.bulk .summary-table td { padding:2px 2px; font-size:6.7px; white-space:nowrap; }
+  body.bulk .summary-table .person { white-space:normal; min-width:62px; max-width:98px; }
+  body.bulk .header { padding-bottom:4px; }
+  body.bulk .header h1 { font-size:13px; }
   body.bulk .signature { padding-top:20px; }
   body.bulk .note { padding:5px 7px; margin:8px 0; font-size:9px; }
   .breakdown-month { text-align:center; }
@@ -79,35 +84,73 @@
     <div>
       <h1>Khulna Agricultural University</h1>
       <p>Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000</p>
-      <strong>@if($kind === 'bulk')Bulk Salary Statement @elseif($kind === 'arrear')বকেয়া বেতনের হিসাব বিবরণী (Arrear Statement) @else Salary Bill @endif</strong>
+      <strong>@if($kind === 'bulk')Horizontal Salary Bill (Current + Arrear) @elseif($kind === 'arrear')বকেয়া বেতনের হিসাব বিবরণী (Arrear Statement) @else Salary Bill @endif</strong>
       <p>Salary period: {{ sprintf('%02d', $month) }}/{{ $year }}</p>
     </div>
     <div></div>
   </header>
 @if($kind === 'bulk')
-  <div class="heading">Posted Salary Bills — Page {{ $pageIndex + 1 }} / {{ count($pages) }} · Records per page: {{ $perPage }}</div>
+  <div class="heading">Salary Statement — Page {{ $pageIndex + 1 }} / {{ count($pages) }} · Up to {{ $perPage }} employees per page</div>
+  @php
+    $component = static function ($r, $group, $words) {
+      $sum = 0.0;
+      foreach (($r[$group] ?? []) as $row) {
+        $name = strtolower((string)($row['title'] ?? ''));
+        foreach ($words as $word) {
+          if (str_contains($name, $word)) {
+            $amount = $row['current'] ?? null;
+            if ($amount === null) return null;
+            $sum += (float)$amount;
+            break;
+          }
+        }
+      }
+      return $sum;
+    };
+    $num = static fn($amount) => $amount === null ? '—' : number_format((float)$amount,2);
+    $columns = ['basic','hra','medical','special','education','other','current_gross','gpf','tax','other_ded','current_deductions','arrear_payable','arrear_deductions','net'];
+    $totals = array_fill_keys($columns, 0.0);
+  @endphp
   <table class="summary-table">
-    <thead><tr><th style="width:30px">SL</th><th>Employee / Code</th><th>Designation</th><th style="width:65px">Grade</th><th class="num">Basic</th><th class="num">Current Gross</th><th class="num">Current Deduct.</th><th class="num">Arrear +</th><th class="num">Arrear −</th><th class="num">Net Payable</th></tr></thead>
-    <tbody>
-      @foreach($pageRows as $i => $r)
-      <tr>
-        <td>{{ $pageIndex * $perPage + $i + 1 }}</td><td><strong>{{ $r['name'] }}</strong><div class="small muted">{{ $r['employee_code'] }}</div></td>
-        <td>{{ $r['designation'] }}</td><td>{{ $r['grade'] }}</td>
-        <td class="num">{{ $r['basic'] === null ? 'UNKNOWN' : number_format($r['basic'],2) }}</td>
-        <td class="num">{{ $r['current_gross'] === null ? 'UNKNOWN' : number_format($r['current_gross'],2) }}</td>
-        <td class="num">{{ $r['current_deductions'] === null ? 'UNKNOWN' : number_format($r['current_deductions'],2) }}</td>
-        <td class="num">{{ $r['arrear_payable'] === null ? 'UNKNOWN' : number_format($r['arrear_payable'],2) }}</td>
-        <td class="num">{{ $r['arrear_deductions'] === null ? 'UNKNOWN' : number_format($r['arrear_deductions'],2) }}</td>
-        <td class="num"><strong>{{ number_format($r['net'],2) }}</strong></td>
+    <thead><tr>
+      <th>SL</th><th>ID</th><th class="person">Name</th><th class="person">Designation</th>
+      <th class="num">Basic</th><th class="num">HRA</th><th class="num">MA</th>
+      <th class="num">S Benefit</th><th class="num">Edu</th><th class="num">Other A</th>
+      <th class="num">Reg Gross</th><th class="num">GPF</th><th class="num">Income T</th>
+      <th class="num">Other D</th><th class="num">Reg Ded</th>
+      <th class="num">Arrear +</th><th class="num">Arrear −</th><th class="num">Net</th><th>Signature</th>
+    </tr></thead><tbody>
+    @foreach($pageRows as $i => $r)
+      @php
+        $hra = $component($r,'allowances',['house rent']);
+        $medical = $component($r,'allowances',['medical']);
+        $special = $component($r,'allowances',['special benefit']);
+        $education = $component($r,'allowances',['education']);
+        $gpf = $component($r,'deductions',['provident fund','gpf']);
+        $tax = $component($r,'deductions',['income tax']);
+        $knownAdd = array_sum(array_filter([$r['basic'],$hra,$medical,$special,$education], 'is_numeric'));
+        $other = $r['current_gross'] === null || in_array(null,[$r['basic'],$hra,$medical,$special,$education],true) ? null : $r['current_gross']-$knownAdd;
+        $otherDed = $r['current_deductions'] === null || $gpf === null || $tax === null ? null : $r['current_deductions']-$gpf-$tax;
+        $vals = ['basic'=>$r['basic'],'hra'=>$hra,'medical'=>$medical,'special'=>$special,'education'=>$education,'other'=>$other,
+          'current_gross'=>$r['current_gross'],'gpf'=>$gpf,'tax'=>$tax,'other_ded'=>$otherDed,
+          'current_deductions'=>$r['current_deductions'],'arrear_payable'=>$r['arrear_payable'],
+          'arrear_deductions'=>$r['arrear_deductions'],'net'=>$r['net']];
+        foreach($vals as $key=>$value) { if (is_numeric($value)) $totals[$key] += (float)$value; }
+      @endphp
+      <tr><td>{{ $pageIndex * $perPage + $i + 1 }}</td>
+        <td>{{ $r['employee_code'] }}</td><td class="person">{{ $r['name'] }}</td><td class="person">{{ $r['designation'] }}</td>
+        @foreach($columns as $key)<td class="num">{{ $num($vals[$key]) }}</td>@endforeach<td></td>
       </tr>
-      @endforeach
-      <tr class="total-row"><td colspan="9" style="text-align:right">Page Net Total</td><td class="num">{{ number_format(array_sum(array_column($pageRows,'net')),2) }}</td></tr>
+    @endforeach
+    <tr class="total-row"><td colspan="4">PAGE TOTAL</td>
+      @foreach($columns as $key)<td class="num">{{ $num($totals[$key]) }}</td>@endforeach<td></td>
+    </tr>
     </tbody>
   </table>
   @if($pageIndex === count($pages)-1)
-  <div class="heading" style="text-align:right">Grand Total — ৳{{ number_format($grandTotal,2) }}</div>
+    <div class="heading" style="text-align:right">Grand Net Total — ৳{{ number_format($grandTotal,2) }}</div>
   @endif
-  <div class="note">Source: saved POSTED SalaryGenerate records. Current Department data (if displayed elsewhere) is not treated as frozen evidence. Unavailable component details appear as UNKNOWN, not estimated zeros.</div>
+  <div class="note">Saved bill amounts only. Arrear columns include ONLY components already saved to these bills. Blank/missing component evidence is shown as —, not estimated. Review all draft/pending bills before payment.</div>
   <div class="signature"><div>Prepared by</div><div>Checked by</div><div>Accounts Officer</div></div>
 @else
 @php($r = $pageRows[0])

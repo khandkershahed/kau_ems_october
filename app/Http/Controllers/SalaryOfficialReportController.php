@@ -48,7 +48,7 @@ final class SalaryOfficialReportController extends Controller
         foreach ($ids as $id) {
             $group = $bills->get($id);
             if (!$group || $group->count() !== 1) {
-                abort(422, 'Exactly one POSTED Salary Bill must exist for employee ID '.$id.' and this month.');
+                return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
             }
             try {
                 $rows[] = $source->fromPostedBill($group->first());
@@ -57,7 +57,7 @@ final class SalaryOfficialReportController extends Controller
                     'employee_id' => $id, 'year' => $validated['year'],
                     'month' => $validated['month'], 'reason' => $exception->getMessage(),
                 ]);
-                abort(422, 'Employee '.$id.' saved bill cannot be reconciled: '.$exception->getMessage());
+                return $this->reportError('Employee '.$id.' saved bill cannot be reconciled: '.$exception->getMessage());
             }
         }
         $kind = $validated['kind'];
@@ -106,6 +106,18 @@ final class SalaryOfficialReportController extends Controller
         }
         return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8',
             'Cache-Control' => 'no-store, private']);
+    }
+
+    /** Human-readable response while preserving HTTP 422 and financial source checks. */
+    private function reportError(string $message)
+    {
+        $safe = e($message);
+        return response('<!doctype html><html><head><meta charset="utf-8"><title>Salary Report Reconciliation</title></head>'
+            .'<body style="font:16px Arial,sans-serif;padding:35px;max-width:900px;margin:auto">'
+            .'<h2>Salary Report Needs Reconciliation</h2><p>'.$safe.'</p>'
+            .'<p>No financial records were modified. Correct this saved bill or adjust the selection, then retry.</p>'
+            .'<button onclick="history.back()">Go Back</button></body></html>', 422,
+            ['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'no-store, private']);
     }
 
     private function embeddedLogo(): ?string

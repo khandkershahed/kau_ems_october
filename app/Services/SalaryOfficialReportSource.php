@@ -82,16 +82,36 @@ final class SalaryOfficialReportSource
                     throw new DomainException('Posted bill and source-link employee/period do not match.');
                 }
                 $snapshot = json_decode((string) $link->source_snapshot, true);
-                if (!is_array($snapshot)
-                    || !hash_equals((string) $link->source_hash, (string) ($snapshot['source_hash'] ?? ''))) {
-                    throw new DomainException('Posted source snapshot hash reference is missing or mismatched.');
+                if (!is_array($snapshot)) {
+                    throw new DomainException('Posted source snapshot is not readable.');
                 }
-                // Check integrity of the frozen JSON payload, not merely its stored hash field.
-                $original = $snapshot;
-                unset($original['source_hash'], $original['statement']);
-                $actual = hash('sha256', json_encode($original, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
-                if (!hash_equals((string) $link->source_hash, $actual)) {
-                    throw new DomainException('Posted salary financial snapshot content was modified.');
+                if (($snapshot['calculation_method'] ?? null) === 'REGULAR_ONLY_PREVIEW') {
+                    // October bulk writer freezes a regular-only preview whose
+                    // calculation_source_hash covers the payload BEFORE the hash
+                    // field is appended. Verify that exact legacy writer format.
+                    $embedded = (string) ($snapshot['calculation_source_hash'] ?? '');
+                    $payload = $snapshot;
+                    unset($payload['calculation_source_hash']);
+                    $actual = hash('sha256', json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+                    if ($embedded === '' || !hash_equals((string) $link->source_hash, $embedded)
+                        || !hash_equals($embedded, $actual)) {
+                        throw new DomainException('Frozen regular-only source snapshot hash mismatch.');
+                    }
+                    if ((int) ($snapshot['user_id'] ?? 0) !== (int) $bill->user_id
+                        || (int) ($snapshot['year'] ?? 0) !== (int) $bill->salaryGenerationYear
+                        || (int) ($snapshot['month'] ?? 0) !== (int) $bill->monthId) {
+                        throw new DomainException('Regular-only frozen source employee/period mismatch.');
+                    }
+                } else {
+                    if (!hash_equals((string) $link->source_hash, (string) ($snapshot['source_hash'] ?? ''))) {
+                        throw new DomainException('Posted source snapshot hash reference is missing or mismatched.');
+                    }
+                    $original = $snapshot;
+                    unset($original['source_hash'], $original['statement']);
+                    $actual = hash('sha256', json_encode($original, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+                    if (!hash_equals((string) $link->source_hash, $actual)) {
+                        throw new DomainException('Posted salary financial snapshot content was modified.');
+                    }
                 }
             }
         }
@@ -123,7 +143,10 @@ final class SalaryOfficialReportSource
             $dedCurrent = $ded / 100.0 - $dedArrear;
         }
         if ($snapshot) {
-            foreach (['gross' => $gross, 'total_deduction' => $ded, 'net_payable' => $net] as $key => $expected) {
+            $expectedFields = ($snapshot['calculation_method'] ?? null) === 'REGULAR_ONLY_PREVIEW'
+                ? ['regular_gross' => $gross, 'regular_deductions' => $ded, 'regular_net' => $net]
+                : ['gross' => $gross, 'total_deduction' => $ded, 'net_payable' => $net];
+            foreach ($expectedFields as $key => $expected) {
                 if (!array_key_exists($key, $snapshot) || self::money($snapshot[$key], $key) !== $expected) {
                     throw new DomainException('Saved posted bill and source snapshot differ: '.$key);
                 }

@@ -37,7 +37,7 @@ class SalaryFixationController extends Controller
             'search' => 'nullable|string|max:120',
             'increment_status' => 'nullable|in:all,increment_available,increment_hold,adhoc,study_leave_with,study_leave_without,other_no_increment',
             'fixation_status' => 'nullable|in:all,needs_review,blocked,provisional,approved',
-            'per_page' => 'nullable|integer|in:10,15,25,50',
+            'per_page' => 'nullable|integer|in:10,15,25,50,100,500,1000,1500',
             'department_office_id' => 'nullable|integer|exists:department_offices,id',
             'user_category_id' => 'nullable|integer|exists:user_categories,id',
             'payroll_group_id' => 'nullable|integer|exists:payroll_groups,id',

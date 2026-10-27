@@ -365,14 +365,14 @@ const formattedMonthYear = computed(() => {
 
 // Step 07 — canonical saved salary reporting. The endpoint reads POSTED bills
 // only; these actions never mutate salary, GPF, arrears, or employee profiles.
-const officialRowsPerPage = ref(15);
+const officialRowsPerPage = ref(25);
 const isOfficialSalaryReport = computed(() => ['Salary Bill', 'Arrear & Deduction Statement'].includes(store.reportType));
 function officialReportUrl(kind, format = 'html') {
     const records = selectedRecords.value;
     if (!records.length) throw new Error('Select at least one generated employee.');
     if (records.length > 500) throw new Error('At most 500 employees can be printed in one request.');
     const incomplete = records.filter(r => !r.is_generated || !Number.isInteger(Number(r.user_id)) || Number(r.user_id) < 1);
-    if (incomplete.length) throw new Error('Only POSTED generated Salary Bills can be printed. Remove not-generated employees from selection.');
+    if (incomplete.length) throw new Error('Only employees with a saved bill for the selected month can be printed. Remove employees without bills.');
     const ids = records.map(r => Number(r.user_id));
     if (new Set(ids).size !== ids.length) throw new Error('Duplicate employee selection.');
     const rows = Number(officialRowsPerPage.value);
@@ -450,7 +450,7 @@ function openOfficialCsv() {
 }
 function officialReportKind() {
     if (store.reportType === 'Arrear & Deduction Statement') return 'arrear';
-    return selectedRecords.value.length === 1 ? 'bill' : 'bills';
+    return selectedRecords.value.length === 1 ? 'bill' : 'bulk';
 }
 
 // Header Customization States

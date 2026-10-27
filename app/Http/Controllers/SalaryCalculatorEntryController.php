@@ -70,6 +70,38 @@ final class SalaryCalculatorEntryController extends Controller
         return app(SalaryComponentCatalog::class)->forEmployee($employee, $adds, $ded, $year, $month, $fixation);
     }
 
+    /** June 2026 historical rent is the October workspace regular-rent reference.
+     * Read-only; never alter an employee's source bill or posted salary.
+     */
+    private function juneRentReference(int $userId): ?float
+    {
+        $bills = DB::table('salary_generates')->where('user_id', $userId)
+            ->where('salaryGenerationYear', 2026)->where('monthId', 6)->limit(2)->get();
+        if ($bills->count() !== 1) return null;
+        try {
+            $source = \App\Services\SalaryArrearCalculator::paidFromPayroll($bills->first());
+            $rent = $source['paid_house_rent'] ?? null;
+            return is_numeric($rent) && (float)$rent >= 0 ? (float)$rent : null;
+        } catch (DomainException $e) {
+            return null;
+        }
+    }
+
+    private function setHistoricalJuneRent(array $additions, float $rent): array
+    {
+        foreach ($additions as &$row) {
+            $name = strtolower(trim((string)($row['name'] ?? '')));
+            if (str_contains($name, 'house rent') && !str_contains($name, 'difference')
+                && !str_contains($name, 'arrear')) {
+                $row['amount'] = $rent;
+                $row['calcType'] = 'fixed';
+                $row['historical_source'] = 'approved_june_2026_salary';
+            }
+        }
+        unset($row);
+        return $additions;
+    }
+
     public function show(Request $request, User $user, ApprovedFixationResolver $resolver, SalaryCalculationService $calculator)
     {
         [$year, $month] = $this->period($request);
@@ -93,6 +125,12 @@ final class SalaryCalculatorEntryController extends Controller
         try {
             $employee = $this->profiles($user);
             [$adds, $ded] = $this->components($employee, $year, $month, $fixation);
+            $juneRent = $year === 2026 && $month === 10
+                ? $this->juneRentReference($user->id) : null;
+            if ($juneRent !== null) {
+                // Use June's actual saved House Rent, not July's projected rate.
+                $adds = $this->setHistoricalJuneRent($adds, $juneRent);
+            }
             // GPF is an optional published/employee-configured component, not a
             // silently inserted deduction for an empty Payroll Component list.
             $gpfOverride = collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))
@@ -127,6 +165,14 @@ final class SalaryCalculatorEntryController extends Controller
                     $adds = $savedAdds;
                     $ded = $savedDed;
                     $gpfOverride = $savedOverride;
+                    if ($juneRent !== null) {
+                        $correctedAdds = $this->setHistoricalJuneRent($adds, $juneRent);
+                        if (json_encode($correctedAdds) !== json_encode($adds)) {
+                            $adds = $correctedAdds;
+                            $error = trim(($error ? $error.' ' : '')
+                                .'October House Rent now uses the approved June 2026 salary. Review and save a NEW calculation version before generating a bill.');
+                        }
+                    }
                     $financial = $calculator->calculate($adds, $ded, null, $gpfOverride);
                     if (abs((float) ($saved['net_salary'] ?? -1) - $financial['net_salary']) > 0.009) {
                         $error = 'Saved calculation totals do not match its component snapshot. Review before using it.';
