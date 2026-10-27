@@ -32,7 +32,7 @@ final class SalaryArrearRuleView
                 $periods = array_values((array) ($row['months'] ?? []));
                 $amount = $row['calculated_amount'] ?? null;
                 $out[$id] = [
-                    'title' => (string) ($row['title'] ?? ''),
+                    // Display title is editable; never use it as the rule's financial identity.
                     'direction' => (string) ($row['direction'] ?? ''),
                     'mode' => (string) ($row['mode'] ?? ''),
                     'formula' => (string) ($row['formula'] ?? ''),

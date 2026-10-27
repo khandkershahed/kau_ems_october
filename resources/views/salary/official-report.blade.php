@@ -431,8 +431,11 @@
                             'tax',
                             'other_ded',
                             'current_deductions',
-                            'arrear_payable',
-                            'arrear_deductions',
+                            'basic_arrear_gross',
+                            'basic_increment_adjustment',
+                            'special_benefit_recovery',
+                            'house_rent_recovery',
+                            'additional_gpf',
                             'net',
                         ];
                         $totals = array_fill_keys($columns, 0.0);
@@ -455,8 +458,11 @@
                                 <th class="num">Income T</th>
                                 <th class="num">Other D</th>
                                 <th class="num">Reg Ded</th>
-                                <th class="num">Arrear +</th>
-                                <th class="num">Arrear −</th>
+                                <th class="num">Basic Arrear</th>
+                                <th class="num">Basic Adj.</th>
+                                <th class="num">S.B. Recovery</th>
+                                <th class="num">HRA Recovery</th>
+                                <th class="num">Addl. GPF</th>
                                 <th class="num">Net</th>
                                 <th>Signature</th>
                             </tr>
@@ -482,6 +488,19 @@
                                         $r['current_deductions'] === null || $gpf === null || $tax === null
                                             ? null
                                             : $r['current_deductions'] - $gpf - $tax;
+                                    $arrearValues = [
+                                        'basic_arrear_gross' => 0.0,
+                                        'basic_increment_adjustment' => 0.0,
+                                        'special_benefit_recovery' => 0.0,
+                                        'house_rent_recovery' => 0.0,
+                                        'additional_gpf' => 0.0,
+                                    ];
+                                    foreach (($r['arrear_rows'] ?? []) as $arrearItem) {
+                                        $code = strtolower((string) ($arrearItem['code'] ?? ''));
+                                        if (array_key_exists($code, $arrearValues)) {
+                                            $arrearValues[$code] = (float) ($arrearItem['final_amount'] ?? $arrearItem['amount'] ?? $arrearItem['total'] ?? 0);
+                                        }
+                                    }
                                     $vals = [
                                         'basic' => $r['basic'],
                                         'hra' => $hra,
@@ -494,8 +513,11 @@
                                         'tax' => $tax,
                                         'other_ded' => $otherDed,
                                         'current_deductions' => $r['current_deductions'],
-                                        'arrear_payable' => $r['arrear_payable'],
-                                        'arrear_deductions' => $r['arrear_deductions'],
+                                        'basic_arrear_gross' => $arrearValues['basic_arrear_gross'],
+                                        'basic_increment_adjustment' => $arrearValues['basic_increment_adjustment'],
+                                        'special_benefit_recovery' => $arrearValues['special_benefit_recovery'],
+                                        'house_rent_recovery' => $arrearValues['house_rent_recovery'],
+                                        'additional_gpf' => $arrearValues['additional_gpf'],
                                         'net' => $r['net'],
                                     ];
                                     foreach ($vals as $key => $value) {

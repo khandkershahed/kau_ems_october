@@ -94,4 +94,24 @@ final class SalaryEmployeeComponentOverrideStep03Test extends TestCase
         self::assertSame('type:8', OverrideService::key(8,'House Rent Allowance'));
         self::assertSame(OverrideService::key(null,'House Rent Allowance'),OverrideService::key(null,' house   RENT allowance '));
     }
+    public function test_master_id_can_safely_replace_unmapped_legacy_name_without_second_component(): void
+    {
+        $legacy = ['name'=>'House Rent Allowance','calcType'=>'fixed','amount'=>8000];
+        [$adds,$deds] = OverrideService::apply([$this->basic(),$legacy], [], [$this->rule()]);
+        self::assertCount(2, $adds);
+        self::assertSame(8, $adds[1]['payroll_component_type_id']);
+        self::assertSame('type:8', $adds[1]['override_component_key']);
+        self::assertSame('percentage', $adds[1]['calcType']);
+        self::assertSame([], $deds);
+        OverrideService::assertSnapshotMatches($adds, $deds, [$this->rule()]);
+    }
+
+    public function test_master_id_does_not_reassign_a_different_legacy_title(): void
+    {
+        $this->expectException(DomainException::class);
+        OverrideService::apply([$this->basic(), [
+            'name'=>'Unrelated Allowance', 'calcType'=>'fixed','amount'=>8000,
+        ]], [], [$this->rule()]);
+    }
+
 }

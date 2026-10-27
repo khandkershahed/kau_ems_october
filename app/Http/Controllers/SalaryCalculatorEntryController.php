@@ -6,6 +6,7 @@ use App\Models\EmployeeInfo;
 use App\Models\BankAccount;
 use App\Services\SalaryBankAccountResolver;
 use App\Models\User;
+use App\Models\PayrollComponentType;
 use App\Services\ApprovedFixationResolver;
 use App\Services\SalaryCalculationService;
 use App\Services\SalaryStatementBreakdown;
@@ -205,6 +206,62 @@ final class SalaryCalculatorEntryController extends Controller
         } catch (DomainException $e) {
             $error = $e->getMessage();
         }
+        // Offer only this employee's effective, direction-specific regular components.
+        // The labels are read from the existing component master, never hardcoded.
+        // Legacy rows without a stable master ID remain editable through their
+        // existing key, but are deliberately not silently mapped by similar names.
+        $componentOptions = ['addition' => [], 'deduction' => []];
+        $typeIds = collect(array_merge($adds, $ded))
+            ->map(static fn ($r) => (int) ($r['payroll_component_type_id'] ?? $r['payroll_component_type']['id'] ?? 0))
+            ->filter(static fn ($id) => $id > 0)->unique()->values();
+        // Include unambiguous master mappings for historical name-only components,
+        // but ONLY when the employee's payroll group has an active assignment
+        // in the same direction. Ambiguous/unmapped legacy rows remain untouched.
+        $masters = PayrollComponentType::with(['payrollComponents' => function ($q) use ($employee) {
+            $q->where('payroll_group_id', $employee?->payroll_group_id)->where('isActive', true);
+        }])->get();
+        $masterNames = $masters->pluck('name', 'id');
+        foreach (['addition' => $adds, 'deduction' => $ded] as $direction => $items) {
+            $seen = [];
+            foreach ($items as $item) {
+                if (isset($item['manual_adjustment_id'])) continue;
+                $id = (int) ($item['payroll_component_type_id'] ?? $item['payroll_component_type']['id'] ?? 0);
+                $sourceName = trim((string) ($item['name'] ?? ''));
+                if ($id <= 0) {
+                    $candidates = $masters->filter(static fn ($master) =>
+                        strcasecmp(trim((string) $master->name), $sourceName) === 0 &&
+                        $master->payrollComponents->contains(static fn ($component) =>
+                            in_array(strtolower((string) $component->component_type),
+                                $direction === 'addition' ? ['allowance','addition'] : ['deduction'], true)));
+                    if ($candidates->count() !== 1) continue;
+                    $id = (int) $candidates->first()->id;
+                }
+                if (!isset($masterNames[$id]) || isset($seen[$id])) continue;
+                if (SalaryEmployeeComponentOverrideService::basic((string) $masterNames[$id])) continue;
+                $seen[$id] = true;
+                $componentOptions[$direction][] = ['id' => $id, 'name' => (string) $masterNames[$id],
+                    'source_name' => $sourceName];
+            }
+            // Offer assigned active master components that were deleted from the
+            // current draft as well, so they can be added back without a modal.
+            foreach ($masters as $master) {
+                $id = (int) $master->id;
+                if (isset($seen[$id]) || SalaryEmployeeComponentOverrideService::basic((string) $master->name)) continue;
+                $assigned = $master->payrollComponents->contains(static fn ($component) =>
+                    in_array(strtolower((string) $component->component_type),
+                        $direction === 'addition' ? ['allowance','addition'] : ['deduction'], true));
+                if (!$assigned) continue;
+                $seen[$id] = true;
+                $assignment = $master->payrollComponents->first(static fn ($component) =>
+                    in_array(strtolower((string) $component->component_type),
+                        $direction === 'addition' ? ['allowance','addition'] : ['deduction'], true));
+                $componentOptions[$direction][] = ['id' => $id, 'name' => (string) $master->name,
+                    'source_name' => (string) $master->name,
+                    'calcType' => strtolower((string) ($assignment?->calcType ?? 'fixed')) === 'percentage' ? 'percentage' : 'fixed',
+                    'amount' => (float) ($assignment?->amount ?? 0)];
+            }
+            usort($componentOptions[$direction], static fn ($a, $b) => strcasecmp($a['name'], $b['name']));
+        }
         $accounts = BankAccount::where('user_id', $user->id)->get();
         $selectedBank = SalaryBankAccountResolver::resolve($user->id, $employee?->bank_account_id, $accounts->all());
         $bankRecord = $selectedBank['selected_id'] ? $accounts->firstWhere('id', $selectedBank['selected_id']) : null;
@@ -229,6 +286,7 @@ final class SalaryCalculatorEntryController extends Controller
             'additions' => $adds, 'deductions' => $ded,
             'gpfOverride' => $gpfOverride,
             'componentOverrides' => $overrideRows,
+            'componentOptions' => $componentOptions,
             'componentOverrideHash' => $componentSignature,
             'arrearRows' => $latest && !$overrideChanged && $latest->arrear_snapshot && !$publishedRulesChanged ? (json_decode($latest->arrear_snapshot, true)['rows'] ?? $arrearRows) : $arrearRows,
             'unpublishedArrearTemplates' => app(SalaryArrearRuleService::class)->unpublishedTemplates($user->id),
@@ -243,21 +301,27 @@ final class SalaryCalculatorEntryController extends Controller
     /** Never convert missing evidence to zero. Unresolved lines stay null in a draft. */
     private function validateArrearSnapshot(array $rows, string $status): array
     {
-        $seen = []; $items = []; $unknown = [];
+        $seen = []; $seenTitles = []; $items = []; $unknown = [];
         foreach ($rows as $index => $row) {
             $key = $row['rule_id'] ?? null;
             if ($key && isset($seen[$key])) throw new DomainException('Duplicate published arrear rule #'.$key);
             if ($key) $seen[$key] = true;
+            $titleKey = strtolower(trim(preg_replace('/\s+/u', ' ', (string) ($row['title'] ?? ''))));
+            $titleIdentity = ($row['direction'] ?? '').':'.$titleKey;
+            if ($titleKey === '' || isset($seenTitles[$titleIdentity])) {
+                throw new DomainException('Duplicate or empty arrear title and direction; reconcile repeated entries before saving.');
+            }
+            $seenTitles[$titleIdentity] = true;
             $automatic = $row['calculated_amount'] ?? null;
             $final = $row['final_amount'] ?? null;
             $overridden = ($automatic === null && $final !== null)
                 || ($automatic !== null && $final !== null && abs((float)$final-(float)$automatic) > 0.009);
-            if ($overridden && (!trim((string)($row['reason'] ?? '')) || !trim((string)($row['evidence_reference'] ?? '')))) {
+            if ($status === 'approved' && $overridden && (!trim((string)($row['reason'] ?? '')) || !trim((string)($row['evidence_reference'] ?? '')))) {
                 throw new DomainException('Manual arrear override needs reason and evidence reference for '.$row['title']);
             }
             if ($final === null) $unknown[] = $row['title'];
             $items[] = [
-                'rule_id'=>$key, 'title'=>$row['title'], 'direction'=>$row['direction'],
+                'rule_id'=>$key, 'code'=>$row['code'] ?? null, 'title'=>$row['title'], 'direction'=>$row['direction'],
                 'mode'=>$row['mode'], 'formula'=>$row['formula'] ?? null,
                 'calculated_amount'=>$automatic, 'final_amount'=>$final,
                 'overridden'=>$overridden, 'months'=>$row['months'] ?? [],
@@ -320,6 +384,7 @@ final class SalaryCalculatorEntryController extends Controller
             'evidence_reference' => 'nullable|string|max:500',
             'arrear_rows' => 'sometimes|array|max:100',
             'arrear_rows.*.rule_id' => 'nullable|integer|min:1',
+            'arrear_rows.*.code' => 'nullable|string|max:60',
             'arrear_rows.*.title' => 'required|string|max:160',
             'arrear_rows.*.direction' => 'required|in:payable,deduction',
             'arrear_rows.*.mode' => 'required|in:fixed,percentage,formula',
@@ -383,6 +448,9 @@ final class SalaryCalculatorEntryController extends Controller
                 ->keyBy('rule_id');
             foreach ($submittedArrear as &$ar) {
                 if (empty($ar['rule_id'])) {
+                    // A custom display title cannot assert one of the five canonical codes.
+                    if (!empty($ar['code'])) throw new DomainException('Custom arrear cannot claim a canonical code.');
+                    $ar['code'] = null;
                     $ar['calculated_amount'] = null;
                     continue;
                 }
@@ -391,6 +459,8 @@ final class SalaryCalculatorEntryController extends Controller
                 if ($ar['direction'] !== $correct['direction']) {
                     throw new DomainException('An arrear rule direction was changed. Use a separate manual row with evidence.');
                 }
+                // Canonical financial identity is resolved from the server-side rule ID.
+                $ar['code'] = $correct['code'];
                 $ar['calculated_amount'] = $correct['calculated_amount'];
                 $ar['error'] = $correct['error'];
                 $ar['months'] = $correct['months'] ?? [];
@@ -478,6 +548,13 @@ final class SalaryCalculatorEntryController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
+    /** Safe regular-only salary preview; no approval, bill, GPF or journal write. */
+    public function previewRegularOnly(Request $request, User $user, \App\Services\SalaryBillPostingService $service)
+    {
+        [$year, $month] = $this->period($request);
+        return response()->json($service->previewRegularOnly($user->id, $year, $month));
+    }
+
     /** Direct bill generation: browser never supplies salary or arrear amounts. */
     public function generateBill(Request $request, User $user, \App\Services\SalaryBillPostingService $service)
     {

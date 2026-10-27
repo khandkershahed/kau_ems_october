@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmployeeInfo;
+use App\Models\PayrollComponentType;
 use App\Models\User;
 use App\Services\ApprovedFixationResolver;
 use App\Services\SalaryComponentCatalog;
@@ -42,7 +43,20 @@ final class SalaryEmployeeComponentOverrideController extends Controller
             $year=(int) $data['year']; $month=(int) $data['month'];
             $custom=(bool) $data['custom'];
             $name=trim($data['component_name']);
+            $master = !empty($data['payroll_component_type_id'])
+                ? PayrollComponentType::find((int) $data['payroll_component_type_id']) : null;
+            if (!empty($data['payroll_component_type_id']) && !$master) {
+                throw new DomainException('Selected payroll component no longer exists.');
+            }
+            if ($master && $name !== trim((string) $master->name)) {
+                throw new DomainException('Component title must match the selected database master record.');
+            }
             if (Overrides::basic($name)) throw new DomainException('Basic Pay cannot be changed through component overrides.');
+            // Historical custom overrides are editable/resettable, but a NEW
+            // regular component must be chosen from the configured master list.
+            if ($custom && (int) $data['expected_revision'] === 0) {
+                throw new DomainException('Choose an existing database component for a new regular override.');
+            }
             if ($custom && !empty($data['payroll_component_type_id'])) {
                 throw new DomainException('A custom component must not claim an existing component type ID.');
             }
@@ -65,12 +79,33 @@ final class SalaryEmployeeComponentOverrideController extends Controller
                 }
             }
             if (!$custom) {
-                $matches=array_values(array_filter($source, static function ($row) use ($key) {
+                $matches=array_values(array_filter($source, static function ($row) use ($key, $data, $name) {
                     if (isset($row['manual_adjustment_id'])) return false;
                     $id=(int) ($row['payroll_component_type_id'] ?? $row['payroll_component_type']['id'] ?? 0);
-                    return Overrides::key($id?:null, (string) ($row['name']??'')) === $key;
+                    return Overrides::key($id?:null, (string) ($row['name']??'')) === $key
+                        || ($id === 0 && !empty($data['payroll_component_type_id'])
+                            && strcasecmp(trim((string) ($row['name'] ?? '')), $name) === 0);
                 }));
-                if (count($matches)!==1) throw new DomainException('Component must match exactly one configured entry for this employee.');
+                if (count($matches)!==1) throw new DomainException('Component must match exactly one configured entry for this employee and direction.');
+                // A legacy title-only record may already override this same
+                // component. Never create a parallel ID-based override for it.
+                if ($typeId) {
+                    $legacyDuplicates = DB::table('salary_component_employee_overrides')
+                        ->where('user_id', $user->id)->where('salary_year', $year)
+                        ->where('salary_month', $month)->where('direction', $data['direction'])
+                        ->whereNull('payroll_component_type_id')->where('component_title', $name)
+                        ->where('component_key', '!=', $key)->exists();
+                    if ($legacyDuplicates) {
+                        throw new DomainException('A legacy title-only override already covers this component. Reconcile it before creating a master-ID override.');
+                    }
+                }
+                if ($typeId && (int) ($matches[0]['payroll_component_type_id'] ?? $matches[0]['payroll_component_type']['id'] ?? 0) === 0) {
+                    $targetDirection = $data['direction'] === 'addition' ? ['allowance','addition'] : ['deduction'];
+                    $hasAssignment = $master->payrollComponents()
+                        ->where('payroll_group_id', $employee->payroll_group_id)
+                        ->where('isActive', true)->whereIn('component_type', $targetDirection)->exists();
+                    if (!$hasAssignment) throw new DomainException('Legacy component cannot be mapped without an active same-direction assignment.');
+                }
                 if (Overrides::basic((string) ($matches[0]['name']??''))) throw new DomainException('Basic Pay cannot be overridden.');
             }
             $mode=$data['mode'];

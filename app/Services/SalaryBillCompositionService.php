@@ -116,7 +116,7 @@ final class SalaryBillCompositionService
                     $used[$ruleId]=true;
                     $current=$liveById->get($ruleId);
                     if (!$current) throw new DomainException('A saved arrear rule was unpublished or removed. Save a new workspace version.');
-                    foreach (['title','direction','mode','formula'] as $key) {
+                    foreach (['direction','mode','formula'] as $key) {
                         if ((string)($row[$key]??'') !== (string)($current[$key]??'')) {
                             throw new DomainException('Published arrear rule changed: '.$current['title'].'. Recalculate and save.');
                         }

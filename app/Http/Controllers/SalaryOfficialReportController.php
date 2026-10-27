@@ -79,6 +79,53 @@ final class SalaryOfficialReportController extends Controller
             }
             return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
         }
+        // Bulk preview must never print an incomplete or unitemized salary as payable.
+        // Other report types retain their existing selection and reconciliation behavior.
+        if ($validated['kind'] === 'bulk') {
+            $rows = array_values(array_filter($rows, static function (array $row): bool {
+                if (($row['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW'
+                    || !($row['details_complete'] ?? false)
+                    || !is_numeric($row['basic'] ?? null)
+                    || !is_numeric($row['net'] ?? null)
+                    || !is_numeric($row['current_gross'] ?? null)
+                    || !is_numeric($row['current_deductions'] ?? null)) {
+                    return false;
+                }
+                $canonical = [
+                    'BASIC_ARREAR_GROSS' => 'payable',
+                    'BASIC_INCREMENT_ADJUSTMENT' => 'deduction',
+                    'SPECIAL_BENEFIT_RECOVERY' => 'deduction',
+                    'HOUSE_RENT_RECOVERY' => 'deduction',
+                    'ADDITIONAL_GPF' => 'deduction',
+                ];
+                $payable = (float) ($row['arrear_payable'] ?? 0);
+                $deduct = (float) ($row['arrear_deductions'] ?? 0);
+                $arrearLines = $row['arrear_rows'] ?? [];
+                if (abs($payable) < 0.005 && abs($deduct) < 0.005 && !$arrearLines) {
+                    return true; // A genuinely regular-only saved bill needs no arrear entries.
+                }
+                if (!is_array($arrearLines)) return false;
+                $found = [];
+                foreach ($arrearLines as $item) {
+                    if (!is_array($item)) return false;
+                    $code = strtoupper(trim((string) ($item['code'] ?? '')));
+                    $amount = $item['final_amount'] ?? $item['amount'] ?? $item['total'] ?? null;
+                    if (!isset($canonical[$code]) || isset($found[$code])
+                        || ($item['direction'] ?? '') !== $canonical[$code]
+                        || !is_numeric($amount) || !is_finite((float) $amount) || (float) $amount < 0) return false;
+                    $found[$code] = round((float) $amount, 2);
+                }
+                if (count($found) !== count($canonical)) return false;
+                $sumDed = $found['BASIC_INCREMENT_ADJUSTMENT']
+                    + $found['SPECIAL_BENEFIT_RECOVERY']
+                    + $found['HOUSE_RENT_RECOVERY'] + $found['ADDITIONAL_GPF'];
+                return abs($found['BASIC_ARREAR_GROSS'] - $payable) < 0.011
+                    && abs($sumDed - $deduct) < 0.011;
+            }));
+        }
+        if ($validated['kind'] === 'bulk' && count($rows) === 0) {
+            return $this->reportError('No fully reconciled saved salary bill is eligible for this horizontal report. Incomplete/unverified salary rows were excluded.');
+        }
         $kind = $validated['kind'];
         $perPage = (int) ($validated['per_page'] ?? 15);
         $pages = $kind === 'bulk' ? array_chunk($rows, $perPage) : array_map(static fn ($row) => [$row], $rows);

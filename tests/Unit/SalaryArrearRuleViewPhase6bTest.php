@@ -37,4 +37,17 @@ final class SalaryArrearRuleViewPhase6bTest extends TestCase
         $modified=$source; $modified['formula']='REVISED_BASIC-PAID_BASIC';
         $this->assertTrue(SalaryArrearRuleView::hasPublishedChanges([$source],[$modified]));
     }
+    public function test_editing_display_title_does_not_change_canonical_arrear_identity(): void
+    {
+        $original=['rule_id'=>15,'title'=>'Basic Arrear', 'direction'=>'payable',
+            'mode'=>'formula','formula'=>'REVISED_BASIC-OLD_BASIC',
+            'months'=>['2026-07','2026-08','2026-09'],
+            'calculated_amount'=>27765,'error'=>null];
+        $renamed=$original;
+        $renamed['title']='Revised basic differential (display label)';
+        self::assertFalse(SalaryArrearRuleView::hasPublishedChanges([$original],[$renamed]));
+        $renamed['formula']='REVISED_BASIC-PAID_BASIC';
+        self::assertTrue(SalaryArrearRuleView::hasPublishedChanges([$original],[$renamed]));
+    }
+
 }

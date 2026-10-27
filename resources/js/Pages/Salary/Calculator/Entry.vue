@@ -20,6 +20,7 @@ const props = defineProps({
     saved: { type: Object, default: null },
     error: { type: String, default: null },
     componentOverrides: { type: Array, default: () => [] },
+    componentOptions: { type: Object, default: () => ({ addition: [], deduction: [] }) },
     componentOverrideHash: { type: String, default: "" },
     arrearRows: { type: Array, default: () => [] },
     unpublishedArrearTemplates: { type: Array, default: () => [] },
@@ -308,6 +309,36 @@ const removeRegular = (dir, index) => {
     if (dir === "addition" && isBasic(list.value[index])) return;
     list.value.splice(index, 1);
 };
+const newComponentSelection = ref({ addition: '', deduction: '' });
+const quickAddComponent = (direction) => {
+    const selected = Number(newComponentSelection.value[direction]);
+    const option = (props.componentOptions?.[direction] || []).find((item) => Number(item.id) === selected);
+    if (!option) return;
+    const list = direction === 'addition' ? additions : deductions;
+    const key = (item) => Number(item.payroll_component_type_id ?? item.payroll_component_type?.id ?? 0);
+    if (list.value.some((item) => key(item) === selected ||
+        String(item.name || '').trim().toLowerCase() === String(option.source_name || option.name).trim().toLowerCase())) {
+        newComponentSelection.value[direction] = '';
+        return;
+    }
+    list.value.push({
+        name: option.source_name || option.name,
+        payroll_component_type_id: option.id,
+        calcType: option.calcType || 'fixed',
+        amount: Number(option.amount ?? 0),
+    });
+    newComponentSelection.value[direction] = '';
+};
+const resetRegularRow = (direction, index) => {
+    const list = direction === 'addition' ? additions : deductions;
+    const original = (direction === 'addition' ? initialAdds : initialDeds).find((item) =>
+        Number(item.payroll_component_type_id ?? item.payroll_component_type?.id ?? 0) > 0 &&
+        Number(item.payroll_component_type_id ?? item.payroll_component_type?.id) ===
+        Number(list.value[index]?.payroll_component_type_id ?? list.value[index]?.payroll_component_type?.id)) ||
+        (direction === 'addition' ? initialAdds : initialDeds).find((item) =>
+            item.name === list.value[index]?.name);
+    if (original) list.value[index] = clone(original);
+};
 const addArrear = (dir) =>
     arrears.value.push({
         rule_id: null,
@@ -317,7 +348,8 @@ const addArrear = (dir) =>
         formula: "",
         amount: 0,
         calculated_amount: null,
-        final_amount: 0,
+        // No evidence was entered yet: zero is never an assumed verified value.
+        final_amount: null,
         months: [],
         reason: "",
         evidence_reference: "",
@@ -389,7 +421,8 @@ const recalculateArrear = async () => {
     }
 };
 const save = async (selectedStatus) => {
-    if (validation.value) {
+    // Draft is an editable workspace. Financial validation applies to approval/posting.
+    if (selectedStatus === "approved" && validation.value) {
         error.value = validation.value;
         return;
     }
@@ -423,6 +456,7 @@ const save = async (selectedStatus) => {
                 : { type: "disabled", amount: 0 },
             arrear_rows: arrears.value.map((r) => ({
                 rule_id: r.rule_id,
+                code: r.code || null,
                 title: r.title,
                 direction: r.direction,
                 mode: r.mode,
@@ -465,6 +499,23 @@ const save = async (selectedStatus) => {
             "Unable to save calculation.";
     } finally {
         saving.value = false;
+    }
+};
+const regularOnlyLoading = ref(false);
+const regularOnlyResult = ref(null);
+const showRegularOnly = async () => {
+    regularOnlyLoading.value = true;
+    regularOnlyResult.value = null;
+    error.value = '';
+    try {
+        const response = await axios.get(route('salary-calculator.regular-only-preview', {
+            user: props.employee.id,
+        }), { params: { year: props.period.year, month: props.period.month } });
+        regularOnlyResult.value = response.data;
+    } catch (e) {
+        error.value = e.response?.data?.message || 'Unable to load server regular-only preview.';
+    } finally {
+        regularOnlyLoading.value = false;
     }
 };
 const posting = ref(false);
@@ -674,6 +725,33 @@ const printAs = (variant) => {
 // Step 03: replaces one regular employee component for the selected month only.
 const componentEditor = ref(null),
     overrideSaving = ref(false);
+const componentSearch = ref("");
+const filteredMasterOptions = computed(() => {
+    const direction = componentEditor.value?.direction;
+    const options = props.componentOptions?.[direction] || [];
+    const q = componentSearch.value.trim().toLowerCase();
+    return options.filter((option) =>
+        !q || String(option.name).toLowerCase().includes(q) ||
+        String(option.id) === q ||
+        Number(option.id) === Number(componentEditor.value?.payroll_component_type_id),
+    );
+});
+const selectOverrideMaster = (event) => {
+    const id = Number(event.target.value);
+    if (!id || !componentEditor.value) return;
+    const direction = componentEditor.value.direction;
+    const master = (props.componentOptions?.[direction] || []).find((r) => Number(r.id) === id);
+    if (!master) return;
+    const row = (direction === 'addition' ? additions.value : deductions.value)
+        .find((r) => Number(r.payroll_component_type_id ?? r.payroll_component_type?.id) === id ||
+            (!Number(r.payroll_component_type_id ?? r.payroll_component_type?.id) &&
+                String(r.name).trim().toLowerCase() === String(master.source_name).trim().toLowerCase()));
+    if (!row) {
+        error.value = 'Selected component is not effective for this employee and direction.';
+        return;
+    }
+    editComponent({ ...row, name: master.name, payroll_component_type_id: id }, direction, false);
+};
 const overrideKey = (r, dir) => {
     const id = Number(
         r.payroll_component_type_id ?? r.payroll_component_type?.id ?? 0,
@@ -697,17 +775,22 @@ const matchingOverride = (r, dir) => {
 };
 const editComponent = (r, dir, custom = false) => {
     if (isBasic(r)) return;
+    componentSearch.value = '';
+    // New regular rows must select an existing configured component, not invent a name.
+    if (!String(r?.name || '').trim()) custom = false;
     custom =
         custom || String(r?.override_component_key || "").startsWith("custom:");
     const old = custom ? null : matchingOverride(r, dir);
+    const rowId = Number(r.payroll_component_type_id ?? r.payroll_component_type?.id ?? 0);
+    const option = (props.componentOptions?.[dir] || []).find((x) =>
+        Number(x.id) === rowId || (rowId === 0 &&
+            String(x.source_name).trim().toLowerCase() === String(r.name).trim().toLowerCase()));
+    // Keep existing legacy override identity until reconciled, never auto-upgrade.
+    const masterId = old && !old.payroll_component_type_id ? null : (rowId || option?.id || null);
     componentEditor.value = {
         direction: dir,
-        component_name: r.name || "",
-        payroll_component_type_id: custom
-            ? null
-            : (r.payroll_component_type_id ??
-              r.payroll_component_type?.id ??
-              null),
+        component_name: masterId ? (option?.name || r.name || '') : (r.name || ''),
+        payroll_component_type_id: custom ? null : masterId,
         custom,
         mode: old?.mode || "manual",
         calc_type: old?.calc_type || r.calcType || "fixed",
@@ -724,6 +807,10 @@ const editComponent = (r, dir, custom = false) => {
         reason: old?.reason || "",
         evidence_reference: old?.evidence_reference || "",
         expected_revision: Number(old?.revision || 0),
+        // Show the live effective rate, not a possibly stale legacy default_amount.
+        // Once an override has been applied, do not infer its pre-override rate.
+        configured_calc_type: r.component_source === 'employee_month_override' ? null : r.calcType ?? null,
+        configured_value: r.component_source === 'employee_month_override' ? null : r.amount ?? null,
     };
 };
 const savedDisabled = computed(() =>
@@ -781,8 +868,9 @@ const saveComponentOverride = async () => {
             text: response.data.message,
         });
         // Fetch authoritative server projection; never let stale saved snapshots mask the new override.
-        window.removeEventListener("beforeunload", beforeUnload);
-        window.location.reload();
+        // The quick editor does not navigate away from the current workspace.
+        // The saved override will be reflected after the next authoritative page load.
+
     } catch (e) {
         error.value =
             e.response?.data?.message ||
@@ -832,12 +920,20 @@ const saveComponentOverride = async () => {
                 class="sticky top-12 z-20 rounded-xl border bg-white/95 shadow-sm p-3 flex flex-wrap gap-2 items-center"
             >
                 <button
-                    :disabled="saving || !!validation"
+                    :disabled="saving"
                     @click="save('draft')"
                     class="px-4 py-2 rounded bg-emerald-700 text-white disabled:opacity-40"
                 >
                     Save Draft
                 </button>
+                <span v-if="regularOnlyResult" role="status" class="text-xs px-2 py-1 rounded border border-teal-300 bg-teal-50 text-teal-950">
+                    REGULAR ONLY / READ-ONLY · {{ regularOnlyResult.status }} ·
+                    Gross ৳{{ regularOnlyResult.regular_gross === null ? '0.00 (unverified)' : money(regularOnlyResult.regular_gross) }} ·
+                    Deduction ৳{{ regularOnlyResult.regular_deductions === null ? '0.00 (unverified)' : money(regularOnlyResult.regular_deductions) }} ·
+                    Net ৳{{ regularOnlyResult.regular_net === null ? '0.00 (unverified)' : money(regularOnlyResult.regular_net) }}
+                    <span v-if="regularOnlyResult.blocking_reasons?.length"> · {{ regularOnlyResult.blocking_reasons.join('; ') }}</span>
+                    · No bill, arrear or GPF posted.
+                </span>
                 <button
                     :disabled="saving || !!validation || !!arrearUnknown.length"
                     @click="save('approved')"
@@ -858,6 +954,10 @@ const saveComponentOverride = async () => {
                     title="Posts server-verified salary and GPF once"
                 >
                     {{ posting ? "Generating..." : "Generate Bill" }}
+                </button>
+                <button type="button" :disabled="regularOnlyLoading" @click="showRegularOnly"
+                    class="px-4 py-2 rounded border border-teal-600 text-teal-800 disabled:opacity-40">
+                    {{ regularOnlyLoading ? 'Checking regular salary…' : 'Preview Regular Only' }}
                 </button>
                 <button
                     @click="csvDownload"
@@ -921,482 +1021,75 @@ const saveComponentOverride = async () => {
                     <p class="font-semibold">{{ r[1] }}</p>
                 </div>
             </section>
-            <section class="grid lg:grid-cols-2 gap-4">
-                <div
-                    class="rounded-xl overflow-hidden border border-emerald-200 bg-white"
-                >
-                    <div
-                        class="p-4 bg-emerald-50 flex justify-between font-semibold text-emerald-800"
-                    >
-                        <h2>+ Configured Allowances / Additions</h2>
-                        <span>৳{{ money(gross) }}</span>
+            <section class="grid lg:grid-cols-2 gap-4" aria-label="Quick salary components editor">
+                <div v-for="direction in ['addition', 'deduction']" :key="direction"
+                    class="rounded-xl border bg-white overflow-hidden"
+                    :class="direction === 'addition' ? 'border-emerald-300' : 'border-rose-300'">
+                    <div class="flex items-center justify-between px-4 py-3 font-bold"
+                        :class="direction === 'addition' ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'">
+                        <h2>{{ direction === 'addition' ? '+ Configured Allowances / Additions' : '− Configured Deductions' }}</h2>
+                        <span>৳{{ money(direction === 'addition' ? gross : normalDeduction) }}</span>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th style="width:35%" class="p-2 text-left">Title</th>
-                                    <th style="width:15%" class="p-2">Type</th>
-                                    <th style="width:15%" class="p-2">Value</th>
-                                    <th style="width:15%" class="p-2">Total</th>
-                                    <th style="width:15%" class="p-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="(r, i) in additions"
-                                    :key="i"
-                                    class="border-t"
-                                >
-                                    <td class="p-2">
-                                        <p>{{ r.name }}</p>
-                                        <!-- <input
-                                            v-model="r.name"
-                                            :readonly="isBasic(r)"
-                                            class="rounded border-slate-200 text-xs w-full"
-                                        /> -->
-                                        <div
-                                            v-if="r.component_source"
-                                            class="text-[10px] text-slate-500"
-                                        >
-                                            {{
-                                                r.component_source ===
-                                                "published_effective_rule"
-                                                    ? "Published effective rule"
-                                                    : r.component_source
-                                            }}
-                                        </div>
-                                    </td>
-                                    <td class="p-2">
-                                        <select
-                                            v-model="r.calcType"
-                                            :disabled="isBasic(r)"
-                                            class="text-xs rounded border-slate-200"
-                                        >
-                                            <option value="fixed">Fixed</option>
-                                            <option value="percentage">
-                                                % Basic
-                                            </option>
-                                        </select>
-                                    </td>
-                                    <td class="p-2">
-                                        <input
-                                            v-model.number="r.amount"
-                                            :readonly="isBasic(r)"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            class="rounded border-slate-200 text-xs text-right w-24"
-                                        />
-                                    </td>
-                                    <td
-                                        class="p-2 text-right text-emerald-700 font-semibold"
-                                    >
-                                        ৳{{ money(amountOf(r)) }}
-                                    </td>
-                                    <td class="p-2">
-                                        <button
-                                            v-if="!isBasic(r)"
-                                            @click="
-                                                editComponent(r, 'addition')
-                                            "
-                                            class="text-xs text-blue-700 underline mr-2"
-                                        >
-                                            Override</button
-                                        ><button
-                                            v-if="!isBasic(r)"
-                                            @click="
-                                                removeRegular('addition', i)
-                                            "
-                                            aria-label="Remove allowance"
-                                            title="Remove"
-                                            class="text-rose-600"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="18"
-                                                height="18"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path :d="trashSvg" />
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="!additions.length">
-                                    <td colspan="7" class="p-4 text-rose-700">
-                                        Basic / Payroll Components are not
-                                        configured. Approved Basic can be
-                                        supplied by the fixation resolver; other
-                                        values are not invented.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <p class="p-3 text-xs text-slate-500">
-                        Add/publish new regular components from Payroll & Arrear
-                        Settings; existing optional rows remain removable.
-                    </p>
-                    <button
-                        type="button"
-                        class="mx-3 mb-3 text-xs underline text-blue-700"
-                        @click="
-                            editComponent(
-                                { name: '', calcType: 'fixed', amount: 0 },
-                                'addition',
-                                true,
-                            )
-                        "
-                    >
-                        + Employee-specific addition
-                    </button>
-                </div>
-                <div
-                    class="rounded-xl overflow-hidden border border-rose-200 bg-white"
-                >
-                    <div
-                        class="p-4 bg-rose-50 flex justify-between font-semibold text-rose-800"
-                    >
-                        <h2>− Configured Deductions</h2>
-                        <span>৳{{ money(normalDeduction) }}</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="p-2 text-left">Title</th>
-                                    <th class="p-2">Type</th>
-                                    <th class="p-2">Value</th>
-                                    <th class="p-2">Total</th>
-                                    <th class="p-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="(r, i) in deductions"
-                                    :key="i"
-                                    class="border-t"
-                                >
-                                    <td class="p-2">
-                                        <p>{{ r.name }}</p>
-                                        <div
-                                            v-if="r.component_source"
-                                            class="text-[10px] text-slate-500"
-                                        >
-                                            {{
-                                                r.component_source ===
-                                                "published_effective_rule"
-                                                    ? "Published effective rule"
-                                                    : r.component_source
-                                            }}
-                                        </div>
-                                    </td>
-                                    <td class="p-2">
-                                        <select
-                                            v-model="r.calcType"
-                                            class="text-xs rounded border-slate-200"
-                                        >
-                                            <option value="fixed">Fixed</option>
-                                            <option value="percentage">
-                                                % Basic
-                                            </option>
-                                        </select>
-                                    </td>
-                                    <td class="p-2">
-                                        <input
-                                            v-model.number="r.amount"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            class="rounded border-slate-200 text-xs text-right w-24"
-                                        />
-                                    </td>
-                                    <td
-                                        class="p-2 text-right text-rose-700 font-semibold"
-                                    >
-                                        ৳{{ money(amountOf(r)) }}
-                                    </td>
-                                    <td class="p-2">
-                                        <button
-                                            @click="
-                                                editComponent(r, 'deduction')
-                                            "
-                                            class="text-xs text-blue-700 underline mr-2"
-                                        >
-                                            Override</button
-                                        ><button
-                                            @click="
-                                                removeRegular('deduction', i)
-                                            "
-                                            aria-label="Remove deduction"
-                                            title="Remove"
-                                            class="text-rose-600"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="18"
-                                                height="18"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path :d="trashSvg" />
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="hasGpf" class="border-t bg-rose-50">
-                                    <td class="p-2 text-xs font-semibold">
-                                        General Provident Fund (GPF)
-                                    </td>
-                                    <td class="p-2">
-                                        <select
-                                            v-model="gpfMode"
-                                            class="rounded border-slate-200 text-xs"
-                                        >
-                                            <option value="default">
-                                                Default 10%
-                                            </option>
-                                            <option value="percentage">
-                                                Override %
-                                            </option>
-                                            <option value="fixed">Fixed</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-2">
-                                        <input
-                                            v-model.number="gpfAmount"
-                                            :disabled="gpfMode === 'default'"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            class="rounded border-slate-200 w-24 text-right text-xs"
-                                        />
-                                    </td>
-                                    <td
-                                        class="p-2 text-right text-rose-700 font-semibold"
-                                    >
-                                        − ৳{{ money(gpf) }}
-                                    </td>
-                                    <td class="p-2 text-right text-slate-500">
-                                        ৳0.00
-                                    </td>
-                                    <td
-                                        class="p-2 text-right text-rose-700 font-semibold"
-                                    >
-                                        ৳{{ money(gpf) }}
-                                    </td>
-                                    <td class="p-2">
-                                        <button
-                                            @click="
-                                                editComponent(
-                                                    configuredGpf,
-                                                    'deduction',
-                                                )
-                                            "
-                                            class="text-xs text-blue-700 underline mr-2"
-                                        >
-                                            Override</button
-                                        ><button
-                                            @click="hasGpf = false"
-                                            title="Remove GPF"
-                                            aria-label="Remove GPF"
-                                            class="text-rose-600"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="18"
-                                                height="18"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="1.8"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path :d="trashSvg" />
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <button
-                        type="button"
-                        class="mx-3 mt-3 text-xs underline text-blue-700"
-                        @click="
-                            editComponent(
-                                { name: '', calcType: 'fixed', amount: 0 },
-                                'deduction',
-                                true,
-                            )
-                        "
-                    >
-                        + Employee-specific deduction
-                    </button>
-                    <p class="p-3 text-xs text-slate-500">
-                        GPF follows the effective employee rule
-                        (Fixed/Percentage) using HALF UP. Additional arrear GPF
-                        is separate.
-                    </p>
-                </div>
-            </section>
-            <section
-                v-if="savedDisabled.length"
-                class="border rounded-lg bg-white p-3 text-xs space-y-2"
-            >
-                <strong>Disabled monthly components</strong>
-                <div
-                    v-for="o in savedDisabled"
-                    :key="o.id"
-                    class="flex justify-between items-center"
-                >
-                    <span>{{ o.component_title }} ({{ o.direction }})</span
-                    ><button
-                        class="text-blue-700 underline"
-                        @click="openDisabled(o)"
-                    >
-                        Reset to Automatic
-                    </button>
-                </div>
-            </section>
-            <section
-                v-if="componentEditor"
-                class="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Monthly salary component override"
-            >
-                <form
-                    @submit.prevent="saveComponentOverride"
-                    class="bg-white rounded-xl shadow-lg p-5 max-w-lg mx-auto my-10 space-y-3 text-sm"
-                >
-                    <div class="flex justify-between">
-                        <h3 class="text-lg font-bold">
-                            Employee Component Override
-                        </h3>
-                        <button type="button" @click="componentEditor = null">
-                            ✕
-                        </button>
-                    </div>
-                    <p class="text-xs text-slate-600">
-                        {{ employee.name }} · {{ monthName }}
-                        {{ period.year }} · {{ componentEditor.direction }}
-                    </p>
-                    <label class="block"
-                        >Component Title<input
-                            v-model="componentEditor.component_name"
-                            :readonly="!componentEditor.custom"
-                            required
-                            maxlength="160"
-                            class="w-full rounded border-slate-300"
-                    /></label>
-                    <label class="block"
-                        >Mode<select
-                            v-model="componentEditor.mode"
-                            class="block w-full rounded border-slate-300"
-                        >
-                            <option value="automatic">
-                                Reset to Automatic
-                            </option>
-                            <option value="manual">Manual Override</option>
-                            <option value="disabled">
-                                Disabled for this month
-                            </option>
-                        </select></label
-                    >
-                    <template v-if="componentEditor.mode === 'manual'">
-                        <div class="grid grid-cols-2 gap-3">
-                            <label
-                                >Calculation Type<select
-                                    v-model="componentEditor.calc_type"
-                                    class="w-full rounded border-slate-300"
-                                >
-                                    <option value="fixed">Fixed</option>
-                                    <option value="percentage">
-                                        Percentage
-                                    </option>
-                                </select></label
-                            ><label
-                                >Value / Rate<input
-                                    v-model.number="componentEditor.value"
-                                    required
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    class="w-full rounded border-slate-300"
-                            /></label>
+                    <div class="space-y-2 p-3">
+                        <div v-for="(row, index) in (direction === 'addition' ? additions : deductions)" :key="index"
+                            class="rounded-lg border border-slate-200 p-3 space-y-2">
+                            <input v-model="row.name" type="text" maxlength="160"
+                                :readonly="direction === 'addition' && isBasic(row)"
+                                aria-label="Component title"
+                                class="w-full rounded-lg border-slate-300 text-sm font-medium" placeholder="Component title" />
+                            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 items-center">
+                                <select v-model="row.calcType" :disabled="direction === 'addition' && isBasic(row)"
+                                    aria-label="Calculation type" class="w-full rounded-lg border-slate-300 text-sm">
+                                    <option value="fixed">Fixed</option><option value="percentage">Percentage (%)</option>
+                                </select>
+                                <input v-model.number="row.amount" type="number" step="0.01" min="0"
+                                    :readonly="direction === 'addition' && isBasic(row)"
+                                    aria-label="Component value" class="w-full rounded-lg border-slate-300 text-right text-sm" />
+                                <div class="flex gap-1 items-center">
+                                    <button type="button" @click="resetRegularRow(direction, index)"
+                                        :disabled="direction === 'addition' && isBasic(row)" title="Reset to initial value"
+                                        class="rounded border border-slate-200 px-2 py-2 text-slate-600 disabled:opacity-30" aria-label="Reset component">↺</button>
+                                    <button type="button" @click="removeRegular(direction, index)"
+                                        :disabled="direction === 'addition' && isBasic(row)" title="Delete component"
+                                        class="rounded border border-rose-200 px-2 py-2 text-rose-700 disabled:opacity-30" aria-label="Delete component">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path :d="trashSvg" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-xs text-right" :class="direction === 'addition' ? 'text-emerald-700' : 'text-rose-700'">
+                                Calculated: ৳{{ money(amountOf(row)) }}
+                            </div>
                         </div>
-                        <label
-                            v-if="componentEditor.calc_type === 'percentage'"
-                            class="block"
-                            >Calculation Base<select
-                                v-model="componentEditor.basis"
-                                class="block w-full rounded border-slate-300"
-                            >
-                                <option value="payable_basic">
-                                    Effective Basic
-                                </option>
-                                <option value="legacy_basic">
-                                    Legacy Basic (documented)
-                                </option>
-                            </select></label
-                        >
-                        <label
-                            v-if="
-                                componentEditor.calc_type === 'percentage' &&
-                                componentEditor.basis === 'legacy_basic'
-                            "
-                            class="block"
-                            >Verified Legacy Basic Reference<input
-                                v-model.number="
-                                    componentEditor.legacy_basic_reference
-                                "
-                                type="number"
-                                required
-                                min="0.01"
-                                step="0.01"
-                                class="w-full rounded border-slate-300"
-                        /></label>
-                    </template>
-                    <label class="block"
-                        >Reason (optional)<textarea
-                            v-model="componentEditor.reason"
-                            maxlength="2000"
-                            rows="2"
-                            class="w-full rounded border-slate-300"
-                        />
-                    </label>
-                    <label class="block"
-                        >Evidence Reference (optional)<input
-                            v-model="componentEditor.evidence_reference"
-                            maxlength="500"
-                            class="w-full rounded border-slate-300"
-                    /></label>
-                    <p class="text-xs text-amber-800">
-                        Only this employee and salary month change. Saving never
-                        posts a bill, arrear or GPF ledger entry. Save a new
-                        salary calculation version afterward.
-                    </p>
-                    <div class="flex justify-end gap-2">
-                        <button
-                            type="button"
-                            @click="componentEditor = null"
-                            class="border rounded px-4 py-2"
-                        >
-                            Cancel</button
-                        ><button
-                            :disabled="overrideSaving"
-                            class="bg-emerald-700 text-white rounded px-4 py-2 disabled:opacity-50"
-                        >
-                            {{ overrideSaving ? "Saving…" : "Save Override" }}
-                        </button>
+                        <div v-if="direction === 'deduction' && hasGpf" class="rounded-lg border border-rose-200 bg-rose-50 p-3 space-y-2">
+                            <input type="text" value="General Provident Fund (GPF)" readonly class="w-full rounded border-slate-300 text-sm bg-white" />
+                            <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 items-center">
+                                <select v-model="gpfMode" aria-label="GPF calculation type" class="w-full rounded border-slate-300 text-sm">
+                                    <option value="default">Default 10%</option><option value="percentage">Percentage (%)</option><option value="fixed">Fixed</option>
+                                </select>
+                                <input v-model.number="gpfAmount" :disabled="gpfMode === 'default'" type="number" min="0" step="0.01"
+                                    aria-label="GPF value" class="w-full rounded border-slate-300 text-right text-sm" />
+                                <button type="button" @click="hasGpf = false" title="Remove GPF" aria-label="Remove GPF"
+                                    class="rounded border border-rose-200 px-2 py-2 text-rose-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path :d="trashSvg" /></svg>
+                                </button>
+                            </div>
+                            <div class="text-xs text-right text-rose-700">Calculated: ৳{{ money(gpf) }}</div>
+                        </div>
+                        <button v-if="direction === 'deduction' && !hasGpf" type="button" @click="hasGpf = true"
+                            class="text-sm underline text-rose-800">+ Restore GPF</button>
+                        <div class="flex flex-wrap items-center gap-2 pt-2 border-t">
+                            <select v-model="newComponentSelection[direction]" :aria-label="'Add ' + direction + ' component'"
+                                class="flex-1 min-w-40 rounded-lg border-slate-300 text-sm">
+                                <option value="">Select saved component…</option>
+                                <option v-for="option in (componentOptions?.[direction] || [])" :key="option.id"
+                                    :value="String(option.id)">{{ option.name }}</option>
+                            </select>
+                            <button type="button" @click="quickAddComponent(direction)" :disabled="!newComponentSelection[direction]"
+                                class="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                                :class="direction === 'addition' ? 'bg-emerald-700' : 'bg-rose-700'">+ Add</button>
+                        </div>
                     </div>
-                </form>
+                </div>
             </section>
             <section class="rounded-xl border bg-white p-4 space-y-3">
                 <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1404,14 +1097,6 @@ const saveComponentOverride = async () => {
                         <h2 class="text-lg font-bold">
                             Arrear Payable & Deductions
                         </h2>
-                        <p class="text-xs text-slate-500">
-                            October 2026: structured 2015/2026 Pay Scale
-                            entitlement for July–September. Old formula records
-                            are retained for audit but not used to calculate the
-                            five standard arrear components. Payment-dependent
-                            amounts display as 0.00 (unverified) until
-                            documented or manually confirmed.
-                        </p>
                     </div>
                     <button
                         @click="recalculateArrear"
@@ -1420,16 +1105,6 @@ const saveComponentOverride = async () => {
                     >
                         Refresh automatic arrear
                     </button>
-                </div>
-                <div v-if="props.effective.source !== 'approved_fixation'" class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="status">
-                    <strong>Revised salary fixation is not approved for this employee/period.</strong>
-                    Current Basic is from the {{ props.effective.source === 'legacy_employee_setup' ? '2015 legacy setup' : 'existing salary setup' }}.
-                    A July–September arrear requires an approved revised Basic and historical payroll evidence; the calculator will not manufacture a difference from the old Basic.
-                    Check Salary Fixation and the employee's June–September historical bills, then refresh.
-                </div>
-                <div v-if="arrearUnknown.length" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-                    <strong>{{ arrearUnknown.length }} of {{ arrears.length }} arrear rows need evidence.</strong>
-                    <span class="block text-xs text-slate-600">A displayed 0.00 is only a placeholder, not a verified zero or payable balance. Open an individual row's audit details for its precise source reason.</span>
                 </div>
                 <div class="grid lg:grid-cols-2 gap-4">
                     <div
@@ -1468,90 +1143,18 @@ const saveComponentOverride = async () => {
                                 v-if="r.direction === dir"
                                 class="border-t p-3 space-y-2 text-xs"
                             >
-                                <div class="flex gap-2">
-                                    <input
-                                        v-model="r.title"
-                                        class="flex-1 rounded border-slate-300 text-sm"
-                                        placeholder="Component title"
-                                    /><button
-                                        @click="removeArrear(i)"
-                                        title="Remove arrear row"
-                                        aria-label="Remove arrear"
-                                        class="text-rose-700"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="18"
-                                            height="18"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path :d="trashSvg" />
-                                        </svg>
+                                <input v-model="r.title" type="text" maxlength="160"
+                                    class="w-full rounded-lg border-slate-300 text-sm" placeholder="Arrear component title" />
+                                <div class="flex items-center gap-2">
+                                    <input v-model.number="r.final_amount" type="number" min="0" step="0.01"
+                                        aria-label="Arrear amount" class="flex-1 min-w-0 rounded-lg border-slate-300 text-sm text-right"
+                                        placeholder="Amount (BDT)" />
+                                    <button type="button" @click="removeArrear(i)" title="Delete arrear component"
+                                        aria-label="Delete arrear component" class="rounded border border-rose-200 px-3 py-2 text-rose-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path :d="trashSvg" /></svg>
                                     </button>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
-                                    <label class="text-xs font-medium text-slate-600">Editable Amount (BDT)
-                                        <input v-model.number="r.final_amount" type="number" min="0" step="0.01"
-                                            class="block w-full rounded border-slate-300 text-sm text-right"
-                                            :placeholder="r.calculated_amount === null ? 'Enter documented amount' : 'Amount'" />
-                                    </label>
-                                    <label class="text-xs font-medium text-slate-600">Note
-                                        <input v-model="r.reason" type="text" maxlength="2000"
-                                            class="block w-full rounded border-slate-300 text-sm"
-                                            placeholder="Reason or adjustment note" />
-                                    </label>
-                                </div>
-                                <div v-if="r.calculated_amount === null" class="text-xs text-amber-800">
-                                    Historical/revised source incomplete. Amount is unverified; 0.00 is not evidence of zero.
-                                </div>
-                                <details v-if="overridden(r)" class="text-xs rounded border border-slate-200 px-2 py-1">
-                                    <summary class="cursor-pointer text-slate-600">Evidence reference required to save an override</summary>
-                                    <input v-model="r.evidence_reference" placeholder="HR memo / reference number"
-                                        class="mt-2 w-full rounded border-slate-300 text-xs" />
-                                </details>
                             </div>
-                        </div>
-                        <div
-                            v-for="rule in unpublishedArrearTemplates.filter(
-                                (t) =>
-                                    t.direction === dir &&
-                                    !arrears.some(
-                                        (r) =>
-                                            Number(r.rule_id) === Number(t.id),
-                                    ),
-                            )"
-                            :key="'unpublished-' + rule.id"
-                            class="border-t border-amber-200 bg-amber-50 p-3 text-xs"
-                            aria-label="Unpublished arrear template not included in totals"
-                        >
-                            <div
-                                class="flex justify-between flex-wrap gap-2 items-center"
-                            >
-                                <strong class="text-amber-900"
-                                    >{{ dir === "payable" ? "+" : "−" }}
-                                    {{ rule.title }}</strong
-                                ><span class="font-bold text-amber-800"
-                                    >UNPUBLISHED · NOT PAYABLE</span
-                                >
-                            </div>
-                            <p class="mt-1 text-slate-600">
-                                Template only; no amount is calculated or
-                                included in Net Salary.
-                                {{ rule.start_month?.slice(0, 7) }} to
-                                {{ rule.end_month?.slice(0, 7) }}
-                            </p>
-                            <code
-                                class="block mt-1 text-slate-700 whitespace-pre-wrap break-all"
-                                >{{ rule.formula }}</code
-                            >
-                            <Link
-                                :href="route('salary-arrear-settings.index')"
-                                class="underline text-amber-900 inline-block mt-2"
-                                >Review/publish in Arrear Settings</Link
-                            >
                         </div>
                         <button
                             @click="addArrear(dir)"

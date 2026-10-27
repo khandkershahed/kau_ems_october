@@ -90,7 +90,12 @@ final class SalaryEmployeeComponentOverrideService
                 if (isset($row['manual_adjustment_id'])) continue;
                 $typeId = (int) ($row['payroll_component_type_id'] ?? $row['payroll_component_type']['id'] ?? 0);
                 $rowName = (string) ($row['name'] ?? '');
-                if ($key === self::key($typeId ?: null, $rowName)) $matches[] = $i;
+                if ($key === self::key($typeId ?: null, $rowName)
+                    || ($typeId === 0 && (int) ($o['payroll_component_type_id'] ?? 0) > 0
+                        && $key === 'type:'.(int) $o['payroll_component_type_id']
+                        && strcasecmp(trim($rowName), trim((string) ($o['component_title'] ?? ''))) === 0)) {
+                    $matches[] = $i;
+                }
             }
             if (count($matches) > 1) throw new DomainException('Duplicate component rows for employee override: '.$o['component_title']);
             $isCustom = str_starts_with($key, 'custom:');

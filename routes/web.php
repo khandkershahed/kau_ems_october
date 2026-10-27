@@ -114,6 +114,7 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/salary/arrear-settings/preview', [\App\Http\Controllers\SalaryArrearSettingsController::class, 'preview'])->name('salary-arrear-settings.rules.preview');
     Route::post('/salary/arrear-settings/components', [\App\Http\Controllers\SalaryArrearSettingsController::class, 'saveComponent'])->name('salary-arrear-settings.components.store');
     Route::get('/salary/calculator/{user}', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'show'])->name('salary-calculator.show');
+    Route::get('/salary/calculator/{user}/regular-only-preview', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'previewRegularOnly'])->name('salary-calculator.regular-only-preview');
     Route::post('/salary/calculator/{user}/generate-bill', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'generateBill'])->name('salary-calculator.generate-bill');
     Route::post('/salary/calculator/{user}/component-override', [\App\Http\Controllers\SalaryEmployeeComponentOverrideController::class, 'save'])->name('salary-calculator.component-override');
     Route::post('/salary/calculator/{user}/versions', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'save'])->name('salary-calculator.versions.store');
