@@ -16,6 +16,16 @@ final class SalaryBillPostingService
         return app(SalaryBillCompositionService::class)->compose($userId,$year,$month);
     }
 
+    /** October 2026 regular-only, read-only preview. Arrears are reported as
+     * readiness metadata and excluded from totals. This NEVER bypasses the
+     * financial guards in post()/previewForPosting(): posting still uses the
+     * full compose() source with server-side recomputation.
+     */
+    public function previewRegularOnly(int $userId, int $year, int $month): array
+    {
+        return app(SalaryBillCompositionService::class)->composeRegularOnly($userId,$year,$month);
+    }
+
     /** Pure read-only posting feasibility screen. The posting transaction still
      * performs all decisive duplicate/GPF/arrear checks under its employee lock.
      */

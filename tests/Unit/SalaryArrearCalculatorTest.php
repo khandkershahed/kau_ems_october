@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Console\Commands\CorrectSeptember20057;
 use App\Services\SalaryArrearCalculator;
 use App\Services\SalaryStructuredArrearService;
 use DomainException;
@@ -292,9 +293,222 @@ class SalaryArrearCalculatorTest extends TestCase
         $this->assertStringContainsString("'PAYMENT_UNVERIFIED', 'UNKNOWN', 'SOURCE_CONFLICT_REVIEW_REQUIRED'", $src);
     }
 
+    /** Step 3B-R: only employee 20057 / 5850 / 9 / 2026 is eligible. */
+    public function test_correction_scope_only_accepts_20057_september_2026(): void
+    {
+        $bill = (object)['user_id' => 58, 'monthId' => 9, 'salaryGenerationYear' => 2026];
+        $this->assertNull(CorrectSeptember20057::validateContext($bill));
+        $this->assertNotNull(CorrectSeptember20057::validateContext((object)['user_id' => 424, 'monthId' => 9, 'salaryGenerationYear' => 2026]));
+        $this->assertNotNull(CorrectSeptember20057::validateContext((object)['user_id' => 58, 'monthId' => 8, 'salaryGenerationYear' => 2026]));
+        $this->assertNotNull(CorrectSeptember20057::validateContext((object)['user_id' => 58, 'monthId' => 9, 'salaryGenerationYear' => 2025]));
+    }
 
-/** Phase 3B cleanup marker */
+    /** Step 3B-R: changed record fingerprint is detected (pure helper). */
+    public function test_fingerprint_changes_detect_record_mutation(): void
+    {
+        $before = (object)['id' => 5850, 'totalAllowance' => 70027.00, 'salaryTotal' => 51564.50];
+        $fp1 = CorrectSeptember20057::fingerprint($before);
+        $this->assertSame($fp1, CorrectSeptember20057::fingerprint($before));
+        $after = (object)['id' => 5850, 'totalAllowance' => 33136.00, 'salaryTotal' => 31180.00];
+        $this->assertNotSame($fp1, CorrectSeptember20057::fingerprint($after));
+    }
 
+    /** Step 3B-R: canonical payload reconciles exactly to the September PDF. */
+    public function test_expected_payload_matches_september_pdf(): void
+    {
+        $p = CorrectSeptember20057::expectedPayload();
+        $this->assertSame(33136.0, $p['totalAllowance']);
+        $this->assertSame(1956.0, $p['totalDeduction']);
+        $this->assertSame(31180.0, $p['salaryTotal']);
+        $this->assertSame($p['totalAllowance'] - $p['totalDeduction'], $p['salaryTotal']);
+        $this->assertSame(1946.0, $p['gpfDeduction']);
+        $basic = 0.0;
+        foreach ($p['salaryAllowanceCalcObject'] as $item) {
+            if ($item['name'] === 'Basic Pay') $basic += $item['calculated_amount'];
+        }
+        $this->assertSame(19460.0, $basic); // no arrear inside allowances
+    }
+
+    /** Step 3B-S: approved bills are refused (downstream dependency guard). */
+    public function test_dependency_issues_refuse_approved_bill(): void
+    {
+        $issues = CorrectSeptember20057::dependencyIssues((object)['reviewStatus' => 'approved']);
+        $this->assertNotEmpty($issues);
+        $this->assertStringContainsString('DEPENDENCY_REFUSED', $issues[0]);
+    }
+
+    /** Phase 3C-Fix (Task B): missing rules still yield all five canonical rows. */
+    public function test_canonical_rule_set_fills_missing_rules(): void
+    {
+        $rules = SalaryStructuredArrearService::canonicalRuleSet([]);
+        $this->assertCount(5, $rules);
+        $this->assertSame(SalaryStructuredArrearService::CODES, array_map(fn ($r) => $r->code, $rules));
+        foreach ($rules as $rule) {
+            $this->assertNotNull($rule->formula);
+            $this->assertNull($rule->amount); // display-only fallback: no fabricated amounts
+            $this->assertNull($rule->id);
+        }
+    }
+
+    /** Phase 3C-Fix (Task B): configured rules are preserved with their revision. */
+    public function test_canonical_rule_set_preserves_configured_rules(): void
+    {
+        $configured = [
+            (object)['id' => 7, 'code' => 'BASIC_ARREAR_GROSS', 'title' => 'Configured', 'formula' => 'cfg', 'amount' => null, 'revision' => 3],
+        ];
+        $rules = SalaryStructuredArrearService::canonicalRuleSet($configured);
+        $this->assertCount(5, $rules);
+        $this->assertSame(7, $rules[0]->id);
+        $this->assertSame(3, $rules[0]->revision);
+        $this->assertSame('Configured', $rules[0]->title);
+        $this->assertSame('BASIC_INCREMENT_ADJUSTMENT', $rules[1]->code);
+    }
+
+    /** Phase 3C-Fix (Task A): evidence summary is narrow, read-only and null-preserving. */
+    public function test_evidence_summary_is_narrow_and_null_preserving(): void
+    {
+        $ref = new \ReflectionMethod(SalaryStructuredArrearService::class, 'evidenceSummary');
+        $this->assertTrue($ref->isPublic());
+        $src = file_get_contents((new \ReflectionClass(SalaryStructuredArrearService::class))->getFileName());
+        $this->assertStringNotContainsString('public function sources(', $src); // sources() stays private
+        $this->assertStringContainsString('public function evidenceSummary(', $src);
+    }
+
+    /** Step 3B-S (Task E): active original journal — reverses_entry_id NULL and no reversal. */
+    public function test_active_original_journal_is_detected(): void
+    {
+        $entries = [
+            (object)['id' => 1, 'signed_amount' => 2778.0, 'reverses_entry_id' => null],
+        ];
+        $this->assertSame([1], CorrectSeptember20057::journalActiveIds($entries));
+        $this->assertSame(2778.0, CorrectSeptember20057::journalNetEffect($entries));
+    }
+
+    /** Step 3B-S (Task E): a properly reversed journal has zero net effect. */
+    public function test_properly_reversed_journal_has_zero_net_effect(): void
+    {
+        $entries = [
+            (object)['id' => 1, 'signed_amount' => 2778.0, 'reverses_entry_id' => null],
+            (object)['id' => 2, 'signed_amount' => -2778.0, 'reverses_entry_id' => 1],
+        ];
+        $this->assertSame([], CorrectSeptember20057::journalActiveIds($entries));
+        $this->assertSame(0.0, CorrectSeptember20057::journalNetEffect($entries));
+    }
+
+    /** Step 3B-S (Task E): duplicate reversal is rejected — net effect is a negative double-count guard. */
+    public function test_duplicate_reversal_is_not_double_counted(): void
+    {
+        $entries = [
+            (object)['id' => 1, 'signed_amount' => 2778.0, 'reverses_entry_id' => null],
+            (object)['id' => 2, 'signed_amount' => -2778.0, 'reverses_entry_id' => 1],
+            (object)['id' => 3, 'signed_amount' => -2778.0, 'reverses_entry_id' => 1],
+        ];
+        $this->assertSame([], CorrectSeptember20057::journalActiveIds($entries));
+        $this->assertSame(0.0, CorrectSeptember20057::journalNetEffect($entries));
+    }
+
+    /** Step 3B-S (Task E): a changed journal amount is still detected by net effect. */
+    public function test_changed_journal_amount_is_reflected_in_net_effect(): void
+    {
+        $entries = [
+            (object)['id' => 1, 'signed_amount' => 999.0, 'reverses_entry_id' => null],
+        ];
+        $this->assertSame(999.0, CorrectSeptember20057::journalNetEffect($entries));
+    }
+
+    /** Step 3B-S (Task E): missing journal yields zero net effect. */
+    public function test_missing_journal_yields_zero_net_effect(): void
+    {
+        $this->assertSame([], CorrectSeptember20057::journalActiveIds([]));
+        $this->assertSame(0.0, CorrectSeptember20057::journalNetEffect([]));
+    }
+
+    /** Step 3B-S (Task E): a journal is not necessarily active merely because reverses_entry_id is NULL. */
+    public function test_null_reverses_entry_id_is_not_active_when_a_reversal_exists(): void
+    {
+        $entries = [
+            (object)['id' => 5, 'signed_amount' => 1000.0, 'reverses_entry_id' => null],
+            (object)['id' => 9, 'signed_amount' => -1000.0, 'reverses_entry_id' => 5],
+        ];
+        $this->assertSame([], CorrectSeptember20057::journalActiveIds($entries));
+        $this->assertSame(0.0, CorrectSeptember20057::journalNetEffect($entries));
+    }
+
+    /** Step 3B-S (Task E): chronological chain break detection. */
+    public function test_gpf_chain_breaks_are_detected(): void
+    {
+        $ok = [
+            (object)['id' => 1, 'year' => 2026, 'month' => 9, 'openingBalance' => 26128.0, 'closingAmount' => 28074.0],
+            (object)['id' => 2, 'year' => 2026, 'month' => 10, 'openingBalance' => 28074.0, 'closingAmount' => 30020.0],
+            (object)['id' => 3, 'year' => 2027, 'month' => 1, 'openingBalance' => 30020.0, 'closingAmount' => 31966.0],
+        ];
+        $this->assertSame([], CorrectSeptember20057::gpfChainBreaks($ok));
+        $broken = [
+            (object)['id' => 1, 'year' => 2026, 'month' => 9, 'openingBalance' => 26128.0, 'closingAmount' => 28074.0],
+            (object)['id' => 2, 'year' => 2026, 'month' => 10, 'openingBalance' => 29000.0, 'closingAmount' => 30020.0],
+        ];
+        $this->assertCount(1, CorrectSeptember20057::gpfChainBreaks($broken));
+    }
+
+    /** Step 3B-T (Task F): backup integrity guard — missing/empty/corrupted manifest and checksum. */
+    public function test_backup_integrity_guard(): void
+    {
+        $tmp = sys_get_temp_dir().'/step3bt_backup_'.uniqid().'.sql';
+        file_put_contents($tmp, str_repeat('a', 2048));
+        $this->assertNotEmpty(CorrectSeptember20057::backupIssues($tmp, 'codershat_kau')); // no manifest
+        file_put_contents($tmp.'.manifest.json', json_encode(['database' => 'codershat_kau',
+            'sha256' => 'wrong', 'completed_at' => date('c'), 'source_snapshot' => 'x', 'target_snapshot' => 'y']));
+        $issues = CorrectSeptember20057::backupIssues($tmp, 'codershat_kau');
+        $this->assertNotEmpty($issues);
+        $this->assertStringContainsString('sha256', $issues[0]);
+        $manifest = json_decode(file_get_contents($tmp.'.manifest.json'), true);
+        $manifest['sha256'] = hash_file('sha256', $tmp);
+        file_put_contents($tmp.'.manifest.json', json_encode($manifest));
+        $this->assertSame([], CorrectSeptember20057::backupIssues($tmp, 'codershat_kau'));
+        unlink($tmp);
+        unlink($tmp.'.manifest.json');
+    }
+
+    /** Step 3B-T (Task F): expected September salary payload matches the PDF. */
+    public function test_expected_september_salary_payload_matches_pdf(): void
+    {
+        $payload = CorrectSeptember20057::expectedPayload();
+        $this->assertSame(33136.0, $payload['totalAllowance']);
+        $this->assertSame(1956.0, $payload['totalDeduction']);
+        $this->assertSame(31180.0, $payload['salaryTotal']);
+        $this->assertSame(1946.0, $payload['gpfDeduction']);
+    }
+
+    /** Step 3B-T (Task F): reversal amount is exactly -2778.00 and one-to-one; net effect is zero. */
+    public function test_reversal_amount_and_one_to_one_relationship(): void
+    {
+        $entries = [
+            (object)['id' => 1, 'signed_amount' => 2778.0, 'reverses_entry_id' => null],
+            (object)['id' => 2, 'signed_amount' => -2778.0, 'reverses_entry_id' => 1],
+        ];
+        $this->assertSame(0.0, CorrectSeptember20057::journalNetEffect($entries));
+        $this->assertSame([], CorrectSeptember20057::journalActiveIds($entries));
+        $this->assertSame(1, $entries[1]->reverses_entry_id); // exactly one reversal of id 1
+    }
+
+    /** Step 3B-T (Task F): duplicate reversal of the same journal is rejected. */
+    public function test_duplicate_reversal_is_rejected(): void
+    {
+        $entries = [
+            (object)['id' => 1, 'signed_amount' => 2778.0, 'reverses_entry_id' => null],
+            (object)['id' => 2, 'signed_amount' => -2778.0, 'reverses_entry_id' => 1],
+            (object)['id' => 3, 'signed_amount' => -2778.0, 'reverses_entry_id' => 1],
+        ];
+        $this->assertSame([], CorrectSeptember20057::journalActiveIds($entries));
+        $this->assertSame(0.0, CorrectSeptember20057::journalNetEffect($entries));
+    }
+
+    public function test_missing_backup_file_is_refused(): void
+    {
+        $issues = CorrectSeptember20057::backupIssues(sys_get_temp_dir().'/nonexistent_'.uniqid().'.sql', 'codershat_kau');
+        $this->assertNotEmpty($issues);
+        $this->assertStringContainsString('BACKUP_REFUSED', $issues[0]);
+    }
 
     /** Phase 3B: 20057 evidence factory — verified monthly payment + house entitlement. */
     private function evidence20057(): array

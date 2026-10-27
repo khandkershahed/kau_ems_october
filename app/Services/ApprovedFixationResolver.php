@@ -17,6 +17,25 @@ final class ApprovedFixationResolver
 {
     public const FIRST_REVISED_PHASE = '2026-07-01';
 
+    /** Regular pay-scale activation phase; earlier phases are arrear-only. */
+    public const REGULAR_ACTIVATION_PHASE = '2027-07-01';
+
+    /**
+     * Pure gate: an approved fixation authorizes regular 2026-scale pay ONLY
+     * from the regular activation phase. A July 2026 arrear-phase fixation
+     * (effective 2026-07-01) never activates the 2026 scale for regular pay.
+     */
+    public static function authorizesRegularPhase(?array $fixation): ?array
+    {
+        if ($fixation === null) return null;
+        return (($fixation['effective_date'] ?? '') === self::REGULAR_ACTIVATION_PHASE) ? $fixation : null;
+    }
+
+    /** Regular-only resolver: ignores arrear-phase fixations for regular pay. */
+    public function forRegular(int $userId, int $year, int $month): ?array
+    {
+        return self::authorizesRegularPhase($this->forUser($userId, $year, $month));
+    }
     public static function cutoff(int $year, int $month): string
     {
         if ($year < 2020 || $year > 2100 || $month < 1 || $month > 12) {

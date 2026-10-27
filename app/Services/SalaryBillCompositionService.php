@@ -213,4 +213,122 @@ final class SalaryBillCompositionService
         $result['statement'] = SalaryStatementBreakdown::build($regular, $finalRows);
         return $result;
     }
+
+    /**
+     * October 2026 regular-only, read-only salary preview. Same authoritative
+     * regular calculation as compose(), but arrear components are excluded from
+     * every total and reported separately as readiness metadata. Missing data
+     * stays null; no fixation value is ever manufactured. Never writes.
+     *
+     * @return array<string,mixed>
+     */
+    public function composeRegularOnly(int $userId, int $year, int $month): array
+    {
+        try {
+            return $this->composeRegularOnlyUnchecked($userId, $year, $month);
+        } catch (DomainException $e) {
+            return [
+                'user_id' => $userId, 'year' => $year, 'month' => $month,
+                'status' => 'BLOCKED', 'employee_code' => null, 'name' => null,
+                'regular' => null, 'regular_gross' => null, 'regular_deductions' => null,
+                'regular_net' => null, 'pay_scale_source' => null,
+                'calculation_source' => null, 'calculation_source_hash' => null,
+                'arrear_readiness' => null, 'arrear_blocking_reasons' => [$e->getMessage()],
+                'blocking_reasons' => [$e->getMessage()],
+                'calculation_method' => 'REGULAR_ONLY_PREVIEW',
+            ];
+        }
+    }
+
+    /** Pure arrear-readiness evaluation; missing evidence stays unverified. */
+    public static function evaluateArrearReadiness(array $rows): array
+    {
+        $reasons = [];
+        foreach ($rows as $row) {
+            if (($row['calculated_amount'] ?? null) === null) {
+                $reasons[] = 'Arrear source unverified: '.($row['title'] ?? 'unnamed');
+            }
+        }
+        return [count($reasons) === 0, $reasons];
+    }
+
+    private function composeRegularOnlyUnchecked(int $userId, int $year, int $month): array
+    {
+        if ($year < 2020 || $year > 2100 || $month < 1 || $month > 12) {
+            throw new DomainException('Invalid salary year or month.');
+        }
+        if (!Schema::hasTable('salary_calculation_versions') || !Schema::hasTable('salary_arrear_rules')) {
+            throw new DomainException('Phase 3/4 financial migrations are required.');
+        }
+        $user = User::findOrFail($userId);
+        if (!(bool) $user->isActive) throw new DomainException('Employee is inactive; reconcile employment status.');
+        $profiles = EmployeeInfo::with(['payScale', 'payrollGroup.grade', 'payrollGroup.payrollGroupType'])
+            ->where('user_id', $userId)->limit(2)->get();
+        if ($profiles->count() !== 1) throw new DomainException('Exactly one employee payroll profile is required.');
+        $profile = $profiles->first();
+        // Regular pay-scale policy: an arrear-phase approved fixation does not
+        // activate the 2026 scale for regular October pay. Only the regular
+        // activation phase does; otherwise the legacy 2015 scale is verified.
+        $fixation = app(ApprovedFixationResolver::class)->forRegular($userId, $year, $month);
+        if ($fixation === null) {
+            SalaryGenerationGuards::assertLegacyGradeScale(
+                $profile->pay_scale_id ? (int) $profile->pay_scale_id : null,
+                $profile->payrollGroup?->grade?->pay_scale_id ? (int) $profile->payrollGroup->grade->pay_scale_id : null,
+                $profile->payScale?->scale_name
+            );
+        }
+        $add = SalaryComponentNormalizer::rows($profile->additionObjects);
+        $ded = SalaryComponentNormalizer::rows($profile->substractionObjects);
+        if (Schema::hasTable('salary_manual_adjustments')) {
+            foreach (DB::table('salary_manual_adjustments')->where('user_id', $userId)
+                ->where('salary_year', $year)->where('salary_month', $month)->orderBy('id')->get() as $item) {
+                $row = ['name' => $item->title, 'calcType' => 'fixed', 'amount' => (float) $item->amount,
+                    'manual_adjustment_id' => (int) $item->id, 'manual_reason' => $item->reason,
+                    'manual_evidence_reference' => $item->evidence_reference];
+                if ($item->direction === 'addition') $add[] = $row;
+                else $ded[] = $row;
+            }
+        }
+        [$add, $ded] = app(SalaryComponentCatalog::class)->forEmployee($profile, $add, $ded, $year, $month, $fixation);
+        if (!collect($ded)->contains(fn ($v) => SalaryCalculationService::isGpf($v))) {
+            $gpfOverride = ['type' => 'disabled', 'amount' => 0];
+        } else {
+            $gpfOverride = null;
+        }
+        $regular = app(SalaryCalculationService::class)->calculate($add, $ded, $fixation, $gpfOverride);
+
+        // Arrear readiness is metadata only: it never changes regular totals.
+        [$ready, $reasons] = self::evaluateArrearReadiness(
+            app(SalaryArrearRuleService::class)->preview($userId, $year, $month)
+        );
+        $regularOnly = [
+            'basic' => $regular['basic'], 'total_allowance' => $regular['total_allowance'],
+            'total_deduction' => $regular['total_deduction'], 'gpf_deduction' => $regular['gpf_deduction'],
+            'net_salary' => $regular['net_salary'], 'allowances' => $regular['allowances'],
+            'deductions' => $regular['deductions'],
+        ];
+        $result = [
+            'user_id' => $userId, 'year' => $year, 'month' => $month,
+            'employee_code' => $profile->employeeCode, 'name' => $user->name,
+            'status' => 'READY',
+            'pay_scale_source' => $fixation
+                ? 'Govt. Pay Scale 2026 (approved regular activation)'
+                : ($profile->payScale?->scale_name ?? null),
+            'fixation_id' => $fixation['salary_fixation_id'] ?? null,
+            'calculation_source' => 'live_regular_only',
+            'calculation_method' => 'REGULAR_ONLY_PREVIEW',
+            'regular' => $regularOnly,
+            'regular_gross' => self::cents($regular['total_allowance']) / 100,
+            'regular_deductions' => self::cents($regular['total_deduction']) / 100,
+            'regular_net' => self::cents($regular['net_salary']) / 100,
+            'arrear_readiness' => $ready,
+            'arrear_blocking_reasons' => $reasons,
+            'blocking_reasons' => $reasons,
+            'excluded' => 'July-September arrear components are excluded from regular totals.',
+        ];
+        $result['calculation_source_hash'] = hash('sha256',
+            json_encode($result, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        return $result;
+    }
+
 }

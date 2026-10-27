@@ -60,6 +60,9 @@ function selectPeriod(id) {
     selectedStatement.value = null;
     selectedEmployee.value = null;
     page.value = 1;
+    // Phase 3C-Fix (Task C.8): period change clears stale calculator state and unsaved edits.
+    structured.value = null;
+    componentEdits.value = {};
 }
 async function createPeriod() {
     const r = await call(() => axios.post(route('salary-arrears.periods.store'), draftPeriod.value));
@@ -86,6 +89,82 @@ async function openStatement(person) {
     const r = await call(() => axios.get(route('salary-arrears.statement', {periodId:selected.value,userId:person.user_id})));
     if (r) selectedStatement.value = r.data.statement;
 }
+// ===== Phase 3C: Employee Arrear Calculator (canonical backend calculation) =====
+const structured = ref(null);          // structuredPreview response from backend
+const componentEdits = ref({});        // code -> proposed local amount (never auto-saved)
+const structuredSearch = ref('');
+function codeLabel(code) {
+    return {
+        BASIC_ARREAR_GROSS: 'Gross Basic Arrear',
+        BASIC_INCREMENT_ADJUSTMENT: 'Old-Scale Increment Adjustment',
+        SPECIAL_BENEFIT_RECOVERY: 'Special Benefit Recovery',
+        HOUSE_RENT_RECOVERY: 'House Rent Difference',
+        ADDITIONAL_GPF: 'Additional GPF Contribution',
+    }[code] || code;
+}
+function componentAmount(c) {
+    // Missing evidence is displayed as 0.00 with an explicit unverified marker; null is preserved internally.
+    if (c.calculated_amount === null || c.calculated_amount === undefined) return 0.00;
+    return Number(c.calculated_amount);
+}
+function editFor(c) {
+    const v = componentEdits.value[c.code];
+    return v === null || v === undefined ? componentAmount(c) : Number(v);
+}
+function provisionalTotals() {
+    const t = { payable: 0, deduction: 0 };
+    for (const c of (structured.value?.components ?? [])) {
+        if (c.missing_evidence && componentEdits.value[c.code] === undefined) continue; // unverified rows stay out of totals
+        const v = editFor(c);
+        if (c.direction === 'payable') t.payable += v; else t.deduction += v;
+    }
+    t.net = t.payable - t.deduction;
+    return t;
+}
+const structuredTotals = computed(provisionalTotals);
+async function calculateArrear(person) {
+    if (!person || !person.user_id) { error.value = 'Select a valid employee first.'; return; }
+    selectedEmployee.value = person;   // store selection consistently
+    structured.value = null;           // reset previous employee results
+    componentEdits.value = {};         // reset unsaved proposed edits
+    const r = await call(() => axios.get(
+        route('salary-arrears.structured-preview', {periodId:selected.value,userId:person.user_id}),
+        {headers:{Accept:'application/json'}}));
+    structured.value = r ? r.data : null; // on HTTP error, no stale results remain
+}
+function resetCalculator() {
+    structured.value = null;
+    componentEdits.value = {};
+    structuredSearch.value = '';
+}
+// Phase 3C-Fix (Task E): only finite, non-negative monetary amounts are accepted.
+function setEdit(c, raw) {
+    if (raw === '' || raw === null) { delete componentEdits.value[c.code]; return; }
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0) return; // reject invalid input; previous value stays
+    componentEdits.value[c.code] = n;
+}
+// Phase 3C-Fix (Task D): month_sources may not be an array — normalize safely.
+function sourceMonths(c) {
+    const ms = c.month_sources;
+    if (!ms) return [];
+    const arr = Array.isArray(ms) ? ms : Object.values(ms ?? {});
+    return arr.filter(m => m && typeof m === 'object');
+}
+function monthLabel(m) {
+    const y = m.year ?? m.salary_year ?? m.period ?? '';
+    const mo = m.month ?? m.salary_month ?? '';
+    const id = m.source_id ?? m.source_record_id ?? m.id ?? '';
+    const label = [y, mo].filter(v => v !== '').join('-');
+    return id !== '' ? `${label} #${id}` : label;
+}
+const structuredCandidates = computed(() => {
+    const q = structuredSearch.value.trim().toLowerCase();
+    const list = records.value ?? [];
+    if (!q) return list;
+    return list.filter(p => p.name.toLowerCase().includes(q) || String(p.employee_code).toLowerCase().includes(q));
+});
+// ===== end Phase 3C calculator =====
 async function addManual() {
     if (!selectedEmployee.value) return;
     const r = await call(() => axios.post(route('salary-arrears.manual', {periodId:selected.value,userId:selectedEmployee.value.user_id}), manual.value));
@@ -201,7 +280,61 @@ onMounted(loadPeriods);
                 </div>
             </div>
             <div v-if="activePeriod" class="bg-white rounded-xl p-4 space-y-3 shadow-sm">
-                <h2 class="font-semibold">2. Employee-wise read-only preview</h2>
+                <h2 class="font-semibold">3. Employee Arrear Calculator (canonical backend)</h2>
+                <p class="text-xs text-slate-600">Amounts are always calculated by the backend SalaryStructuredArrearService; the UI never recalculates arrears. Local edits are provisional only &mdash; they are never submitted as verified amounts.</p>
+                <p class="text-xs text-red-700 font-medium">Structured five-component preview &mdash; this is NOT the legacy draft snapshot and is not financially equivalent to it. Legacy snapshots use SalaryArrearCalculator; this preview uses SalaryStructuredArrearService.</p>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <input v-model="structuredSearch" placeholder="Search employee (name or code)" class="border rounded" />
+                    <select class="border rounded" :disabled="loading" @change="calculateArrear(structuredCandidates.find(p => p.profile_id === Number($event.target.value)))">
+                        <option value="">Select employee&hellip;</option>
+                        <option v-for="p in structuredCandidates" :key="p.profile_id" :value="p.profile_id">{{ p.name }} ({{ p.employee_code }})</option>
+                    </select>
+                    <button class="px-4 py-2 rounded bg-emerald-700 text-white" :disabled="loading || !structured" @click="calculateArrear(selectedEmployee)">Refresh</button>
+                    <button class="px-4 py-2 rounded bg-slate-600 text-white" :disabled="loading" @click="resetCalculator">Reset</button>
+                </div>
+                <div v-if="structured" class="space-y-2">
+                    <p class="text-xs" :class="structured.verified ? 'text-emerald-700' : 'text-amber-700'">
+                        Source: {{ structured.user_name }} ({{ structured.employee_code }}) &middot; {{ structured.verified ? 'Source verified' : 'Source contains unverified/pending historical evidence' }}
+                        <span v-if="structured.conflict"> &middot; <strong class="text-red-700">Source conflict &mdash; amounts suppressed pending review</strong></span>
+                    </p>
+                    <div class="overflow-auto"><table class="w-full text-sm border">
+                        <thead class="bg-slate-100"><tr>
+                            <th class="p-2 text-left">Component</th><th class="p-2 text-left">Direction</th>
+                            <th class="p-2 text-right">Calculated</th><th class="p-2 text-right">Proposed</th>
+                            <th class="p-2 text-left">Verification</th><th class="p-2 text-left">Formula / Source</th>
+                            <th class="p-2 text-left">Approval</th>
+                        </tr></thead>
+                        <tbody>
+                            <tr v-for="c in structured.components" :key="c.code" class="border-t align-top">
+                                <td class="p-2">{{ codeLabel(c.code) }}</td>
+                                <td class="p-2"><span :class="c.direction==='payable' ? 'text-emerald-700' : 'text-red-700'">{{ c.direction }}</span></td>
+                                <td class="p-2 text-right">
+                                    <span v-if="c.missing_evidence" class="text-amber-700">0.00 <div class="text-[10px]">Unverified &mdash; Source required</div></span>
+                                    <span v-else>{{ money(c.calculated_amount) }}</span>
+                                </td>
+                                <td class="p-2 text-right">
+                                    <input type="number" step="0.01" min="0" class="border rounded w-28 text-right"
+                                        :value="editFor(c)" :disabled="c.missing_evidence"
+                                        @input="setEdit(c, $event.target.value)" />
+                                    <div v-if="componentEdits[c.code] !== undefined && editFor(c) !== componentAmount(c)" class="text-[10px] text-amber-700 font-semibold">Not saved (provisional)</div>
+                                    <div v-if="c.missing_evidence" class="text-[10px] text-amber-700">Source evidence required before a proposed amount can be validated.</div>
+                                </td>
+                                <td class="p-2 text-xs">{{ c.source_status }}<div v-if="c.payment_verified !== undefined" class="text-[10px] text-slate-500">payment: {{ c.payment_verified ? 'verified' : 'unverified' }}</div></td>
+                                <td class="p-2 text-xs">{{ c.formula || '—' }}<div v-if="sourceMonths(c).length" class="text-[10px] text-slate-500">months: {{ sourceMonths(c).map(monthLabel).join(', ') }}</div></td>
+                                <td class="p-2"><span :class="c.approval_eligible ? 'text-emerald-700' : 'text-amber-700'">{{ c.approval_eligible ? 'eligible' : 'not eligible' }}</span></td>
+                            </tr>
+                        </tbody>
+                    </table></div>
+                    <div class="flex flex-wrap gap-4 text-sm border-t pt-2">
+                        <span>Provisional payable: <strong>{{ money(structuredTotals.payable) }}</strong></span>
+                        <span>Provisional deduction: <strong class="text-red-700">{{ money(structuredTotals.deduction) }}</strong></span>
+                        <span>Provisional net: <strong>{{ money(structuredTotals.net) }}</strong></span>
+                        <span class="text-xs text-amber-700 self-center">Provisional totals include local edits and are not equivalent to any saved draft until reconciled and persisted.</span>
+                    </div>
+                </div>
+            </div>
+            <div v-if="activePeriod" class="bg-white rounded-xl p-4 space-y-3 shadow-sm">
+                <h2 class="font-semibold">4. Employee-wise read-only preview</h2>
                 <div class="flex flex-wrap gap-3 items-center"><input v-model="filter" placeholder="Name or employee code" class="border rounded" /><button class="px-4 py-2 rounded bg-emerald-600 text-white" :disabled="loading" @click="page=1;loadPreview()">Calculate Draft</button><button class="border rounded px-4 py-2" :disabled="records.length===0" @click="exportCSV">Export page CSV</button><span class="text-xs text-slate-600">{{ totalProfiles }} profiles</span></div>
                 <div class="overflow-auto"><table class="w-full text-sm"><thead class="bg-slate-100"><tr><th class="p-2 text-left">Employee</th><th class="p-2">Status</th><th class="p-2 text-right">Provisional Net</th><th class="p-2">Evidence problems</th><th class="p-2">Action</th></tr></thead><tbody><tr v-for="row in records" :key="row.profile_id" class="border-t"><td class="p-2">{{ row.name }}<div class="text-xs text-gray-500">{{ row.employee_code }}</div></td><td class="p-2">{{ row.status }}</td><td class="p-2 text-right">{{ money(row.net_arrear) }}</td><td class="p-2 text-xs text-red-800">{{ row.errors.join(' | ') || row.warnings.join(' | ') }}</td><td class="p-2"><button class="text-emerald-700 underline" @click="openStatement(row)">Details / Manual</button></td></tr></tbody></table></div>
                 <div class="flex gap-3 items-center"><button :disabled="page<=1||loading" class="border rounded px-3 py-1" @click="page--;loadPreview()">Previous</button><span>{{ page }} / {{ lastPage }}</span><button :disabled="page>=lastPage||loading" class="border rounded px-3 py-1" @click="page++;loadPreview()">Next</button></div>

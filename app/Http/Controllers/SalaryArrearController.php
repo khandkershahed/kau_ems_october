@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\SalaryArrearCalculator;
+use App\Services\SalaryStructuredArrearService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -140,6 +141,61 @@ class SalaryArrearController extends Controller
             'payable' => false, 'gpf_posted' => false])->header('Cache-Control', 'private, no-store');
     }
 
+    /**
+     * Phase 3C: canonical five-component preview via SalaryStructuredArrearService.
+     * Read-only draft preview. Never posts a bill, never touches the legacy
+     * statement response above. All amounts come from the backend service;
+     * Vue renders only and does not calculate arrears independently.
+     */
+    public function structuredPreview(Request $request, int $periodId, int $userId)
+    {
+        $period = DB::table('salary_arrear_periods')->where('id', $periodId)->first();
+        abort_unless($period, 404);
+        $user = DB::table('users as u')
+            ->leftJoin('employee_infos as e', 'e.user_id', '=', 'u.id')
+            ->where('u.id', $userId)
+            ->selectRaw('u.*, e.employeeCode as employee_code')
+            ->first();
+        abort_unless($user !== null, 404);
+
+        $service = app(SalaryStructuredArrearService::class);
+        $rules = SalaryStructuredArrearService::canonicalRuleSet(Schema::hasTable('salary_arrear_rules')
+            ? DB::table('salary_arrear_rules')->whereIn('code', SalaryStructuredArrearService::CODES)
+                ->where('published', 1)->orderBy('display_order')->get()->all()
+            : []);
+        $components = $service->preview($userId, $rules);
+        $evidence = $service->evidenceSummary($userId);
+        $conflict = (bool) ($evidence['source_conflicts'] ?? false);
+
+        $provisional = ['payable' => 0.0, 'deduction' => 0.0];
+        foreach ($components as $component) {
+            if ($component['calculated_amount'] === null) continue;
+            if ($component['direction'] === 'payable') $provisional['payable'] += $component['calculated_amount'];
+            else $provisional['deduction'] += $component['calculated_amount'];
+        }
+
+        return response()->json([
+            'period_id' => $periodId,
+            'user_id' => $userId,
+            'user_name' => $user->name ?? '',
+            'employee_code' => $user->employee_code ?? '',
+            'verified' => ! $conflict,
+            'conflict' => $conflict,
+            'calculation_method' => 'STRUCTURED_PAY_SCALE_2026',
+            'components' => $components,
+            'provisional_totals' => $provisional,
+            'evidence' => [
+                'june_basic' => $evidence['june_basic'] ?? null,
+                'old_increment' => $evidence['old_increment'] ?? null,
+                'increment_status' => $evidence['increment_status'] ?? 'UNKNOWN',
+                'revised_basics' => $evidence['revised_basics'] ?? [],
+                'revised_sources' => $evidence['revised_sources'] ?? [],
+                'paid_months' => $evidence['paid_months'] ?? [],
+                'financial_months' => $evidence['financial_months'] ?? [],
+            ],
+            'disclaimer' => 'Draft preview only. No salary bill, GPF ledger, journal, or disbursement is created. Missing evidence is shown as 0.00 with "Unverified - Source required".',
+        ])->header('Cache-Control', 'private, no-store');
+    }
     /** HR attests that an approved bill was actually disbursed; no bank data is guessed. */
     public function certifyPayment(Request $request, int $periodId, int $userId)
     {

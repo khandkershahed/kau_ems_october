@@ -152,6 +152,8 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::put('/salary/arrears/periods/{periodId}', [\App\Http\Controllers\SalaryArrearController::class, 'updatePolicy'])->name('salary-arrears.periods.policy');
     Route::get('/salary/arrears/periods/{periodId}/preview', [\App\Http\Controllers\SalaryArrearController::class, 'preview'])->name('salary-arrears.preview');
     Route::get('/salary/arrears/periods/{periodId}/employees/{userId}', [\App\Http\Controllers\SalaryArrearController::class, 'statement'])->name('salary-arrears.statement');
+    Route::get('/salary/arrears/periods/{periodId}/employees/{userId}/structured-preview', [\App\Http\Controllers\SalaryArrearController::class, 'structuredPreview'])->name('salary-arrears.structured-preview');
+Route::get('/salary/arrears/periods/{periodId}/employees/{userId}/structured-preview', [\App\Http\Controllers\SalaryArrearController::class, 'structuredPreview'])->name('salary-arrears.structured-preview');
     Route::post('/salary/arrears/periods/{periodId}/employees/{userId}/payment-confirmation', [\App\Http\Controllers\SalaryArrearController::class, 'certifyPayment'])->name('salary-arrears.payment-confirmation');
     Route::post('/salary/arrears/periods/{periodId}/employees/{userId}/source', [\App\Http\Controllers\SalaryArrearController::class, 'sourceOverride'])->name('salary-arrears.source');
     Route::post('/salary/arrears/periods/{periodId}/employees/{userId}/manual', [\App\Http\Controllers\SalaryArrearController::class, 'manualItem'])->name('salary-arrears.manual');
