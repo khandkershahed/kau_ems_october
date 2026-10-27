@@ -36,8 +36,8 @@ $call = function (array $ids, int $count) use ($kernel) {
     $sig = str_starts_with($body, '%PDF');
     $pages = 0;
     if ($sig) {
-        preg_match('#/Count (\d+)#', $body, $m);
-        $pages = (int) ($m[1] ?? 0);
+        $pages = preg_match_all('#/Type\s*/Page[^s]#', $body);
+
         preg_match('#/MediaBox \[0 0 ([\d.]+) ([\d.]+)\]#', $body, $mb);
         $landscape = isset($mb[1]) && (float) $mb[1] > (float) $mb[2];
     }

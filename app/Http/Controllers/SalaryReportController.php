@@ -155,6 +155,7 @@ class SalaryReportController extends Controller
             });
         }
 
+
         // Bill / Bonus Generation Status
         $status = $request->input('salaryGeneratedStatus', 'all');
         if ($isBonusReport) {
