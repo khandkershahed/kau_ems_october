@@ -1,0 +1,43 @@
+Act as a senior Laravel 12, Vue 3, Inertia.js, MySQL payroll engineer, financial auditor, and QA lead for Khulna Agricultural University Employee Management System (KAU EMS).
+
+LANGUAGE: Explain everything in Bangla. Keep technical code, filenames and formulas in English.
+
+OBJECTIVE: Implement Step 05 — Pay Scale–Based Arrear Engine; deliver an actual source patch-only ZIP with SHA256 and the complete Step 06 prompt in one code block.
+
+MANDATORY PREFLIGHT:
+- Read the latest attached app.zip, updated SQL dump, October 2026 payroll records, salary fixation reports and the 19-page 2026 pay-scale Gazette (if attached).
+- Confirm installation of Step 01 migration and published component rules; Step 02 effective-dated resolver; Step 03 monthly overrides and migration; Step 04 SalaryStatementBreakdown and salaryStatementBreakdown.js.
+- Do not assume any previous generated patch was installed without source and migration evidence.
+- Do not run seeders, destructive migrations, historical salary updates, GPF posting, arrear disbursement or bank advice creation.
+
+RETAINED FINANCIAL POLICIES:
+1. Salary entitlement under the updated 2026 pay-scale Gazette is phased from 2026-07-01. Grade 1–9: July–December 2026 40% increase, January–June 2027 70%, July 2027 full scale plus applicable increment. Grade 10–20: 50%, 75%, then full scale plus increment. Confirm from authoritative Gazette and employee fixation before implementing.
+2. Do not assume the October 2026 regular payroll basis changed merely because entitlement changed. Preserve approved KAU policy for the regular bill, while exposing any outstanding October entitlement separately. Do not silently enable 2026 regular-scale payment for October without an authorized policy change.
+3. Distinguish HOUSE RENT applicable 2015 rules through December 2027 and future 2028 revisions; use location, accommodation and employee eligibility and evidence. Never apply 2028 rates to 2026.
+4. Never assume GPF fixed 10% or an employee's paid special benefit from pay-scale tables alone.
+5. The original October arrear intention is July–September 2026 only (3 months). September payroll bills are largely missing from the previous SQL snapshot; reconstruct entitlement from pay scales where feasible but mark unverified paid amounts as estimates, not paid zero.
+
+IMPLEMENTATION TASKS:
+A. Audit `SalaryArrearRuleService`, `SalaryArrearFormulaEngine`, `SalaryArrearCalculator`, `SalaryFixationService`, `SalaryBillCompositionService`, `SalaryCalculationService`, `SalaryStatementBreakdown`, `PayrollEffectivePolicy`, monthly salary bill records and GPF ledger logic. Report method-level defects with evidence.
+B. Centralize entitlement calculation for 2015 June Basic, the eligible old 2015 July increment, the 2026 fixed Basic/phased entitlement and effective-month exceptions (grade change, promotion, study leave, increment hold, AD HOC).
+C. For a stable monthly period, support `MONTHLY_DIFFERENCE × 3`; when months differ, sum the three independently. NEVER multiply a `SUM_MONTHS()` aggregate by 3 again.
+D. Equivalent Basic methods: `(NEW_ENTITLED_BASIC - JUNE_BASIC)*3 - (OLD_JULY_BASIC - JUNE_BASIC)*3` OR `(NEW_ENTITLED_BASIC - OLD_JULY_BASIC)*3`. Never deduct old increment twice.
+E. Separate five named components: Basic Arrear (+); Old Increment Adjustment (−); Special Benefit Recovery (−); House Rent Adjustment (+/- as supported); Additional GPF (−). Keep regular GPF distinct. If House Rent is signed, correctly map signs to addition/deduction so no double-subtraction occurs.
+F. Verify paid Special Benefit, historical House Rent and deducted GPF using actual source records when available; otherwise permit an explicit employee-month manual value/reference with flag ESTIMATED or MANUALLY CONFIRMED, and preserve UNKNOWN separately from 0.00. Allow administrator override with optional note but never label missing as verified.
+G. Reconcile published arrear rules currently having the wrong October start period/empty month list and `SUM_MONTHS(...) * 3` double multiplier. Produce a reviewed, idempotent migration/command that does NOT silently rewrite published financial rules in production; include dry-run and rollback/backup guidance.
+H. Integrate authoritative server calculations with existing `Current / Arrear / Total` UI and report projection. Preserve existing forms/classes and report formatting. No new separate calculation engine in Vue.
+I. Existing single calculator and 25-employees-per-batch bulk workflow must calculate identical values for same employee, month, rule/override hash. Preview must stay read-only. Posting must remain atomic/idempotent and prevent duplicate arrears and GPF.
+J. Do not add mandatory HR multi-stage gates; retain input validation, authorization and duplicate payment checks.
+
+QA REQUIRED:
+- PHP lint, actual Laravel unit/feature tests, Vite build, migration pretend + isolated MySQL test execution if available.
+- Use at least 10 representative employees/grades and month-wise edge cases; test 0/1/3 month arrears, increment hold, AD HOC, study leave with/without increment, promotion, partial paid source, House Rent negative/positive, GPF HALF UP, missing sources, manual 0 with evidence, double multiplier, old increment double deduction, duplicate bill/GPF, and Single/Bulk parity.
+- Verify every financial total against an independent fixture; distinguish performed tests from skipped/not-run.
+- Preserve approved fixation, historical 2015 bills, payment and GPF ledgers.
+
+DELIVERABLES:
+1. Actual patch-only ZIP with exact project-relative paths, not hypothetical examples.
+2. All new/modified source files, tests, optional non-destructive migrations and dry-run commands, SHA256 manifest.
+3. Detailed Bangla findings/QA/Windows staging/Namecheap production installation/backup/rollback instructions.
+4. Do NOT claim production readiness until staging parity, financial source verification, and posting safety acceptance pass.
+5. Include the complete Step 06 — Bulk Salary Calculation & Generation prompt in a SINGLE code block along with the patch.

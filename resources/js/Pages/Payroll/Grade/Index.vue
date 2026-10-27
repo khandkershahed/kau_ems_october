@@ -1,0 +1,689 @@
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { Head } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Modal from '@/Components/Modal.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import { useGradeStore } from '@/stores/grade';
+import { storeToRefs } from 'pinia';
+import axios from 'axios';
+
+const props = defineProps({
+    payScales: {
+        type: Array,
+        default: () => []
+    },
+    payrollGroupTypes: {
+        type: Array,
+        default: () => []
+    }
+});
+
+const gradeStore = useGradeStore();
+const { grades, loading, filters, sort, activeFilterCount } = storeToRefs(gradeStore);
+
+const availablePayScales = ref([...props.payScales]);
+const availableGroupTypes = ref([...props.payrollGroupTypes]);
+
+const isModalOpen = ref(false);
+const isEditing = ref(false);
+const form = ref({
+    id: null,
+    pay_scale_id: '',
+    grade_name: '',
+    grade_description: '',
+    min: 0,
+    max: 0,
+    isActive: true,
+});
+
+const localFilters = ref({
+    search: '',
+    pay_scale_id: '',
+    isActive: '',
+    min: '',
+    max: '',
+    hasPayrollGroups: '',
+    payroll_group_type_id: '',
+});
+
+const statusOptions = [
+    { label: 'Active Only', value: 'true' },
+    { label: 'Inactive Only', value: 'false' },
+];
+
+const groupAssignmentOptions = [
+    { label: 'With Assigned Groups', value: 'true' },
+    { label: 'No Groups Assigned', value: 'false' },
+];
+
+const activeFilterChips = computed(() => {
+    const chips = [];
+    if (localFilters.value.search) {
+        chips.push({ key: 'search', label: `Search: "${localFilters.value.search}"` });
+    }
+    if (localFilters.value.pay_scale_id) {
+        const scale = availablePayScales.value.find(s => String(s.id) === String(localFilters.value.pay_scale_id));
+        chips.push({ key: 'pay_scale_id', label: `Scale: ${scale ? scale.scale_name : localFilters.value.pay_scale_id}` });
+    }
+    if (localFilters.value.min !== '') {
+        chips.push({ key: 'min', label: `Min ≥ ${Number(localFilters.value.min).toLocaleString()}` });
+    }
+    if (localFilters.value.max !== '') {
+        chips.push({ key: 'max', label: `Max ≤ ${Number(localFilters.value.max).toLocaleString()}` });
+    }
+    if (localFilters.value.isActive !== '') {
+        const isAct = localFilters.value.isActive === 'true' || localFilters.value.isActive === true;
+        chips.push({ key: 'isActive', label: `Status: ${isAct ? 'Active' : 'Inactive'}` });
+    }
+    if (localFilters.value.hasPayrollGroups !== '') {
+        const has = localFilters.value.hasPayrollGroups === 'true' || localFilters.value.hasPayrollGroups === true;
+        chips.push({ key: 'hasPayrollGroups', label: `Groups: ${has ? 'With Groups' : 'No Groups'}` });
+    }
+    if (localFilters.value.payroll_group_type_id) {
+        const type = availableGroupTypes.value.find(t => String(t.id) === String(localFilters.value.payroll_group_type_id));
+        chips.push({ key: 'payroll_group_type_id', label: `Type: ${type ? type.group_name : localFilters.value.payroll_group_type_id}` });
+    }
+    return chips;
+});
+
+onMounted(async () => {
+    localFilters.value = { ...gradeStore.filters };
+    gradeStore.fetchGrades();
+
+    // Fallback if not injected via Inertia props
+    if (availablePayScales.value.length === 0) {
+        try {
+            const response = await axios.get(route('pay-scales.index'), { params: { all: true } });
+            availablePayScales.value = response.data;
+        } catch (e) {
+            console.error("Failed to fetch pay scales", e);
+        }
+    }
+});
+
+const handleSearch = () => {
+    gradeStore.setFilters(localFilters.value);
+};
+
+const handleReset = () => {
+    gradeStore.resetFilters();
+    localFilters.value = { ...gradeStore.filters };
+};
+
+const removeSingleFilter = (key) => {
+    localFilters.value[key] = '';
+    gradeStore.setFilters({ [key]: '' });
+};
+
+const handleSort = (field) => {
+    gradeStore.setSort(field);
+};
+
+const openCreateModal = () => {
+    isEditing.value = false;
+    form.value = {
+        id: null,
+        pay_scale_id: availablePayScales.value.length > 0 ? availablePayScales.value[0].id : '',
+        grade_name: '',
+        grade_description: '',
+        min: 0,
+        max: 0,
+        isActive: true,
+    };
+    isModalOpen.value = true;
+};
+
+const openEditModal = (grade) => {
+    isEditing.value = true;
+    form.value = {
+        id: grade.id,
+        pay_scale_id: grade.pay_scale_id,
+        grade_name: grade.grade_name,
+        grade_description: grade.grade_description || '',
+        min: grade.min,
+        max: grade.max,
+        isActive: Boolean(grade.isActive),
+    };
+    isModalOpen.value = true;
+};
+
+const closeModal = () => {
+    isModalOpen.value = false;
+};
+
+const saveGrade = async () => {
+    try {
+        if (isEditing.value) {
+            await gradeStore.updateGrade(form.value.id, form.value);
+        } else {
+            await gradeStore.createGrade(form.value);
+        }
+        closeModal();
+    } catch (error) {
+        console.error("Save failed:", error);
+    }
+};
+
+const confirmDelete = async (id) => {
+    await gradeStore.deleteGrade(id);
+};
+
+const changePage = (page) => {
+    if (page >= 1 && page <= grades.value.last_page) {
+        gradeStore.fetchGrades(page);
+    }
+};
+
+const formatCurrency = (val) => {
+    if (val === null || val === undefined || isNaN(val)) return '-';
+    return Number(val).toLocaleString();
+};
+</script>
+
+<template>
+    <Head title="Salary Grades" />
+
+    <AuthenticatedLayout>
+        <template #header>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-bold text-2xl text-gray-900 dark:text-white leading-tight">Salary Grades</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage salary grades, minimum & maximum pay amounts, and designations</p>
+                </div>
+                <PrimaryButton @click="openCreateModal" class="inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Salary Grade
+                </PrimaryButton>
+            </div>
+        </template>
+
+        <div class="py-6 sm:py-8">
+            <div class="max-w-7xl mx-auto sm:px-2 lg:px-4 space-y-6">
+
+                <!-- Search and Filter Section -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 sm:p-6 transition-colors">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Search & Filters</h3>
+                                <span v-if="activeFilterCount > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                                    {{ activeFilterCount }} active
+                                </span>
+                            </div>
+
+                            <button
+                                v-if="activeFilterCount > 0"
+                                type="button"
+                                @click="handleReset"
+                                class="text-xs font-medium text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-400 transition"
+                            >
+                                Reset all
+                            </button>
+                        </div>
+
+                        <!-- Filter Controls Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <!-- Universal Search -->
+                            <div>
+                                <InputLabel for="filter_search" value="Search Grade" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <div class="relative mt-1">
+                                    <input
+                                        id="filter_search"
+                                        type="text"
+                                        v-model="localFilters.search"
+                                        @keyup.enter="handleSearch"
+                                        placeholder="Grade name or description..."
+                                        class="block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 pl-8 pr-8 py-2 shadow-sm transition"
+                                    />
+                                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <button
+                                        v-if="localFilters.search"
+                                        type="button"
+                                        @click="localFilters.search = ''; handleSearch()"
+                                        class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Pay Scale -->
+                            <div>
+                                <InputLabel for="filter_pay_scale" value="Pay Scale" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <select
+                                    id="filter_pay_scale"
+                                    v-model="localFilters.pay_scale_id"
+                                    class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                                >
+                                    <option value="">All Pay Scales</option>
+                                    <option v-for="scale in availablePayScales" :key="scale.id" :value="scale.id">
+                                        {{ scale.scale_name }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Min Salary -->
+                            <div>
+                                <InputLabel for="filter_min" value="Min Salary (≥)" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <input
+                                    id="filter_min"
+                                    type="number"
+                                    v-model="localFilters.min"
+                                    @keyup.enter="handleSearch"
+                                    placeholder="e.g. 20000"
+                                    class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                                />
+                            </div>
+
+                            <!-- Max Salary -->
+                            <div>
+                                <InputLabel for="filter_max" value="Max Salary (≤)" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <input
+                                    id="filter_max"
+                                    type="number"
+                                    v-model="localFilters.max"
+                                    @keyup.enter="handleSearch"
+                                    placeholder="e.g. 70000"
+                                    class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                                />
+                            </div>
+
+                            <!-- Status -->
+                            <div>
+                                <InputLabel for="filter_status" value="Status" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <select
+                                    id="filter_status"
+                                    v-model="localFilters.isActive"
+                                    class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                                >
+                                    <option value="">All Statuses</option>
+                                    <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                </select>
+                            </div>
+
+                            <!-- Designation Groups Assignment -->
+                            <div>
+                                <InputLabel for="filter_hasPayrollGroups" value="Designation Groups" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <select
+                                    id="filter_hasPayrollGroups"
+                                    v-model="localFilters.hasPayrollGroups"
+                                    class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                                >
+                                    <option value="">All Grades</option>
+                                    <option v-for="opt in groupAssignmentOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                                </select>
+                            </div>
+
+                            <!-- Designation Group Type -->
+                            <div v-if="availableGroupTypes.length > 0">
+                                <InputLabel for="filter_group_type" value="Designation Type" class="text-xs font-medium text-gray-700 dark:text-gray-300" />
+                                <select
+                                    id="filter_group_type"
+                                    v-model="localFilters.payroll_group_type_id"
+                                    class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                                >
+                                    <option value="">All Designation Types</option>
+                                    <option v-for="type in availableGroupTypes" :key="type.id" :value="type.id">
+                                        {{ type.group_name }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons Row -->
+                        <div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700/60">
+                            <button
+                                type="button"
+                                @click="handleReset"
+                                class="px-3.5 py-1.5 text-xs font-medium rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm"
+                            >
+                                Reset
+                            </button>
+                            <button
+                                type="button"
+                                @click="handleSearch"
+                                class="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-medium rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 transition shadow-sm"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                Apply Filters
+                            </button>
+                        </div>
+
+                        <!-- Active Filter Chips -->
+                        <div v-if="activeFilterChips.length > 0" class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700/60">
+                            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Active Filters:</span>
+                            <div
+                                v-for="chip in activeFilterChips"
+                                :key="chip.key"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            >
+                                <span>{{ chip.label }}</span>
+                                <button
+                                    type="button"
+                                    @click="removeSingleFilter(chip.key)"
+                                    class="text-emerald-500 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-200 transition"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <button
+                                type="button"
+                                @click="handleReset"
+                                class="text-xs font-medium text-red-600 dark:text-red-400 hover:underline ml-1"
+                            >
+                                Clear all
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden transition-colors">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50/80 dark:bg-gray-700/50 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700/60">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3.5">SL</th>
+                                    <th scope="col" class="px-6 py-3.5 cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition" @click="handleSort('grade_name')">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span>Grade Name</span>
+                                            <span class="text-gray-400">
+                                                <svg v-if="sort.field === 'grade_name'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sort.direction === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                                                </svg>
+                                                <svg v-else class="w-3 h-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition" @click="handleSort('pay_scale_id')">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span>Pay Scale</span>
+                                            <span class="text-gray-400">
+                                                <svg v-if="sort.field === 'pay_scale_id'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sort.direction === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                                                </svg>
+                                                <svg v-else class="w-3 h-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 text-right cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition" @click="handleSort('min')">
+                                        <div class="inline-flex items-center justify-end gap-1.5">
+                                            <span>Min Amount</span>
+                                            <span class="text-gray-400">
+                                                <svg v-if="sort.field === 'min'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sort.direction === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                                                </svg>
+                                                <svg v-else class="w-3 h-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 text-right cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition" @click="handleSort('max')">
+                                        <div class="inline-flex items-center justify-end gap-1.5">
+                                            <span>Max Amount</span>
+                                            <span class="text-gray-400">
+                                                <svg v-if="sort.field === 'max'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sort.direction === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                                                </svg>
+                                                <svg v-else class="w-3 h-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition" @click="handleSort('payroll_groups_count')">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span>Designations</span>
+                                            <span class="text-gray-400">
+                                                <svg v-if="sort.field === 'payroll_groups_count'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sort.direction === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                                                </svg>
+                                                <svg v-else class="w-3 h-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 text-center cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition" @click="handleSort('isActive')">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
+                                            <span>Status</span>
+                                            <span class="text-gray-400">
+                                                <svg v-if="sort.field === 'isActive'" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="sort.direction === 'asc' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'" />
+                                                </svg>
+                                                <svg v-else class="w-3 h-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th scope="col" class="px-6 py-3.5 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
+                                <tr v-if="loading" class="bg-white dark:bg-gray-800">
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        <div class="inline-flex items-center gap-2">
+                                            <svg class="animate-spin h-5 w-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Loading salary grades...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-else-if="!grades.data || grades.data.length === 0" class="bg-white dark:bg-gray-800">
+                                    <td colspan="8" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <div class="p-3 rounded-full bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500 mb-3">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-base font-semibold text-gray-800 dark:text-gray-200">No salary grades found</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm">Try adjusting your search criteria or clearing active filters.</p>
+                                            <button
+                                                v-if="activeFilterChips.length > 0"
+                                                type="button"
+                                                @click="handleReset"
+                                                class="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
+                                            >
+                                                Clear all filters
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-else v-for="(grade, index) in grades.data" :key="grade.id" class="bg-white dark:bg-gray-800 hover:bg-gray-50/80 dark:hover:bg-gray-700/50 transition-colors">
+                                    <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ (grades.current_page - 1) * grades.per_page + index + 1 }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-gray-900 dark:text-white">{{ grade.grade_name }}</div>
+                                        <div v-if="grade.grade_description" class="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{{ grade.grade_description }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                                            {{ grade.pay_scale?.scale_name || 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-gray-100">
+                                        ৳ {{ formatCurrency(grade.min) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-medium text-gray-900 dark:text-gray-100">
+                                        ৳ {{ formatCurrency(grade.max) }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                            {{ grade.payroll_groups_count ?? 0 }} groups
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span :class="grade.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-400'" class="text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                            {{ grade.isActive ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <div class="inline-flex items-center gap-2">
+                                            <button
+                                                @click="openEditModal(grade)"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60 rounded-lg transition"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                Edit
+                                            </button>
+                                            <button
+                                                @click="confirmDelete(grade.id)"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-900/60 rounded-lg transition"
+                                            >
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="p-4 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between" v-if="grades.last_page > 1">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            Page <span class="font-semibold text-gray-900 dark:text-white">{{ grades.current_page }}</span> of
+                            <span class="font-semibold text-gray-900 dark:text-white">{{ grades.last_page }}</span> ({{ grades.total }} total grades)
+                        </span>
+
+                        <div class="inline-flex gap-1">
+                            <button
+                                @click="changePage(grades.current_page - 1)"
+                                :disabled="grades.current_page === 1"
+                                class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                @click="changePage(grades.current_page + 1)"
+                                :disabled="grades.current_page === grades.last_page"
+                                class="px-3 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Modal -->
+        <Modal :show="isModalOpen" @close="closeModal">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-6">
+                    {{ isEditing ? 'Edit Grade' : 'Add New Grade' }}
+                </h2>
+
+                <form @submit.prevent="saveGrade" class="space-y-6">
+                    <div>
+                        <InputLabel for="pay_scale_id" value="Pay Scale *" />
+                        <select
+                            id="pay_scale_id"
+                            v-model="form.pay_scale_id"
+                            class="mt-1 block w-full text-xs rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 shadow-sm transition"
+                            required
+                        >
+                            <option value="" disabled>Select Pay Scale</option>
+                            <option v-for="scale in availablePayScales" :key="scale.id" :value="scale.id">
+                                {{ scale.scale_name }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <InputLabel for="grade_name" value="Grade Name *" />
+                        <TextInput
+                            id="grade_name"
+                            type="text"
+                            class="mt-1 block w-full"
+                            v-model="form.grade_name"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <InputLabel for="grade_description" value="Description" />
+                        <TextInput
+                            id="grade_description"
+                            type="text"
+                            class="mt-1 block w-full"
+                            v-model="form.grade_description"
+                        />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel for="min" value="Minimum Amount *" />
+                            <TextInput
+                                id="min"
+                                type="number"
+                                step="any"
+                                class="mt-1 block w-full"
+                                v-model="form.min"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <InputLabel for="max" value="Maximum Amount *" />
+                            <TextInput
+                                id="max"
+                                type="number"
+                                step="any"
+                                class="mt-1 block w-full"
+                                v-model="form.max"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div class="flex items-center mt-4">
+                        <Checkbox id="isActive" v-model:checked="form.isActive" />
+                        <label for="isActive" class="ml-2 text-sm text-gray-600 dark:text-gray-400">Active</label>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6">
+                        <SecondaryButton @click="closeModal" type="button">Cancel</SecondaryButton>
+                        <PrimaryButton type="submit">
+                            {{ isEditing ? 'Update' : 'Save' }}
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+    </AuthenticatedLayout>
+</template>

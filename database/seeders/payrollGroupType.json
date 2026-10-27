@@ -1,0 +1,274 @@
+[
+  {
+    "group_name": "Vice Chancellor",
+    "group_description": "Post of Vice Chancellor"
+  },
+  {
+    "group_name": "Treasurer",
+    "group_description": "Post of Treasurer"
+  },
+  {
+    "group_name": "Director (Finance and Accounts Department)",
+    "group_description": "Post of Director (Finance and Accounts Department)"
+  },
+  {
+    "group_name": "Director (Director (Planning and Development)",
+    "group_description": "Post of Director (Director (Planning and Development)"
+  },
+  {
+    "group_name": "Chief Engineer",
+    "group_description": "Post of Chief Engineer"
+  },
+  {
+    "group_name": "Deputy Controller of Examinations",
+    "group_description": "Post of Deputy Controller of Examinations"
+  },
+  {
+    "group_name": "Assistant Registrar",
+    "group_description": "Post of Assistant Registrar"
+  },
+  {
+    "group_name": "Section Officer",
+    "group_description": "Post of Section Officer"
+  },
+  {
+    "group_name": "Assistant director (Accounts)",
+    "group_description": "Post of Assistant director (Accounts)"
+  },
+  {
+    "group_name": "Protocol Officer / Assistant Register",
+    "group_description": "Post of Protocol Officer / Assistant Register"
+  },
+  {
+    "group_name": "Assistant Director",
+    "group_description": "Post of Assistant Director"
+  },
+  {
+    "group_name": "Senior Medical Officer",
+    "group_description": "Post of Senior Medical Officer"
+  },
+  {
+    "group_name": "Assistant Engineer(Electrical)",
+    "group_description": "Post of Assistant Engineer(Electrical)"
+  },
+  {
+    "group_name": "Assistant Engineer (Civil)",
+    "group_description": "Post of Assistant Engineer (Civil)"
+  },
+  {
+    "group_name": "Assistant Registrar(Education)",
+    "group_description": "Post of Assistant Registrar(Education)"
+  },
+  {
+    "group_name": "Asst. Engineer",
+    "group_description": "Post of Asst. Engineer"
+  },
+  {
+    "group_name": "Sub-Assistant Engineer",
+    "group_description": "Post of Sub-Assistant Engineer"
+  },
+  {
+    "group_name": "Accounts officer",
+    "group_description": "Post of Accounts officer"
+  },
+  {
+    "group_name": "P. A. To Vc",
+    "group_description": "Post of P. A. To Vc"
+  },
+  {
+    "group_name": "ADMINISTRATIVE OFFICER",
+    "group_description": "Post of ADMINISTRATIVE OFFICER"
+  },
+  {
+    "group_name": "Budget Officer",
+    "group_description": "Post of Budget Officer"
+  },
+  {
+    "group_name": "PS TO VC",
+    "group_description": "Post of PS TO VC"
+  },
+  {
+    "group_name": "Development Officer",
+    "group_description": "Post of Development Officer"
+  },
+  {
+    "group_name": "Public Relation Officer",
+    "group_description": "Post of Public Relation Officer"
+  },
+  {
+    "group_name": "Assistant Accounts Officer",
+    "group_description": "Post of Assistant Accounts Officer"
+  },
+  {
+    "group_name": "Computer Operator",
+    "group_description": "Post of Computer Operator"
+  },
+  {
+    "group_name": "Assistant Network Engineer",
+    "group_description": "Post of Assistant Network Engineer"
+  },
+  {
+    "group_name": "Assistant Professor",
+    "group_description": "Post of Assistant Professor"
+  },
+  {
+    "group_name": "Lecturer",
+    "group_description": "Post of Lecturer"
+  },
+  {
+    "group_name": "Office Assistant cum Computer typist.",
+    "group_description": "Post of Office Assistant cum Computer typist."
+  },
+  {
+    "group_name": "Store keeper",
+    "group_description": "Post of Store keeper"
+  },
+  {
+    "group_name": "Lab Technician",
+    "group_description": "Post of Lab Technician"
+  },
+  {
+    "group_name": "Driver",
+    "group_description": "Post of Driver"
+  },
+  {
+    "group_name": "Office Assistant",
+    "group_description": "Post of Office Assistant"
+  },
+  {
+    "group_name": "Cook",
+    "group_description": "Post of Cook"
+  },
+  {
+    "group_name": "Security Guard",
+    "group_description": "Post of Security Guard"
+  },
+  {
+    "group_name": "Cleaner",
+    "group_description": "Post of Cleaner"
+  },
+  {
+    "group_name": "Medical Assistant",
+    "group_description": "Post of Medical Assistant"
+  },
+  {
+    "group_name": "Assistant Cooker",
+    "group_description": "Post of Assistant Cooker"
+  },
+  {
+    "group_name": "Hall attendant",
+    "group_description": "Post of Hall attendant"
+  },
+  {
+    "group_name": "Car helper",
+    "group_description": "Post of Car helper"
+  },
+  {
+    "group_name": "Electrician",
+    "group_description": "Post of Electrician"
+  },
+  {
+    "group_name": "dining boy",
+    "group_description": "Post of dining boy"
+  },
+  {
+    "group_name": "Plumbing Mechanical",
+    "group_description": "Post of Plumbing Mechanical"
+  },
+  {
+    "group_name": "Network Technician / Hardware Technician",
+    "group_description": "Post of Network Technician / Hardware Technician"
+  },
+  {
+    "group_name": "Despatch clerk",
+    "group_description": "Post of Despatch clerk"
+  },
+  {
+    "group_name": "Photocopy Machine Operator",
+    "group_description": "Post of Photocopy Machine Operator"
+  },
+  {
+    "group_name": "Lab Attendant",
+    "group_description": "Post of Lab Attendant"
+  },
+  {
+    "group_name": "Transport Helper",
+    "group_description": "Post of Transport Helper"
+  },
+  {
+    "group_name": "Library Attendent / Book Shorter",
+    "group_description": "Post of Library Attendent / Book Shorter"
+  },
+  {
+    "group_name": "Library Attendent",
+    "group_description": "Post of Library Attendent"
+  },
+  {
+    "group_name": "Library attendant",
+    "group_description": "Post of Library attendant"
+  },
+  {
+    "group_name": "Gardener",
+    "group_description": "Post of Gardener"
+  },
+  {
+    "group_name": "Mali",
+    "group_description": "Post of Mali"
+  },
+  {
+    "group_name": "Medical Attendant",
+    "group_description": "Post of Medical Attendant"
+  },
+  {
+    "group_name": "Meil Carrier",
+    "group_description": "Post of Meil Carrier"
+  },
+  {
+    "group_name": "Messenger",
+    "group_description": "Post of Messenger"
+  },
+  {
+    "group_name": "Gerderner",
+    "group_description": "Post of Gerderner"
+  },
+  {
+    "group_name": "Data Entry Operator",
+    "group_description": "Post of Data Entry Operator"
+  },
+  {
+    "group_name": "Dersser",
+    "group_description": "Post of Dersser"
+  },
+  {
+    "group_name": "NETWORK TECHNICIAN",
+    "group_description": "Post of NETWORK TECHNICIAN"
+  },
+  {
+    "group_name": "CHEF",
+    "group_description": "Post of CHEF"
+  },
+  {
+    "group_name": "controller of Examinations",
+    "group_description": "Post of controller of Examinations"
+  },
+  {
+    "group_name": "Medical Officer",
+    "group_description": "Post of Medical Officer"
+  },
+  {
+    "group_name": "Security Supervisor",
+    "group_description": "Post of Security Supervisor"
+  },
+  {
+    "group_name": "Library",
+    "group_description": "Post of Library"
+  },
+  {
+    "group_name": "Director (Director (Planning and",
+    "group_description": "Post of Director (Director (Planning and Development)"
+  },
+  {
+    "group_name": "Network Technician / Hardware",
+    "group_description": "Post of Network Technician / Hardware"
+  }
+]

@@ -1,0 +1,1422 @@
+﻿pay_scale,grade,designation,component,direction,calc_type,value,basis,frequency,effective_from,effective_until,status,evidence_reference,source_component_id,source_calc_type,source_value,source_active
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,2,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Education Allowance,addition,fixed,,,,,,PENDING,,3,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,House Rent Allowance,addition,fixed,,,,,,PENDING,,4,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Medical Allowance,addition,fixed,,,,,,PENDING,,5,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Others Allowance,addition,fixed,,,,,,PENDING,,6,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Special benefit,addition,fixed,,,,,,PENDING,,7,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,General Provident Fund,deduction,fixed,,,,,,PENDING,,8,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Others Deduction,deduction,fixed,,,,,,PENDING,,9,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,ADMINISTRATIVE OFFICER,Revenue Stamp,deduction,fixed,,,,,,PENDING,,10,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,11,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,12,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,Education Allowance,addition,fixed,,,,,,PENDING,,13,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,14,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,Medical Allowance,addition,fixed,,,,,,PENDING,,15,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,Special benefit,addition,fixed,,,,,,PENDING,,16,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,17,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Accounts officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,18,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,19,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,20,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,Education Allowance,addition,fixed,,,,,,PENDING,,21,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,22,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,23,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,Special benefit,addition,fixed,,,,,,PENDING,,24,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,25,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Assistant Accounts Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,26,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,27,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,28,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Education Allowance,addition,fixed,,,,,,PENDING,,29,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,House Rent Allowance,addition,fixed,,,,,,PENDING,,30,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Medical Allowance,addition,fixed,,,,,,PENDING,,31,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Special benefit,addition,fixed,,,,,,PENDING,,32,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Tiffin Allowance,addition,fixed,,,,,,PENDING,,33,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Travel allowance,addition,fixed,,,,,,PENDING,,34,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,General Provident Fund,deduction,fixed,,,,,,PENDING,,35,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Assistant Cooker,Revenue Stamp,deduction,fixed,,,,,,PENDING,,36,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,37,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,38,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,House Rent Allowance,addition,fixed,,,,,,PENDING,,39,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,Medical Allowance,addition,fixed,,,,,,PENDING,,40,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,Special benefit,addition,fixed,,,,,,PENDING,,41,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,General Provident Fund,deduction,fixed,,,,,,PENDING,,42,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,Income Tax,deduction,fixed,,,,,,PENDING,,43,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Director,Revenue Stamp,deduction,fixed,,,,,,PENDING,,44,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,45,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,46,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),House Rent Allowance,addition,fixed,,,,,,PENDING,,47,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Medical Allowance,addition,fixed,,,,,,PENDING,,48,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Others Allowance,addition,fixed,,,,,,PENDING,,49,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Special benefit,addition,fixed,,,,,,PENDING,,50,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),General Provident Fund,deduction,fixed,,,,,,PENDING,,51,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Income Tax,deduction,fixed,,,,,,PENDING,,52,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer (Civil),Revenue Stamp,deduction,fixed,,,,,,PENDING,,53,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,54,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,55,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Education Allowance,addition,fixed,,,,,,PENDING,,56,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),House Rent Allowance,addition,fixed,,,,,,PENDING,,57,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Medical Allowance,addition,fixed,,,,,,PENDING,,58,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Others Allowance,addition,fixed,,,,,,PENDING,,59,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Special benefit,addition,fixed,,,,,,PENDING,,60,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),General Provident Fund,deduction,fixed,,,,,,PENDING,,61,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Income Tax,deduction,fixed,,,,,,PENDING,,62,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Engineer(Electrical),Revenue Stamp,deduction,fixed,,,,,,PENDING,,63,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Network Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,64,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Network Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,65,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Network Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,66,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Network Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,67,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Network Engineer,Special benefit,addition,fixed,,,,,,PENDING,,68,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Network Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,69,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,70,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,71,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Book Allowance,addition,fixed,,,,,,PENDING,,72,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Charge Allowance,addition,fixed,,,,,,PENDING,,73,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Education Allowance,addition,fixed,,,,,,PENDING,,74,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Festival Allowance,addition,fixed,,,,,,PENDING,,75,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,House Rent Allowance,addition,fixed,,,,,,PENDING,,76,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Medical Allowance,addition,fixed,,,,,,PENDING,,77,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Special benefit,addition,fixed,,,,,,PENDING,,78,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,General Provident Fund,deduction,fixed,,,,,,PENDING,,79,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Income Tax,deduction,fixed,,,,,,PENDING,,80,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Others Deduction,deduction,fixed,,,,,,PENDING,,81,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 6,Assistant Professor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,82,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,83,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,84,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Book Allowance,addition,fixed,,,,,,PENDING,,85,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Charge Allowance,addition,fixed,,,,,,PENDING,,86,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Education Allowance,addition,fixed,,,,,,PENDING,,87,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Festival Allowance,addition,fixed,,,,,,PENDING,,88,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,House Rent Allowance,addition,fixed,,,,,,PENDING,,89,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Medical Allowance,addition,fixed,,,,,,PENDING,,90,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Special benefit,addition,fixed,,,,,,PENDING,,91,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,General Provident Fund,deduction,fixed,,,,,,PENDING,,92,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Income Tax,deduction,fixed,,,,,,PENDING,,93,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Others Deduction,deduction,fixed,,,,,,PENDING,,94,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Assistant Professor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,95,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,96,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,97,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,House Rent Allowance,addition,fixed,,,,,,PENDING,,98,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,Medical Allowance,addition,fixed,,,,,,PENDING,,99,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,Special benefit,addition,fixed,,,,,,PENDING,,100,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,General Provident Fund,deduction,fixed,,,,,,PENDING,,101,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,Income Tax,deduction,fixed,,,,,,PENDING,,102,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar,Revenue Stamp,deduction,fixed,,,,,,PENDING,,103,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,104,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,105,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),House Rent Allowance,addition,fixed,,,,,,PENDING,,106,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),Medical Allowance,addition,fixed,,,,,,PENDING,,107,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),Special benefit,addition,fixed,,,,,,PENDING,,108,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),General Provident Fund,deduction,fixed,,,,,,PENDING,,109,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),Income Tax,deduction,fixed,,,,,,PENDING,,110,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant Registrar(Education),Revenue Stamp,deduction,fixed,,,,,,PENDING,,111,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,112,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,113,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Education Allowance,addition,fixed,,,,,,PENDING,,114,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),House Rent Allowance,addition,fixed,,,,,,PENDING,,115,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Medical Allowance,addition,fixed,,,,,,PENDING,,116,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Special benefit,addition,fixed,,,,,,PENDING,,117,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),General Provident Fund,deduction,fixed,,,,,,PENDING,,118,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Income Tax,deduction,fixed,,,,,,PENDING,,119,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Assistant director (Accounts),Revenue Stamp,deduction,fixed,,,,,,PENDING,,120,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,121,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,122,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,123,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,124,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Others Allowance,addition,fixed,,,,,,PENDING,,125,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Special benefit,addition,fixed,,,,,,PENDING,,126,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,General Provident Fund,deduction,fixed,,,,,,PENDING,,127,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Income Tax,deduction,fixed,,,,,,PENDING,,128,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Asst. Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,129,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,130,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,131,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,132,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,133,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,Special benefit,addition,fixed,,,,,,PENDING,,134,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,135,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,Income Tax,deduction,fixed,,,,,,PENDING,,136,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Budget Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,137,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,138,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,139,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Education Allowance,addition,fixed,,,,,,PENDING,,140,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,House Rent Allowance,addition,fixed,,,,,,PENDING,,141,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Medical Allowance,addition,fixed,,,,,,PENDING,,142,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Special benefit,addition,fixed,,,,,,PENDING,,143,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Tiffin Allowance,addition,fixed,,,,,,PENDING,,144,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Travel allowance,addition,fixed,,,,,,PENDING,,145,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,General Provident Fund,deduction,fixed,,,,,,PENDING,,146,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,CHEF,Revenue Stamp,deduction,fixed,,,,,,PENDING,,147,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,148,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,149,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Education Allowance,addition,fixed,,,,,,PENDING,,150,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,House Rent Allowance,addition,fixed,,,,,,PENDING,,151,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Medical Allowance,addition,fixed,,,,,,PENDING,,152,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Special benefit,addition,fixed,,,,,,PENDING,,153,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,154,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Travel allowance,addition,fixed,,,,,,PENDING,,155,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,General Provident Fund,deduction,fixed,,,,,,PENDING,,156,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Car helper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,157,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,158,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,159,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Education Allowance,addition,fixed,,,,,,PENDING,,160,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,161,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,162,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Mobile Allowance,addition,fixed,,,,,,PENDING,,163,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Special benefit,addition,fixed,,,,,,PENDING,,164,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,General Provident Fund,deduction,fixed,,,,,,PENDING,,165,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Income Tax,deduction,fixed,,,,,,PENDING,,166,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Others Deduction,deduction,fixed,,,,,,PENDING,,167,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Chief Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,168,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,169,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,170,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Education Allowance,addition,fixed,,,,,,PENDING,,171,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,House Rent Allowance,addition,fixed,,,,,,PENDING,,172,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Medical Allowance,addition,fixed,,,,,,PENDING,,173,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Special benefit,addition,fixed,,,,,,PENDING,,174,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Tiffin Allowance,addition,fixed,,,,,,PENDING,,175,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Travel allowance,addition,fixed,,,,,,PENDING,,176,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,General Provident Fund,deduction,fixed,,,,,,PENDING,,177,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Others Deduction,deduction,fixed,,,,,,PENDING,,178,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Cleaner,Revenue Stamp,deduction,fixed,,,,,,PENDING,,179,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,180,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,181,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Education Allowance,addition,fixed,,,,,,PENDING,,182,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,183,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,184,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Special benefit,addition,fixed,,,,,,PENDING,,185,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,186,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Travel allowance,addition,fixed,,,,,,PENDING,,187,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,188,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Computer Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,189,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,190,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,191,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Education Allowance,addition,fixed,,,,,,PENDING,,192,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,193,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,194,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Special benefit,addition,fixed,,,,,,PENDING,,195,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,196,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Travel allowance,addition,fixed,,,,,,PENDING,,197,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,198,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Computer Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,199,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,200,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,201,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Education Allowance,addition,fixed,,,,,,PENDING,,202,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,House Rent Allowance,addition,fixed,,,,,,PENDING,,203,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Medical Allowance,addition,fixed,,,,,,PENDING,,204,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Special benefit,addition,fixed,,,,,,PENDING,,205,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Tiffin Allowance,addition,fixed,,,,,,PENDING,,206,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Travel allowance,addition,fixed,,,,,,PENDING,,207,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,General Provident Fund,deduction,fixed,,,,,,PENDING,,208,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 17,Cook,Revenue Stamp,deduction,fixed,,,,,,PENDING,,209,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,210,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,211,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Education Allowance,addition,fixed,,,,,,PENDING,,212,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,House Rent Allowance,addition,fixed,,,,,,PENDING,,213,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Medical Allowance,addition,fixed,,,,,,PENDING,,214,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Special benefit,addition,fixed,,,,,,PENDING,,215,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Tiffin Allowance,addition,fixed,,,,,,PENDING,,216,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Travel allowance,addition,fixed,,,,,,PENDING,,217,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,General Provident Fund,deduction,fixed,,,,,,PENDING,,218,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Cook,Revenue Stamp,deduction,fixed,,,,,,PENDING,,219,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,220,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,221,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Education Allowance,addition,fixed,,,,,,PENDING,,222,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,223,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,224,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Special benefit,addition,fixed,,,,,,PENDING,,225,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,226,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Travel allowance,addition,fixed,,,,,,PENDING,,227,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,228,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Others Deduction,deduction,fixed,,,,,,PENDING,,229,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Data Entry Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,230,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,231,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,232,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Charge Allowance,addition,fixed,,,,,,PENDING,,233,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Education Allowance,addition,fixed,,,,,,PENDING,,234,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,House Rent Allowance,addition,fixed,,,,,,PENDING,,235,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Medical Allowance,addition,fixed,,,,,,PENDING,,236,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Mobile Allowance,addition,fixed,,,,,,PENDING,,237,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Others Allowance,addition,fixed,,,,,,PENDING,,238,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Special benefit,addition,fixed,,,,,,PENDING,,239,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,General Provident Fund,deduction,fixed,,,,,,PENDING,,240,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Income Tax,deduction,fixed,,,,,,PENDING,,241,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Others Deduction,deduction,fixed,,,,,,PENDING,,242,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 5,Deputy Controller of Examinations,Revenue Stamp,deduction,fixed,,,,,,PENDING,,243,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,244,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,245,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Education Allowance,addition,fixed,,,,,,PENDING,,246,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,House Rent Allowance,addition,fixed,,,,,,PENDING,,247,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Medical Allowance,addition,fixed,,,,,,PENDING,,248,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Special benefit,addition,fixed,,,,,,PENDING,,249,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Tiffin Allowance,addition,fixed,,,,,,PENDING,,250,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Travel allowance,addition,fixed,,,,,,PENDING,,251,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,General Provident Fund,deduction,fixed,,,,,,PENDING,,252,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Dersser,Revenue Stamp,deduction,fixed,,,,,,PENDING,,253,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,254,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,255,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,House Rent Allowance,addition,fixed,,,,,,PENDING,,256,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Medical Allowance,addition,fixed,,,,,,PENDING,,257,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Special benefit,addition,fixed,,,,,,PENDING,,258,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Tiffin Allowance,addition,fixed,,,,,,PENDING,,259,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Travel allowance,addition,fixed,,,,,,PENDING,,260,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,General Provident Fund,deduction,fixed,,,,,,PENDING,,261,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Despatch clerk,Revenue Stamp,deduction,fixed,,,,,,PENDING,,262,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,263,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,264,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,265,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,266,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,Special benefit,addition,fixed,,,,,,PENDING,,267,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,268,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,Income Tax,deduction,fixed,,,,,,PENDING,,269,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Development Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,270,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,271,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Education Allowance,addition,fixed,,,,,,PENDING,,272,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,House Rent Allowance,addition,fixed,,,,,,PENDING,,273,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Medical Allowance,addition,fixed,,,,,,PENDING,,274,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Mobile Allowance,addition,fixed,,,,,,PENDING,,275,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Special benefit,addition,fixed,,,,,,PENDING,,276,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,General Provident Fund,deduction,fixed,,,,,,PENDING,,277,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Income Tax,deduction,fixed,,,,,,PENDING,,278,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and,Revenue Stamp,deduction,fixed,,,,,,PENDING,,279,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,280,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,281,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Education Allowance,addition,fixed,,,,,,PENDING,,282,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),House Rent Allowance,addition,fixed,,,,,,PENDING,,283,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Medical Allowance,addition,fixed,,,,,,PENDING,,284,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Mobile Allowance,addition,fixed,,,,,,PENDING,,285,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Special benefit,addition,fixed,,,,,,PENDING,,286,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),General Provident Fund,deduction,fixed,,,,,,PENDING,,287,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Income Tax,deduction,fixed,,,,,,PENDING,,288,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Director (Planning and Development),Revenue Stamp,deduction,fixed,,,,,,PENDING,,289,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,290,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),House Rent Allowance,addition,fixed,,,,,,PENDING,,291,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),Medical Allowance,addition,fixed,,,,,,PENDING,,292,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),Mobile Allowance,addition,fixed,,,,,,PENDING,,293,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),Special benefit,addition,fixed,,,,,,PENDING,,294,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),Income Tax,deduction,fixed,,,,,,PENDING,,295,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,Director (Finance and Accounts Department),Revenue Stamp,deduction,fixed,,,,,,PENDING,,296,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,297,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,298,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Education Allowance,addition,fixed,,,,,,PENDING,,299,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,House Rent Allowance,addition,fixed,,,,,,PENDING,,300,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Medical Allowance,addition,fixed,,,,,,PENDING,,301,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Special benefit,addition,fixed,,,,,,PENDING,,302,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Tiffin Allowance,addition,fixed,,,,,,PENDING,,303,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Travel allowance,addition,fixed,,,,,,PENDING,,304,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,General Provident Fund,deduction,fixed,,,,,,PENDING,,305,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Driver,Revenue Stamp,deduction,fixed,,,,,,PENDING,,306,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,307,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,308,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Education Allowance,addition,fixed,,,,,,PENDING,,309,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,House Rent Allowance,addition,fixed,,,,,,PENDING,,310,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Medical Allowance,addition,fixed,,,,,,PENDING,,311,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Special benefit,addition,fixed,,,,,,PENDING,,312,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Tiffin Allowance,addition,fixed,,,,,,PENDING,,313,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Travel allowance,addition,fixed,,,,,,PENDING,,314,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,General Provident Fund,deduction,fixed,,,,,,PENDING,,315,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Driver,Revenue Stamp,deduction,fixed,,,,,,PENDING,,316,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,317,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,318,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Education Allowance,addition,fixed,,,,,,PENDING,,319,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,House Rent Allowance,addition,fixed,,,,,,PENDING,,320,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Medical Allowance,addition,fixed,,,,,,PENDING,,321,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Special benefit,addition,fixed,,,,,,PENDING,,322,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Tiffin Allowance,addition,fixed,,,,,,PENDING,,323,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Travel allowance,addition,fixed,,,,,,PENDING,,324,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,General Provident Fund,deduction,fixed,,,,,,PENDING,,325,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Electrician,Revenue Stamp,deduction,fixed,,,,,,PENDING,,326,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,327,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,328,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,House Rent Allowance,addition,fixed,,,,,,PENDING,,329,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Medical Allowance,addition,fixed,,,,,,PENDING,,330,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Special benefit,addition,fixed,,,,,,PENDING,,331,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Tiffin Allowance,addition,fixed,,,,,,PENDING,,332,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Travel allowance,addition,fixed,,,,,,PENDING,,333,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,General Provident Fund,deduction,fixed,,,,,,PENDING,,334,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gardener,Revenue Stamp,deduction,fixed,,,,,,PENDING,,335,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,336,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,337,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,House Rent Allowance,addition,fixed,,,,,,PENDING,,338,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Medical Allowance,addition,fixed,,,,,,PENDING,,339,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Special benefit,addition,fixed,,,,,,PENDING,,340,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Tiffin Allowance,addition,fixed,,,,,,PENDING,,341,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Travel allowance,addition,fixed,,,,,,PENDING,,342,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,General Provident Fund,deduction,fixed,,,,,,PENDING,,343,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Gerderner,Revenue Stamp,deduction,fixed,,,,,,PENDING,,344,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,345,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,346,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Education Allowance,addition,fixed,,,,,,PENDING,,347,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,348,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,349,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Special benefit,addition,fixed,,,,,,PENDING,,350,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,351,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Travel allowance,addition,fixed,,,,,,PENDING,,352,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,353,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Hall attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,354,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,355,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,356,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Education Allowance,addition,fixed,,,,,,PENDING,,357,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,358,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,359,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Special benefit,addition,fixed,,,,,,PENDING,,360,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,361,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Travel allowance,addition,fixed,,,,,,PENDING,,362,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,363,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Lab Attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,364,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,365,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,366,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Education Allowance,addition,fixed,,,,,,PENDING,,367,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,House Rent Allowance,addition,fixed,,,,,,PENDING,,368,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Medical Allowance,addition,fixed,,,,,,PENDING,,369,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Special benefit,addition,fixed,,,,,,PENDING,,370,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Tiffin Allowance,addition,fixed,,,,,,PENDING,,371,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Travel allowance,addition,fixed,,,,,,PENDING,,372,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,General Provident Fund,deduction,fixed,,,,,,PENDING,,373,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 11,Lab Technician,Revenue Stamp,deduction,fixed,,,,,,PENDING,,374,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,375,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,376,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Book Allowance,addition,fixed,,,,,,PENDING,,377,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Charge Allowance,addition,fixed,,,,,,PENDING,,378,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Education Allowance,addition,fixed,,,,,,PENDING,,379,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Festival Allowance,addition,fixed,,,,,,PENDING,,380,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,House Rent Allowance,addition,fixed,,,,,,PENDING,,381,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Medical Allowance,addition,fixed,,,,,,PENDING,,382,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Special benefit,addition,fixed,,,,,,PENDING,,383,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,General Provident Fund,deduction,fixed,,,,,,PENDING,,384,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Income Tax,deduction,fixed,,,,,,PENDING,,385,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Others Deduction,deduction,fixed,,,,,,PENDING,,386,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Lecturer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,387,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,388,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,389,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Education Allowance,addition,fixed,,,,,,PENDING,,390,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,House Rent Allowance,addition,fixed,,,,,,PENDING,,391,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Medical Allowance,addition,fixed,,,,,,PENDING,,392,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Special benefit,addition,fixed,,,,,,PENDING,,393,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Tiffin Allowance,addition,fixed,,,,,,PENDING,,394,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Travel allowance,addition,fixed,,,,,,PENDING,,395,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,General Provident Fund,deduction,fixed,,,,,,PENDING,,396,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library,Revenue Stamp,deduction,fixed,,,,,,PENDING,,397,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,398,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,399,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,House Rent Allowance,addition,fixed,,,,,,PENDING,,400,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Medical Allowance,addition,fixed,,,,,,PENDING,,401,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Special benefit,addition,fixed,,,,,,PENDING,,402,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Tiffin Allowance,addition,fixed,,,,,,PENDING,,403,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Travel allowance,addition,fixed,,,,,,PENDING,,404,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,General Provident Fund,deduction,fixed,,,,,,PENDING,,405,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library Attendent,Revenue Stamp,deduction,fixed,,,,,,PENDING,,406,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,407,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,408,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,409,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,410,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Special benefit,addition,fixed,,,,,,PENDING,,411,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,412,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Travel allowance,addition,fixed,,,,,,PENDING,,413,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,414,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Library attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,415,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,416,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,417,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Education Allowance,addition,fixed,,,,,,PENDING,,418,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,House Rent Allowance,addition,fixed,,,,,,PENDING,,419,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Medical Allowance,addition,fixed,,,,,,PENDING,,420,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Special benefit,addition,fixed,,,,,,PENDING,,421,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Tiffin Allowance,addition,fixed,,,,,,PENDING,,422,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Travel allowance,addition,fixed,,,,,,PENDING,,423,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,General Provident Fund,deduction,fixed,,,,,,PENDING,,424,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Mali,Revenue Stamp,deduction,fixed,,,,,,PENDING,,425,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,426,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,427,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,House Rent Allowance,addition,fixed,,,,,,PENDING,,428,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Medical Allowance,addition,fixed,,,,,,PENDING,,429,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Special benefit,addition,fixed,,,,,,PENDING,,430,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,431,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Travel allowance,addition,fixed,,,,,,PENDING,,432,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,General Provident Fund,deduction,fixed,,,,,,PENDING,,433,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Medical Assistant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,434,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,435,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,436,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,437,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,438,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Special benefit,addition,fixed,,,,,,PENDING,,439,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,440,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Travel allowance,addition,fixed,,,,,,PENDING,,441,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,442,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Medical Attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,443,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Medical Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,444,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Medical Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,445,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Medical Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,446,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Medical Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,447,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Medical Officer,Special benefit,addition,fixed,,,,,,PENDING,,448,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Medical Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,449,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,450,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,451,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Education Allowance,addition,fixed,,,,,,PENDING,,452,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,House Rent Allowance,addition,fixed,,,,,,PENDING,,453,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Medical Allowance,addition,fixed,,,,,,PENDING,,454,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Special benefit,addition,fixed,,,,,,PENDING,,455,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Tiffin Allowance,addition,fixed,,,,,,PENDING,,456,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Travel allowance,addition,fixed,,,,,,PENDING,,457,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,General Provident Fund,deduction,fixed,,,,,,PENDING,,458,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Meil Carrier,Revenue Stamp,deduction,fixed,,,,,,PENDING,,459,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,460,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,461,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,House Rent Allowance,addition,fixed,,,,,,PENDING,,462,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Medical Allowance,addition,fixed,,,,,,PENDING,,463,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Special benefit,addition,fixed,,,,,,PENDING,,464,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Tiffin Allowance,addition,fixed,,,,,,PENDING,,465,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Travel allowance,addition,fixed,,,,,,PENDING,,466,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,General Provident Fund,deduction,fixed,,,,,,PENDING,,467,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Messenger,Revenue Stamp,deduction,fixed,,,,,,PENDING,,468,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,469,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,470,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Education Allowance,addition,fixed,,,,,,PENDING,,471,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,House Rent Allowance,addition,fixed,,,,,,PENDING,,472,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Medical Allowance,addition,fixed,,,,,,PENDING,,473,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Special benefit,addition,fixed,,,,,,PENDING,,474,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Tiffin Allowance,addition,fixed,,,,,,PENDING,,475,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Travel allowance,addition,fixed,,,,,,PENDING,,476,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,General Provident Fund,deduction,fixed,,,,,,PENDING,,477,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,NETWORK TECHNICIAN,Revenue Stamp,deduction,fixed,,,,,,PENDING,,478,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,479,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,House Rent Allowance,addition,fixed,,,,,,PENDING,,480,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,Medical Allowance,addition,fixed,,,,,,PENDING,,481,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,Special benefit,addition,fixed,,,,,,PENDING,,482,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,Tiffin Allowance,addition,fixed,,,,,,PENDING,,483,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,Travel allowance,addition,fixed,,,,,,PENDING,,484,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,General Provident Fund,deduction,fixed,,,,,,PENDING,,485,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware,Revenue Stamp,deduction,fixed,,,,,,PENDING,,486,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,487,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,488,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,House Rent Allowance,addition,fixed,,,,,,PENDING,,489,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Medical Allowance,addition,fixed,,,,,,PENDING,,490,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Special benefit,addition,fixed,,,,,,PENDING,,491,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Tiffin Allowance,addition,fixed,,,,,,PENDING,,492,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Travel allowance,addition,fixed,,,,,,PENDING,,493,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,General Provident Fund,deduction,fixed,,,,,,PENDING,,494,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Network Technician / Hardware Technician,Revenue Stamp,deduction,fixed,,,,,,PENDING,,495,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,496,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,497,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Education Allowance,addition,fixed,,,,,,PENDING,,498,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,House Rent Allowance,addition,fixed,,,,,,PENDING,,499,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Medical Allowance,addition,fixed,,,,,,PENDING,,500,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Special benefit,addition,fixed,,,,,,PENDING,,501,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,502,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Travel allowance,addition,fixed,,,,,,PENDING,,503,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,General Provident Fund,deduction,fixed,,,,,,PENDING,,504,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Others Deduction,deduction,fixed,,,,,,PENDING,,505,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Office Assistant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,506,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,507,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,508,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Education Allowance,addition,fixed,,,,,,PENDING,,509,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,House Rent Allowance,addition,fixed,,,,,,PENDING,,510,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Medical Allowance,addition,fixed,,,,,,PENDING,,511,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Special benefit,addition,fixed,,,,,,PENDING,,512,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,513,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Travel allowance,addition,fixed,,,,,,PENDING,,514,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,General Provident Fund,deduction,fixed,,,,,,PENDING,,515,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Others Deduction,deduction,fixed,,,,,,PENDING,,516,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 19,Office Assistant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,517,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,518,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,519,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Education Allowance,addition,fixed,,,,,,PENDING,,520,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,House Rent Allowance,addition,fixed,,,,,,PENDING,,521,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Medical Allowance,addition,fixed,,,,,,PENDING,,522,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Special benefit,addition,fixed,,,,,,PENDING,,523,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Tiffin Allowance,addition,fixed,,,,,,PENDING,,524,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Travel allowance,addition,fixed,,,,,,PENDING,,525,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,General Provident Fund,deduction,fixed,,,,,,PENDING,,526,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Office Assistant cum Computer typist.,Revenue Stamp,deduction,fixed,,,,,,PENDING,,527,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,528,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,529,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Education Allowance,addition,fixed,,,,,,PENDING,,530,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,House Rent Allowance,addition,fixed,,,,,,PENDING,,531,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Medical Allowance,addition,fixed,,,,,,PENDING,,532,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Special benefit,addition,fixed,,,,,,PENDING,,533,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Tiffin Allowance,addition,fixed,,,,,,PENDING,,534,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Travel allowance,addition,fixed,,,,,,PENDING,,535,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,General Provident Fund,deduction,fixed,,,,,,PENDING,,536,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Office Assistant cum Computer typist.,Revenue Stamp,deduction,fixed,,,,,,PENDING,,537,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,538,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,539,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Education Allowance,addition,fixed,,,,,,PENDING,,540,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Festival Allowance,addition,fixed,,,,,,PENDING,,541,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,House Rent Allowance,addition,fixed,,,,,,PENDING,,542,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Medical Allowance,addition,fixed,,,,,,PENDING,,543,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Special benefit,addition,fixed,,,,,,PENDING,,544,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,General Provident Fund,deduction,fixed,,,,,,PENDING,,545,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Others Deduction,deduction,fixed,,,,,,PENDING,,546,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,P. A. To Vc,Revenue Stamp,deduction,fixed,,,,,,PENDING,,547,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,548,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,549,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Education Allowance,addition,fixed,,,,,,PENDING,,550,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Festival Allowance,addition,fixed,,,,,,PENDING,,551,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,House Rent Allowance,addition,fixed,,,,,,PENDING,,552,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Medical Allowance,addition,fixed,,,,,,PENDING,,553,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Special benefit,addition,fixed,,,,,,PENDING,,554,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,General Provident Fund,deduction,fixed,,,,,,PENDING,,555,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Others Deduction,deduction,fixed,,,,,,PENDING,,556,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,P. A. To Vc,Revenue Stamp,deduction,fixed,,,,,,PENDING,,557,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,558,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,559,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,House Rent Allowance,addition,fixed,,,,,,PENDING,,560,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Medical Allowance,addition,fixed,,,,,,PENDING,,561,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Mobile Allowance,addition,fixed,,,,,,PENDING,,562,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Special benefit,addition,fixed,,,,,,PENDING,,563,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,General Provident Fund,deduction,fixed,,,,,,PENDING,,564,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Income Tax,deduction,fixed,,,,,,PENDING,,565,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Others Deduction,deduction,fixed,,,,,,PENDING,,566,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,PS TO VC,Revenue Stamp,deduction,fixed,,,,,,PENDING,,567,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,568,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,569,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Education Allowance,addition,fixed,,,,,,PENDING,,570,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,571,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,572,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Special benefit,addition,fixed,,,,,,PENDING,,573,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,574,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Travel allowance,addition,fixed,,,,,,PENDING,,575,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,576,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Others Deduction,deduction,fixed,,,,,,PENDING,,577,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 18,Photocopy Machine Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,578,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,579,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,580,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Education Allowance,addition,fixed,,,,,,PENDING,,581,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,582,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,583,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Special benefit,addition,fixed,,,,,,PENDING,,584,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,585,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Travel allowance,addition,fixed,,,,,,PENDING,,586,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,587,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Others Deduction,deduction,fixed,,,,,,PENDING,,588,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Photocopy Machine Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,589,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,590,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,591,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Education Allowance,addition,fixed,,,,,,PENDING,,592,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,House Rent Allowance,addition,fixed,,,,,,PENDING,,593,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Medical Allowance,addition,fixed,,,,,,PENDING,,594,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Special benefit,addition,fixed,,,,,,PENDING,,595,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Tiffin Allowance,addition,fixed,,,,,,PENDING,,596,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Travel allowance,addition,fixed,,,,,,PENDING,,597,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,General Provident Fund,deduction,fixed,,,,,,PENDING,,598,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Plumbing Mechanical,Revenue Stamp,deduction,fixed,,,,,,PENDING,,599,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,600,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,601,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,House Rent Allowance,addition,fixed,,,,,,PENDING,,602,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Medical Allowance,addition,fixed,,,,,,PENDING,,603,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Mobile Allowance,addition,fixed,,,,,,PENDING,,604,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Special benefit,addition,fixed,,,,,,PENDING,,605,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,General Provident Fund,deduction,fixed,,,,,,PENDING,,606,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Income Tax,deduction,fixed,,,,,,PENDING,,607,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Protocol Officer / Assistant Register,Revenue Stamp,deduction,fixed,,,,,,PENDING,,608,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,609,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,610,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,611,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,612,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Mobile Allowance,addition,fixed,,,,,,PENDING,,613,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Special benefit,addition,fixed,,,,,,PENDING,,614,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,615,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Income Tax,deduction,fixed,,,,,,PENDING,,616,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Public Relation Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,617,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,618,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,619,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Education Allowance,addition,fixed,,,,,,PENDING,,620,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Festival Allowance,addition,fixed,,,,,,PENDING,,621,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,622,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,623,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Special benefit,addition,fixed,,,,,,PENDING,,624,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,625,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Income Tax,deduction,fixed,,,,,,PENDING,,626,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Others Deduction,deduction,fixed,,,,,,PENDING,,627,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 9,Section Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,628,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,629,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,630,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Education Allowance,addition,fixed,,,,,,PENDING,,631,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,House Rent Allowance,addition,fixed,,,,,,PENDING,,632,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Medical Allowance,addition,fixed,,,,,,PENDING,,633,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Special benefit,addition,fixed,,,,,,PENDING,,634,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Tiffin Allowance,addition,fixed,,,,,,PENDING,,635,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Travel allowance,addition,fixed,,,,,,PENDING,,636,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,General Provident Fund,deduction,fixed,,,,,,PENDING,,637,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Security Guard,Revenue Stamp,deduction,fixed,,,,,,PENDING,,638,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,639,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,House Rent Allowance,addition,fixed,,,,,,PENDING,,640,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,Medical Allowance,addition,fixed,,,,,,PENDING,,641,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,Special benefit,addition,fixed,,,,,,PENDING,,642,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,Tiffin Allowance,addition,fixed,,,,,,PENDING,,643,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,Travel allowance,addition,fixed,,,,,,PENDING,,644,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 13,Security Supervisor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,645,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,646,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,647,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Education Allowance,addition,fixed,,,,,,PENDING,,648,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Festival Allowance,addition,fixed,,,,,,PENDING,,649,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,650,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,651,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Special benefit,addition,fixed,,,,,,PENDING,,652,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,653,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Income Tax,deduction,fixed,,,,,,PENDING,,654,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 7,Senior Medical Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,655,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,656,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,657,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Education Allowance,addition,fixed,,,,,,PENDING,,658,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,House Rent Allowance,addition,fixed,,,,,,PENDING,,659,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Medical Allowance,addition,fixed,,,,,,PENDING,,660,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Special benefit,addition,fixed,,,,,,PENDING,,661,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,662,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Travel allowance,addition,fixed,,,,,,PENDING,,663,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,General Provident Fund,deduction,fixed,,,,,,PENDING,,664,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 15,Store keeper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,665,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,666,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,667,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Education Allowance,addition,fixed,,,,,,PENDING,,668,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,House Rent Allowance,addition,fixed,,,,,,PENDING,,669,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Medical Allowance,addition,fixed,,,,,,PENDING,,670,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Special benefit,addition,fixed,,,,,,PENDING,,671,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,672,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Travel allowance,addition,fixed,,,,,,PENDING,,673,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,General Provident Fund,deduction,fixed,,,,,,PENDING,,674,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 16,Store keeper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,675,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,676,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,677,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,678,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,679,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,Special benefit,addition,fixed,,,,,,PENDING,,680,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,General Provident Fund,deduction,fixed,,,,,,PENDING,,681,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 10,Sub-Assistant Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,682,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,683,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,684,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,House Rent Allowance,addition,fixed,,,,,,PENDING,,685,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Medical Allowance,addition,fixed,,,,,,PENDING,,686,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Special benefit,addition,fixed,,,,,,PENDING,,687,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,688,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Travel allowance,addition,fixed,,,,,,PENDING,,689,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,General Provident Fund,deduction,fixed,,,,,,PENDING,,690,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,Transport Helper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,691,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,692,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,693,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Education Allowance,addition,fixed,,,,,,PENDING,,694,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,House Rent Allowance,addition,fixed,,,,,,PENDING,,695,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Medical Allowance,addition,fixed,,,,,,PENDING,,696,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Mobile Allowance,addition,fixed,,,,,,PENDING,,697,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Special benefit,addition,fixed,,,,,,PENDING,,698,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Telephone call allowance,addition,fixed,,,,,,PENDING,,699,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Deduction (for use of office vehicles),deduction,fixed,,,,,,PENDING,,700,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Income Tax,deduction,fixed,,,,,,PENDING,,701,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Others Deduction,deduction,fixed,,,,,,PENDING,,702,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Treasurer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,703,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,704,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,705,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Education Allowance,addition,fixed,,,,,,PENDING,,706,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,House Rent Allowance,addition,fixed,,,,,,PENDING,,707,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Medical Allowance,addition,fixed,,,,,,PENDING,,708,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Mobile Allowance,addition,fixed,,,,,,PENDING,,709,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Special benefit,addition,fixed,,,,,,PENDING,,710,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Telephone call allowance,addition,fixed,,,,,,PENDING,,711,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Deduction (for use of office vehicles),deduction,fixed,,,,,,PENDING,,712,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,General Provident Fund,deduction,fixed,,,,,,PENDING,,713,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Income Tax,deduction,fixed,,,,,,PENDING,,714,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Others Deduction,deduction,fixed,,,,,,PENDING,,715,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 1,Vice Chancellor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,716,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,717,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,718,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Education Allowance,addition,fixed,,,,,,PENDING,,719,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,House Rent Allowance,addition,fixed,,,,,,PENDING,,720,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Medical Allowance,addition,fixed,,,,,,PENDING,,721,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Mobile Allowance,addition,fixed,,,,,,PENDING,,722,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Special benefit,addition,fixed,,,,,,PENDING,,723,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Telephone call allowance,addition,fixed,,,,,,PENDING,,724,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Deduction (for use of office vehicles),deduction,fixed,,,,,,PENDING,,725,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,General Provident Fund,deduction,fixed,,,,,,PENDING,,726,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Income Tax,deduction,fixed,,,,,,PENDING,,727,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Others Deduction,deduction,fixed,,,,,,PENDING,,728,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 2,Vice Chancellor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,729,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,730,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,731,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Education Allowance,addition,fixed,,,,,,PENDING,,732,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,House Rent Allowance,addition,fixed,,,,,,PENDING,,733,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Medical Allowance,addition,fixed,,,,,,PENDING,,734,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Mobile Allowance,addition,fixed,,,,,,PENDING,,735,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Special benefit,addition,fixed,,,,,,PENDING,,736,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,General Provident Fund,deduction,fixed,,,,,,PENDING,,737,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Income Tax,deduction,fixed,,,,,,PENDING,,738,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 3,controller of Examinations,Revenue Stamp,deduction,fixed,,,,,,PENDING,,739,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,740,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,741,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Education Allowance,addition,fixed,,,,,,PENDING,,742,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,House Rent Allowance,addition,fixed,,,,,,PENDING,,743,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Medical Allowance,addition,fixed,,,,,,PENDING,,744,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Special benefit,addition,fixed,,,,,,PENDING,,745,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Tiffin Allowance,addition,fixed,,,,,,PENDING,,746,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Travel allowance,addition,fixed,,,,,,PENDING,,747,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,General Provident Fund,deduction,fixed,,,,,,PENDING,,748,fixed,0.00,1
+Govt. Pay Scale 2015,Grade 20,dining boy,Revenue Stamp,deduction,fixed,,,,,,PENDING,,749,fixed,0.00,1
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,750,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,751,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Education Allowance,addition,fixed,,,,,,PENDING,,752,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,House Rent Allowance,addition,percentage,,,,,,PENDING,,753,percentage,40.00,1
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Medical Allowance,addition,fixed,,,,,,PENDING,,754,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Others Allowance,addition,fixed,,,,,,PENDING,,755,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,General Provident Fund,deduction,fixed,,,,,,PENDING,,756,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Others Deduction,deduction,fixed,,,,,,PENDING,,757,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,ADMINISTRATIVE OFFICER,Revenue Stamp,deduction,fixed,,,,,,PENDING,,758,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,759,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,760,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,Education Allowance,addition,fixed,,,,,,PENDING,,761,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,762,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,Medical Allowance,addition,fixed,,,,,,PENDING,,763,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,764,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Accounts officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,765,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,766,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,767,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,Education Allowance,addition,fixed,,,,,,PENDING,,768,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,House Rent Allowance,addition,percentage,,,,,,PENDING,,769,percentage,40.00,1
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,770,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,771,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Assistant Accounts Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,772,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,773,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,774,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Education Allowance,addition,fixed,,,,,,PENDING,,775,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,House Rent Allowance,addition,fixed,,,,,,PENDING,,776,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Medical Allowance,addition,fixed,,,,,,PENDING,,777,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Tiffin Allowance,addition,fixed,,,,,,PENDING,,778,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Travel allowance,addition,fixed,,,,,,PENDING,,779,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,General Provident Fund,deduction,fixed,,,,,,PENDING,,780,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Assistant Cooker,Revenue Stamp,deduction,fixed,,,,,,PENDING,,781,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,782,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,783,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,House Rent Allowance,addition,fixed,,,,,,PENDING,,784,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,Medical Allowance,addition,fixed,,,,,,PENDING,,785,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,General Provident Fund,deduction,fixed,,,,,,PENDING,,786,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,Income Tax,deduction,fixed,,,,,,PENDING,,787,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Director,Revenue Stamp,deduction,fixed,,,,,,PENDING,,788,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,789,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,790,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),House Rent Allowance,addition,fixed,,,,,,PENDING,,791,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),Medical Allowance,addition,fixed,,,,,,PENDING,,792,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),Others Allowance,addition,fixed,,,,,,PENDING,,793,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),General Provident Fund,deduction,fixed,,,,,,PENDING,,794,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),Income Tax,deduction,fixed,,,,,,PENDING,,795,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer (Civil),Revenue Stamp,deduction,fixed,,,,,,PENDING,,796,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,797,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,798,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Education Allowance,addition,fixed,,,,,,PENDING,,799,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),House Rent Allowance,addition,fixed,,,,,,PENDING,,800,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Medical Allowance,addition,fixed,,,,,,PENDING,,801,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Others Allowance,addition,fixed,,,,,,PENDING,,802,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),General Provident Fund,deduction,fixed,,,,,,PENDING,,803,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Income Tax,deduction,fixed,,,,,,PENDING,,804,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Engineer(Electrical),Revenue Stamp,deduction,fixed,,,,,,PENDING,,805,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Network Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,806,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Network Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,807,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Network Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,808,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Network Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,809,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Network Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,810,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,811,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,812,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Book Allowance,addition,fixed,,,,,,PENDING,,813,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Charge Allowance,addition,fixed,,,,,,PENDING,,814,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Education Allowance,addition,fixed,,,,,,PENDING,,815,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Festival Allowance,addition,fixed,,,,,,PENDING,,816,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,House Rent Allowance,addition,fixed,,,,,,PENDING,,817,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Medical Allowance,addition,fixed,,,,,,PENDING,,818,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,General Provident Fund,deduction,fixed,,,,,,PENDING,,819,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Income Tax,deduction,fixed,,,,,,PENDING,,820,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Others Deduction,deduction,fixed,,,,,,PENDING,,821,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 6,Assistant Professor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,822,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,823,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,824,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Book Allowance,addition,fixed,,,,,,PENDING,,825,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Charge Allowance,addition,fixed,,,,,,PENDING,,826,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Education Allowance,addition,fixed,,,,,,PENDING,,827,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Festival Allowance,addition,fixed,,,,,,PENDING,,828,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,House Rent Allowance,addition,fixed,,,,,,PENDING,,829,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Medical Allowance,addition,fixed,,,,,,PENDING,,830,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,General Provident Fund,deduction,fixed,,,,,,PENDING,,831,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Income Tax,deduction,fixed,,,,,,PENDING,,832,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Others Deduction,deduction,fixed,,,,,,PENDING,,833,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Assistant Professor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,834,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,835,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,836,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,House Rent Allowance,addition,fixed,,,,,,PENDING,,837,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,Medical Allowance,addition,fixed,,,,,,PENDING,,838,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,General Provident Fund,deduction,fixed,,,,,,PENDING,,839,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,Income Tax,deduction,fixed,,,,,,PENDING,,840,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar,Revenue Stamp,deduction,fixed,,,,,,PENDING,,841,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,842,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,843,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),House Rent Allowance,addition,fixed,,,,,,PENDING,,844,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),Medical Allowance,addition,fixed,,,,,,PENDING,,845,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),General Provident Fund,deduction,fixed,,,,,,PENDING,,846,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),Income Tax,deduction,fixed,,,,,,PENDING,,847,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant Registrar(Education),Revenue Stamp,deduction,fixed,,,,,,PENDING,,848,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,849,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,850,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),Education Allowance,addition,fixed,,,,,,PENDING,,851,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),House Rent Allowance,addition,fixed,,,,,,PENDING,,852,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),Medical Allowance,addition,fixed,,,,,,PENDING,,853,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),General Provident Fund,deduction,fixed,,,,,,PENDING,,854,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),Income Tax,deduction,fixed,,,,,,PENDING,,855,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Assistant director (Accounts),Revenue Stamp,deduction,fixed,,,,,,PENDING,,856,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,857,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,858,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,859,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,860,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,Others Allowance,addition,fixed,,,,,,PENDING,,861,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,General Provident Fund,deduction,fixed,,,,,,PENDING,,862,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,Income Tax,deduction,fixed,,,,,,PENDING,,863,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Asst. Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,864,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,865,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,866,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,867,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,868,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,869,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,Income Tax,deduction,fixed,,,,,,PENDING,,870,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Budget Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,871,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,872,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,873,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Education Allowance,addition,fixed,,,,,,PENDING,,874,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,House Rent Allowance,addition,fixed,,,,,,PENDING,,875,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Medical Allowance,addition,fixed,,,,,,PENDING,,876,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Tiffin Allowance,addition,fixed,,,,,,PENDING,,877,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Travel allowance,addition,fixed,,,,,,PENDING,,878,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,General Provident Fund,deduction,fixed,,,,,,PENDING,,879,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,CHEF,Revenue Stamp,deduction,fixed,,,,,,PENDING,,880,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,881,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,882,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Education Allowance,addition,fixed,,,,,,PENDING,,883,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,House Rent Allowance,addition,fixed,,,,,,PENDING,,884,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Medical Allowance,addition,fixed,,,,,,PENDING,,885,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,886,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Travel allowance,addition,fixed,,,,,,PENDING,,887,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,General Provident Fund,deduction,fixed,,,,,,PENDING,,888,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Car helper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,889,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,890,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,891,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Education Allowance,addition,fixed,,,,,,PENDING,,892,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,House Rent Allowance,addition,fixed,,,,,,PENDING,,893,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,894,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Mobile Allowance,addition,fixed,,,,,,PENDING,,895,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,General Provident Fund,deduction,fixed,,,,,,PENDING,,896,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Income Tax,deduction,fixed,,,,,,PENDING,,897,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Others Deduction,deduction,fixed,,,,,,PENDING,,898,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Chief Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,899,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,900,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,901,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Education Allowance,addition,fixed,,,,,,PENDING,,902,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,House Rent Allowance,addition,fixed,,,,,,PENDING,,903,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Medical Allowance,addition,fixed,,,,,,PENDING,,904,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Tiffin Allowance,addition,fixed,,,,,,PENDING,,905,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Travel allowance,addition,fixed,,,,,,PENDING,,906,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,General Provident Fund,deduction,fixed,,,,,,PENDING,,907,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Others Deduction,deduction,fixed,,,,,,PENDING,,908,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Cleaner,Revenue Stamp,deduction,fixed,,,,,,PENDING,,909,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,910,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,911,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Education Allowance,addition,fixed,,,,,,PENDING,,912,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,913,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,914,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,915,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Travel allowance,addition,fixed,,,,,,PENDING,,916,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,917,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Computer Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,918,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,919,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,920,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Education Allowance,addition,fixed,,,,,,PENDING,,921,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,922,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,923,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,924,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Travel allowance,addition,fixed,,,,,,PENDING,,925,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,926,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Computer Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,927,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,928,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,929,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Education Allowance,addition,fixed,,,,,,PENDING,,930,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,House Rent Allowance,addition,fixed,,,,,,PENDING,,931,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Medical Allowance,addition,fixed,,,,,,PENDING,,932,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Tiffin Allowance,addition,fixed,,,,,,PENDING,,933,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Travel allowance,addition,fixed,,,,,,PENDING,,934,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,General Provident Fund,deduction,fixed,,,,,,PENDING,,935,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 17,Cook,Revenue Stamp,deduction,fixed,,,,,,PENDING,,936,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,937,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,938,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Education Allowance,addition,fixed,,,,,,PENDING,,939,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,House Rent Allowance,addition,fixed,,,,,,PENDING,,940,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Medical Allowance,addition,fixed,,,,,,PENDING,,941,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Tiffin Allowance,addition,fixed,,,,,,PENDING,,942,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Travel allowance,addition,fixed,,,,,,PENDING,,943,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,General Provident Fund,deduction,fixed,,,,,,PENDING,,944,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Cook,Revenue Stamp,deduction,fixed,,,,,,PENDING,,945,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,946,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,947,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Education Allowance,addition,fixed,,,,,,PENDING,,948,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,949,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,950,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,951,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Travel allowance,addition,fixed,,,,,,PENDING,,952,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,953,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Others Deduction,deduction,fixed,,,,,,PENDING,,954,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Data Entry Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,955,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,956,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,957,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Charge Allowance,addition,fixed,,,,,,PENDING,,958,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Education Allowance,addition,fixed,,,,,,PENDING,,959,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,House Rent Allowance,addition,fixed,,,,,,PENDING,,960,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Medical Allowance,addition,fixed,,,,,,PENDING,,961,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Mobile Allowance,addition,fixed,,,,,,PENDING,,962,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Others Allowance,addition,fixed,,,,,,PENDING,,963,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,General Provident Fund,deduction,fixed,,,,,,PENDING,,964,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Income Tax,deduction,fixed,,,,,,PENDING,,965,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Others Deduction,deduction,fixed,,,,,,PENDING,,966,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 5,Deputy Controller of Examinations,Revenue Stamp,deduction,fixed,,,,,,PENDING,,967,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,968,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,969,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Education Allowance,addition,fixed,,,,,,PENDING,,970,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,House Rent Allowance,addition,fixed,,,,,,PENDING,,971,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Medical Allowance,addition,fixed,,,,,,PENDING,,972,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Tiffin Allowance,addition,fixed,,,,,,PENDING,,973,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Travel allowance,addition,fixed,,,,,,PENDING,,974,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,General Provident Fund,deduction,fixed,,,,,,PENDING,,975,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Dersser,Revenue Stamp,deduction,fixed,,,,,,PENDING,,976,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,977,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,978,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,House Rent Allowance,addition,fixed,,,,,,PENDING,,979,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,Medical Allowance,addition,fixed,,,,,,PENDING,,980,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,Tiffin Allowance,addition,fixed,,,,,,PENDING,,981,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,Travel allowance,addition,fixed,,,,,,PENDING,,982,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,General Provident Fund,deduction,fixed,,,,,,PENDING,,983,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Despatch clerk,Revenue Stamp,deduction,fixed,,,,,,PENDING,,984,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,985,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,986,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,987,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,988,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,989,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,Income Tax,deduction,fixed,,,,,,PENDING,,990,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Development Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,991,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,992,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,Education Allowance,addition,fixed,,,,,,PENDING,,993,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,House Rent Allowance,addition,fixed,,,,,,PENDING,,994,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,Medical Allowance,addition,fixed,,,,,,PENDING,,995,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,Mobile Allowance,addition,fixed,,,,,,PENDING,,996,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,General Provident Fund,deduction,fixed,,,,,,PENDING,,997,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,Income Tax,deduction,fixed,,,,,,PENDING,,998,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and,Revenue Stamp,deduction,fixed,,,,,,PENDING,,999,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1000,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1001,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Education Allowance,addition,fixed,,,,,,PENDING,,1002,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),House Rent Allowance,addition,fixed,,,,,,PENDING,,1003,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Medical Allowance,addition,fixed,,,,,,PENDING,,1004,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Mobile Allowance,addition,fixed,,,,,,PENDING,,1005,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),General Provident Fund,deduction,fixed,,,,,,PENDING,,1006,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Income Tax,deduction,fixed,,,,,,PENDING,,1007,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Director (Planning and Development),Revenue Stamp,deduction,fixed,,,,,,PENDING,,1008,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Finance and Accounts Department),Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1009,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Finance and Accounts Department),House Rent Allowance,addition,fixed,,,,,,PENDING,,1010,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Finance and Accounts Department),Medical Allowance,addition,fixed,,,,,,PENDING,,1011,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Finance and Accounts Department),Mobile Allowance,addition,fixed,,,,,,PENDING,,1012,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Finance and Accounts Department),Income Tax,deduction,fixed,,,,,,PENDING,,1013,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,Director (Finance and Accounts Department),Revenue Stamp,deduction,fixed,,,,,,PENDING,,1014,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1015,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1016,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Education Allowance,addition,fixed,,,,,,PENDING,,1017,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,House Rent Allowance,addition,fixed,,,,,,PENDING,,1018,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Medical Allowance,addition,fixed,,,,,,PENDING,,1019,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1020,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Travel allowance,addition,fixed,,,,,,PENDING,,1021,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,General Provident Fund,deduction,fixed,,,,,,PENDING,,1022,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Driver,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1023,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1024,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1025,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Education Allowance,addition,fixed,,,,,,PENDING,,1026,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,House Rent Allowance,addition,fixed,,,,,,PENDING,,1027,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Medical Allowance,addition,fixed,,,,,,PENDING,,1028,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1029,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Travel allowance,addition,fixed,,,,,,PENDING,,1030,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,General Provident Fund,deduction,fixed,,,,,,PENDING,,1031,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Driver,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1032,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1033,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1034,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Education Allowance,addition,fixed,,,,,,PENDING,,1035,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,House Rent Allowance,addition,fixed,,,,,,PENDING,,1036,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Medical Allowance,addition,fixed,,,,,,PENDING,,1037,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1038,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Travel allowance,addition,fixed,,,,,,PENDING,,1039,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,General Provident Fund,deduction,fixed,,,,,,PENDING,,1040,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Electrician,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1041,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1042,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1043,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,House Rent Allowance,addition,fixed,,,,,,PENDING,,1044,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,Medical Allowance,addition,fixed,,,,,,PENDING,,1045,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1046,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,Travel allowance,addition,fixed,,,,,,PENDING,,1047,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,General Provident Fund,deduction,fixed,,,,,,PENDING,,1048,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gardener,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1049,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1050,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1051,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,House Rent Allowance,addition,fixed,,,,,,PENDING,,1052,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,Medical Allowance,addition,fixed,,,,,,PENDING,,1053,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1054,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,Travel allowance,addition,fixed,,,,,,PENDING,,1055,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,General Provident Fund,deduction,fixed,,,,,,PENDING,,1056,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Gerderner,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1057,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1058,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1059,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Education Allowance,addition,fixed,,,,,,PENDING,,1060,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1061,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,1062,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1063,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Travel allowance,addition,fixed,,,,,,PENDING,,1064,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1065,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Hall attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1066,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1067,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1068,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Education Allowance,addition,fixed,,,,,,PENDING,,1069,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1070,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,1071,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1072,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Travel allowance,addition,fixed,,,,,,PENDING,,1073,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1074,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Lab Attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1075,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1076,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1077,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Education Allowance,addition,fixed,,,,,,PENDING,,1078,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,House Rent Allowance,addition,fixed,,,,,,PENDING,,1079,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Medical Allowance,addition,fixed,,,,,,PENDING,,1080,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1081,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Travel allowance,addition,fixed,,,,,,PENDING,,1082,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,General Provident Fund,deduction,fixed,,,,,,PENDING,,1083,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 11,Lab Technician,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1084,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1085,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1086,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Book Allowance,addition,fixed,,,,,,PENDING,,1087,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Charge Allowance,addition,fixed,,,,,,PENDING,,1088,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Education Allowance,addition,fixed,,,,,,PENDING,,1089,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Festival Allowance,addition,fixed,,,,,,PENDING,,1090,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,House Rent Allowance,addition,fixed,,,,,,PENDING,,1091,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Medical Allowance,addition,fixed,,,,,,PENDING,,1092,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,General Provident Fund,deduction,fixed,,,,,,PENDING,,1093,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Income Tax,deduction,fixed,,,,,,PENDING,,1094,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Others Deduction,deduction,fixed,,,,,,PENDING,,1095,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Lecturer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1096,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1097,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1098,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Education Allowance,addition,fixed,,,,,,PENDING,,1099,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,House Rent Allowance,addition,fixed,,,,,,PENDING,,1100,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Medical Allowance,addition,fixed,,,,,,PENDING,,1101,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1102,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Travel allowance,addition,fixed,,,,,,PENDING,,1103,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,General Provident Fund,deduction,fixed,,,,,,PENDING,,1104,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1105,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1106,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1107,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,House Rent Allowance,addition,fixed,,,,,,PENDING,,1108,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,Medical Allowance,addition,fixed,,,,,,PENDING,,1109,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1110,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,Travel allowance,addition,fixed,,,,,,PENDING,,1111,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,General Provident Fund,deduction,fixed,,,,,,PENDING,,1112,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library Attendent,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1113,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1114,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1115,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1116,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,1117,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1118,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,Travel allowance,addition,fixed,,,,,,PENDING,,1119,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1120,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Library attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1121,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1122,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1123,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Education Allowance,addition,fixed,,,,,,PENDING,,1124,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,House Rent Allowance,addition,fixed,,,,,,PENDING,,1125,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Medical Allowance,addition,fixed,,,,,,PENDING,,1126,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1127,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Travel allowance,addition,fixed,,,,,,PENDING,,1128,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,General Provident Fund,deduction,fixed,,,,,,PENDING,,1129,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Mali,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1130,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1131,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1132,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1133,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,Medical Allowance,addition,fixed,,,,,,PENDING,,1134,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1135,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,Travel allowance,addition,fixed,,,,,,PENDING,,1136,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1137,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Medical Assistant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1138,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1139,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1140,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1141,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,Medical Allowance,addition,fixed,,,,,,PENDING,,1142,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1143,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,Travel allowance,addition,fixed,,,,,,PENDING,,1144,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1145,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Medical Attendant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1146,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Medical Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1147,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Medical Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1148,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Medical Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,1149,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Medical Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,1150,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Medical Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1151,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1152,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1153,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Education Allowance,addition,fixed,,,,,,PENDING,,1154,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,House Rent Allowance,addition,fixed,,,,,,PENDING,,1155,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Medical Allowance,addition,fixed,,,,,,PENDING,,1156,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1157,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Travel allowance,addition,fixed,,,,,,PENDING,,1158,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,General Provident Fund,deduction,fixed,,,,,,PENDING,,1159,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Meil Carrier,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1160,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1161,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1162,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,House Rent Allowance,addition,fixed,,,,,,PENDING,,1163,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,Medical Allowance,addition,fixed,,,,,,PENDING,,1164,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1165,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,Travel allowance,addition,fixed,,,,,,PENDING,,1166,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,General Provident Fund,deduction,fixed,,,,,,PENDING,,1167,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Messenger,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1168,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1169,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1170,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Education Allowance,addition,fixed,,,,,,PENDING,,1171,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,House Rent Allowance,addition,fixed,,,,,,PENDING,,1172,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Medical Allowance,addition,fixed,,,,,,PENDING,,1173,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1174,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Travel allowance,addition,fixed,,,,,,PENDING,,1175,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,General Provident Fund,deduction,fixed,,,,,,PENDING,,1176,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,NETWORK TECHNICIAN,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1177,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1178,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,House Rent Allowance,addition,fixed,,,,,,PENDING,,1179,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,Medical Allowance,addition,fixed,,,,,,PENDING,,1180,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1181,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,Travel allowance,addition,fixed,,,,,,PENDING,,1182,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,General Provident Fund,deduction,fixed,,,,,,PENDING,,1183,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1184,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1185,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1186,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,House Rent Allowance,addition,fixed,,,,,,PENDING,,1187,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,Medical Allowance,addition,fixed,,,,,,PENDING,,1188,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1189,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,Travel allowance,addition,fixed,,,,,,PENDING,,1190,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,General Provident Fund,deduction,fixed,,,,,,PENDING,,1191,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Network Technician / Hardware Technician,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1192,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1193,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1194,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Education Allowance,addition,fixed,,,,,,PENDING,,1195,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1196,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Medical Allowance,addition,fixed,,,,,,PENDING,,1197,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1198,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Travel allowance,addition,fixed,,,,,,PENDING,,1199,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1200,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Others Deduction,deduction,fixed,,,,,,PENDING,,1201,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Office Assistant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1202,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1203,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1204,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Education Allowance,addition,fixed,,,,,,PENDING,,1205,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,House Rent Allowance,addition,fixed,,,,,,PENDING,,1206,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Medical Allowance,addition,fixed,,,,,,PENDING,,1207,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1208,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Travel allowance,addition,fixed,,,,,,PENDING,,1209,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,General Provident Fund,deduction,fixed,,,,,,PENDING,,1210,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Others Deduction,deduction,fixed,,,,,,PENDING,,1211,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 19,Office Assistant,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1212,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1213,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1214,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Education Allowance,addition,fixed,,,,,,PENDING,,1215,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,House Rent Allowance,addition,fixed,,,,,,PENDING,,1216,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Medical Allowance,addition,fixed,,,,,,PENDING,,1217,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1218,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Travel allowance,addition,fixed,,,,,,PENDING,,1219,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,General Provident Fund,deduction,fixed,,,,,,PENDING,,1220,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Office Assistant cum Computer typist.,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1221,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1222,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1223,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Education Allowance,addition,fixed,,,,,,PENDING,,1224,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,House Rent Allowance,addition,fixed,,,,,,PENDING,,1225,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Medical Allowance,addition,fixed,,,,,,PENDING,,1226,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1227,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Travel allowance,addition,fixed,,,,,,PENDING,,1228,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,General Provident Fund,deduction,fixed,,,,,,PENDING,,1229,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Office Assistant cum Computer typist.,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1230,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1231,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1232,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Education Allowance,addition,fixed,,,,,,PENDING,,1233,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Festival Allowance,addition,fixed,,,,,,PENDING,,1234,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,House Rent Allowance,addition,fixed,,,,,,PENDING,,1235,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Medical Allowance,addition,fixed,,,,,,PENDING,,1236,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,General Provident Fund,deduction,fixed,,,,,,PENDING,,1237,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Others Deduction,deduction,fixed,,,,,,PENDING,,1238,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,P. A. To Vc,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1239,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1240,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1241,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Education Allowance,addition,fixed,,,,,,PENDING,,1242,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Festival Allowance,addition,fixed,,,,,,PENDING,,1243,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,House Rent Allowance,addition,percentage,,,,,,PENDING,,1244,percentage,40.00,1
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Medical Allowance,addition,fixed,,,,,,PENDING,,1245,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,General Provident Fund,deduction,fixed,,,,,,PENDING,,1246,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Others Deduction,deduction,fixed,,,,,,PENDING,,1247,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,P. A. To Vc,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1248,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1249,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1250,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,House Rent Allowance,addition,fixed,,,,,,PENDING,,1251,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Medical Allowance,addition,fixed,,,,,,PENDING,,1252,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Mobile Allowance,addition,fixed,,,,,,PENDING,,1253,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,General Provident Fund,deduction,fixed,,,,,,PENDING,,1254,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Income Tax,deduction,fixed,,,,,,PENDING,,1255,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Others Deduction,deduction,fixed,,,,,,PENDING,,1256,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,PS TO VC,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1257,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1258,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1259,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Education Allowance,addition,fixed,,,,,,PENDING,,1260,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,1261,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,1262,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1263,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Travel allowance,addition,fixed,,,,,,PENDING,,1264,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,1265,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Others Deduction,deduction,fixed,,,,,,PENDING,,1266,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 18,Photocopy Machine Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1267,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1268,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1269,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Education Allowance,addition,fixed,,,,,,PENDING,,1270,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,House Rent Allowance,addition,fixed,,,,,,PENDING,,1271,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Medical Allowance,addition,fixed,,,,,,PENDING,,1272,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1273,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Travel allowance,addition,fixed,,,,,,PENDING,,1274,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,General Provident Fund,deduction,fixed,,,,,,PENDING,,1275,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Others Deduction,deduction,fixed,,,,,,PENDING,,1276,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Photocopy Machine Operator,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1277,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1278,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1279,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Education Allowance,addition,fixed,,,,,,PENDING,,1280,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,House Rent Allowance,addition,fixed,,,,,,PENDING,,1281,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Medical Allowance,addition,fixed,,,,,,PENDING,,1282,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1283,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Travel allowance,addition,fixed,,,,,,PENDING,,1284,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,General Provident Fund,deduction,fixed,,,,,,PENDING,,1285,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Plumbing Mechanical,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1286,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1287,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1288,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,House Rent Allowance,addition,fixed,,,,,,PENDING,,1289,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,Medical Allowance,addition,fixed,,,,,,PENDING,,1290,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,Mobile Allowance,addition,fixed,,,,,,PENDING,,1291,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,General Provident Fund,deduction,fixed,,,,,,PENDING,,1292,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,Income Tax,deduction,fixed,,,,,,PENDING,,1293,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Protocol Officer / Assistant Register,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1294,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1295,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1296,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,1297,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,1298,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,Mobile Allowance,addition,fixed,,,,,,PENDING,,1299,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,1300,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,Income Tax,deduction,fixed,,,,,,PENDING,,1301,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Public Relation Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1302,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1303,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1304,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Education Allowance,addition,fixed,,,,,,PENDING,,1305,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Festival Allowance,addition,fixed,,,,,,PENDING,,1306,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,1307,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,1308,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,1309,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Income Tax,deduction,fixed,,,,,,PENDING,,1310,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Others Deduction,deduction,fixed,,,,,,PENDING,,1311,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 9,Section Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1312,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1313,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1314,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Education Allowance,addition,fixed,,,,,,PENDING,,1315,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,House Rent Allowance,addition,fixed,,,,,,PENDING,,1316,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Medical Allowance,addition,fixed,,,,,,PENDING,,1317,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1318,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Travel allowance,addition,fixed,,,,,,PENDING,,1319,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,General Provident Fund,deduction,fixed,,,,,,PENDING,,1320,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Security Guard,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1321,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Security Supervisor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1322,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Security Supervisor,House Rent Allowance,addition,fixed,,,,,,PENDING,,1323,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Security Supervisor,Medical Allowance,addition,fixed,,,,,,PENDING,,1324,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Security Supervisor,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1325,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Security Supervisor,Travel allowance,addition,fixed,,,,,,PENDING,,1326,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 13,Security Supervisor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1327,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1328,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1329,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Education Allowance,addition,fixed,,,,,,PENDING,,1330,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Festival Allowance,addition,fixed,,,,,,PENDING,,1331,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,House Rent Allowance,addition,fixed,,,,,,PENDING,,1332,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Medical Allowance,addition,fixed,,,,,,PENDING,,1333,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,General Provident Fund,deduction,fixed,,,,,,PENDING,,1334,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Income Tax,deduction,fixed,,,,,,PENDING,,1335,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 7,Senior Medical Officer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1336,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1337,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1338,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Education Allowance,addition,fixed,,,,,,PENDING,,1339,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,House Rent Allowance,addition,fixed,,,,,,PENDING,,1340,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Medical Allowance,addition,fixed,,,,,,PENDING,,1341,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1342,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Travel allowance,addition,fixed,,,,,,PENDING,,1343,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,General Provident Fund,deduction,fixed,,,,,,PENDING,,1344,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 15,Store keeper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1345,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1346,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1347,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Education Allowance,addition,fixed,,,,,,PENDING,,1348,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,House Rent Allowance,addition,fixed,,,,,,PENDING,,1349,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Medical Allowance,addition,fixed,,,,,,PENDING,,1350,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1351,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Travel allowance,addition,fixed,,,,,,PENDING,,1352,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,General Provident Fund,deduction,fixed,,,,,,PENDING,,1353,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 16,Store keeper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1354,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Sub-Assistant Engineer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1355,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Sub-Assistant Engineer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1356,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Sub-Assistant Engineer,House Rent Allowance,addition,percentage,,,,,,PENDING,,1357,percentage,40.00,1
+Govt. Pay Scale 2026,Grade 10,Sub-Assistant Engineer,Medical Allowance,addition,fixed,,,,,,PENDING,,1358,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Sub-Assistant Engineer,General Provident Fund,deduction,fixed,,,,,,PENDING,,1359,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 10,Sub-Assistant Engineer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1360,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1361,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1362,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,House Rent Allowance,addition,fixed,,,,,,PENDING,,1363,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,Medical Allowance,addition,fixed,,,,,,PENDING,,1364,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1365,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,Travel allowance,addition,fixed,,,,,,PENDING,,1366,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,General Provident Fund,deduction,fixed,,,,,,PENDING,,1367,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,Transport Helper,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1368,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1369,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1370,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Education Allowance,addition,fixed,,,,,,PENDING,,1371,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,House Rent Allowance,addition,fixed,,,,,,PENDING,,1372,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Medical Allowance,addition,fixed,,,,,,PENDING,,1373,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Mobile Allowance,addition,fixed,,,,,,PENDING,,1374,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Telephone call allowance,addition,fixed,,,,,,PENDING,,1375,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Deduction (for use of office vehicles),deduction,fixed,,,,,,PENDING,,1376,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Income Tax,deduction,fixed,,,,,,PENDING,,1377,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Others Deduction,deduction,fixed,,,,,,PENDING,,1378,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Treasurer,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1379,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1380,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1381,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Education Allowance,addition,fixed,,,,,,PENDING,,1382,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,House Rent Allowance,addition,fixed,,,,,,PENDING,,1383,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Medical Allowance,addition,fixed,,,,,,PENDING,,1384,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Mobile Allowance,addition,fixed,,,,,,PENDING,,1385,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Telephone call allowance,addition,fixed,,,,,,PENDING,,1386,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Deduction (for use of office vehicles),deduction,fixed,,,,,,PENDING,,1387,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,General Provident Fund,deduction,fixed,,,,,,PENDING,,1388,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Income Tax,deduction,fixed,,,,,,PENDING,,1389,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Others Deduction,deduction,fixed,,,,,,PENDING,,1390,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 1,Vice Chancellor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1391,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1392,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1393,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Education Allowance,addition,fixed,,,,,,PENDING,,1394,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,House Rent Allowance,addition,fixed,,,,,,PENDING,,1395,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Medical Allowance,addition,fixed,,,,,,PENDING,,1396,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Mobile Allowance,addition,fixed,,,,,,PENDING,,1397,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Telephone call allowance,addition,fixed,,,,,,PENDING,,1398,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Deduction (for use of office vehicles),deduction,fixed,,,,,,PENDING,,1399,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,General Provident Fund,deduction,fixed,,,,,,PENDING,,1400,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Income Tax,deduction,fixed,,,,,,PENDING,,1401,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Others Deduction,deduction,fixed,,,,,,PENDING,,1402,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 2,Vice Chancellor,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1403,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1404,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1405,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Education Allowance,addition,fixed,,,,,,PENDING,,1406,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,House Rent Allowance,addition,fixed,,,,,,PENDING,,1407,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Medical Allowance,addition,fixed,,,,,,PENDING,,1408,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Mobile Allowance,addition,fixed,,,,,,PENDING,,1409,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,General Provident Fund,deduction,fixed,,,,,,PENDING,,1410,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Income Tax,deduction,fixed,,,,,,PENDING,,1411,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 3,controller of Examinations,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1412,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Bangla New Year Allowance,addition,fixed,,,,,,PENDING,,1413,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Basic Pay,addition,calculated,,payable_basic,,,,PENDING,,1414,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Education Allowance,addition,fixed,,,,,,PENDING,,1415,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,House Rent Allowance,addition,fixed,,,,,,PENDING,,1416,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Medical Allowance,addition,fixed,,,,,,PENDING,,1417,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Tiffin Allowance,addition,fixed,,,,,,PENDING,,1418,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Travel allowance,addition,fixed,,,,,,PENDING,,1419,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,General Provident Fund,deduction,fixed,,,,,,PENDING,,1420,fixed,0.00,0
+Govt. Pay Scale 2026,Grade 20,dining boy,Revenue Stamp,deduction,fixed,,,,,,PENDING,,1421,fixed,0.00,0

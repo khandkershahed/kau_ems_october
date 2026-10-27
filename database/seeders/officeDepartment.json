@@ -1,0 +1,410 @@
+[
+    {
+        "type": "office",
+        "description": "Office of store",
+        "name": "Central store",
+        "isActive": "1"
+    },
+    {
+        "type": "faculty",
+        "description": "Assistant Professor",
+        "name": "Assistant Professor",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Office of the Vie Chancellor",
+        "name": "Office of the Vice-Chancellor",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Office of the Treasurer",
+        "name": "Office of the Treasurer",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Office of the Registrar",
+        "name": "Office of the Registrar",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Transport pool",
+        "name": "Transport pool",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Council Section",
+        "name": "Council Section",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Academic Section",
+        "name": "Academic Section",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Legal Section",
+        "name": "Legal Section",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Public Relations & Publications Office",
+        "name": "Public Relations & Publications Office",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Estate Section",
+        "name": "Estate Section",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Central store",
+        "name": "Central store",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Central Dispatch",
+        "name": "Central Dispatch",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Finance & Accounts Division",
+        "name": "Finance & Accounts Division",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Planning, Developments & Works Division",
+        "name": "Planning, Developments & Works Division",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "ICT Cell",
+        "name": "ICT Cell",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Office of the Controller of Examinations",
+        "name": "Office of the Controller of Examinations",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Engineering Division",
+        "name": "Engineering Division",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Health Care Center",
+        "name": "Health Care Center",
+        "isActive": "1"
+    },
+    {
+        "type": "office",
+        "description": "Deans of the Faculties",
+        "name": "Deans of the Faculties",
+        "isActive": "1"
+    },
+    {
+        "type": "faculty",
+        "description": "VETERINARY, ANIMAL AND BIOMEDICAL SCIENCES",
+        "name": "VETERINARY, ANIMAL AND BIOMEDICAL SCIENCES",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Anatomy and Histology",
+        "name": "Anatomy and Histology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Physiology",
+        "name": "Physiology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Pharmacology and Toxicology",
+        "name": "Pharmacology and Toxicology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Microbiology and Public Health",
+        "name": "Microbiology and Public Health",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Animal Science",
+        "name": "Animal Science",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Pathology",
+        "name": "Pathology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Parasitology",
+        "name": "Parasitology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Genetics and Animal Breeding",
+        "name": "Genetics and Animal Breeding",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Dairy Science",
+        "name": "Dairy Science",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Poultry Science",
+        "name": "Poultry Science",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Epidemiology and Preventive Medicine",
+        "name": "Epidemiology and Preventive Medicine",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Animal Nutrition",
+        "name": "Animal Nutrition",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Medicine",
+        "name": "Medicine",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Surgery",
+        "name": "Surgery",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Theriogenology",
+        "name": "Theriogenology",
+        "isActive": "1"
+    },
+    {
+        "type": "faculty",
+        "description": "AGRICULTURE",
+        "name": "AGRICULTURE",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agronomy",
+        "name": "Agronomy",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Soil Science",
+        "name": "Soil Science",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Horticulture",
+        "name": "Horticulture",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Crop Botany",
+        "name": "Crop Botany",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agricultural Chemistry",
+        "name": "Agricultural Chemistry",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Biochemistry and Molecular Biology",
+        "name": "Biochemistry and Molecular Biology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Entomology",
+        "name": "Entomology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Plant Pathology",
+        "name": "Plant Pathology",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Genetics and Plant Breeding",
+        "name": "Genetics and Plant Breeding",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agricultural Extension and Information Systems",
+        "name": "Agricultural Extension and Information Systems",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agroforestry",
+        "name": "Agroforestry",
+        "isActive": "1"
+    },
+    {
+        "type": "faculty",
+        "description": "FISHERIES & OCEAN SCIENCES",
+        "name": "FISHERIES & OCEAN SCIENCES",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Fishery Biology and Genetics",
+        "name": "Fishery Biology and Genetics",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Aquaculture",
+        "name": "Aquaculture",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Fishery Resources Conservation and Management",
+        "name": "Fishery Resources Conservation and Management",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Oceanography",
+        "name": "Oceanography",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Fisheries Technology and Quality Control",
+        "name": "Fisheries Technology and Quality Control",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Fish Health Management",
+        "name": "Fish Health Management",
+        "isActive": "1"
+    },
+    {
+        "type": "faculty",
+        "description": "AGRICULTURAL ECONOMICS & AGRIBUSINESS STUDIES",
+        "name": "AGRICULTURAL ECONOMICS & AGRIBUSINESS STUDIES",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agricultural Economics",
+        "name": "Agricultural Economics",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Sociology and Rural Development",
+        "name": "Sociology and Rural Development",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agricultural Statistics",
+        "name": "Agricultural Statistics",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Language and Communication Studies",
+        "name": "Language and Communication Studies",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agricultural Finance, Co-operative and Banking",
+        "name": "Agricultural Finance, Co-operative and Banking",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Agribusiness and Marketing",
+        "name": "Agribusiness and Marketing",
+        "isActive": "1"
+    },
+    {
+        "type": "faculty",
+        "description": "AGRICULTURAL ENGINEERING & TECHNOLOGY",
+        "name": "AGRICULTURAL ENGINEERING & TECHNOLOGY",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Farm Structure and Environmental Engineering",
+        "name": "Farm Structure and Environmental Engineering",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Farm Power and Machinery",
+        "name": "Farm Power and Machinery",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Irrigation and Water Management",
+        "name": "Irrigation and Water Management",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Computer Science and Engineering",
+        "name": "Computer Science and Engineering",
+        "isActive": "1"
+    },
+    {
+        "type": "department",
+        "description": "Mathematics and Physics",
+        "name": "Mathematics and Physics",
+        "isActive": "1"
+    }
+]

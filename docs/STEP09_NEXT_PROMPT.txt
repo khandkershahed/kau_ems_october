@@ -1,0 +1,13 @@
+STEP 09 — STRUCTURED PAY-SCALE ARREAR ENGINE (CORRECTIVE IMPLEMENTATION)
+Act as a senior Laravel 12, Vue 3, MySQL payroll and audit engineer. Answer in Bangla. Examine latest installed app.zip, staging MySQL SQL dump, published salary_arrear_rules rows and original gazette. Never assume a generated patch was applied.
+
+OBJECTIVE: Replace spreadsheet-expression-driven default arrears with a first-class, structured 5-component reconciliation that is directly used by SalaryArrearRuleService, Salary Calculator, SalaryBillCompositionService and Bulk preview. Keep the old rule data and audit it, never silently delete or rewrite independently edited rules.
+
+1. Build source adapter from verified 2015 June Basic, grade/stage, approved 2026 fixation schedule, increment eligibility (hold, AD HOC, study leave, promotion, grade changes). Independently compute July, August, September entitled phased Basic, old-scale increment and Basic Difference. No September bill dependency for pay-scale entitlement.
+2. Recoveries: Special Benefit actually paid; House Rent entitlement and previous payment; approved additional GPF versus previous deduction. Keep VERIFIED_PAID, RECONSTRUCTED_REFERENCE, MANUAL_CONFIRMED, UNKNOWN distinct. Missing historical evidence never becomes verified zero.
+3. Maintain one explicit selected month period (2026-07, 2026-08, 2026-09), no SUM_MONTHS * 3. Compute by month; mathematically equivalent flat x3 only when monthly amounts are identical.
+4. Reconcile published five rules including the independently edited BASIC_INCREMENT_ADJUSTMENT via before/after report. Do not auto publish; explicit audited revision only after review.
+5. Reuse existing employee-month manual component override and arrear amount evidence workflows. No new role-based HR gates or mandatory approvals; retain login and immutable posted financial safeguards.
+6. Expose clean UI with five sections, Automatic / Manual / Disabled, rate/base, source/evidence, Current / Arrear / Total, confidence and detailed monthly breakdown. Hide legacy raw formulas in advanced/audit view. Preserve KAU green/red design.
+7. Preserve posted bills and GPF history. Test 1, 10, 15, 16, 25 and all employees on disposable MySQL. Verify side-by-side Single vs Bulk. Test NULL UNKNOWN vs true zero, GPF HALF UP and signed House Rent.
+8. Deliver patch-only ZIP, tests, SHA256, staging commands, backup, Namecheap constraints, rollback, actual test logs. Do not claim production readiness without full staging tests.

@@ -1,0 +1,97 @@
+[
+    {
+        "name": "Bangla New Year Allowance",
+        "component_description": "bangla_new_year_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Basic Pay",
+        "component_description": "basic_pay",
+        "type": "allowance"
+    },
+    {
+        "name": "Book Allowance",
+        "component_description": "book_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Charge Allowance",
+        "component_description": "charge_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Education Allowance",
+        "component_description": "education_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Festival Allowance",
+        "component_description": "festival_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "House Rent Allowance",
+        "component_description": "house_rent_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Medical Allowance",
+        "component_description": "medical_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Mobile Allowance",
+        "component_description": "mobile_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Others Allowance",
+        "component_description": "others_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Special benefit",
+        "component_description": "special_benefit",
+        "type": "allowance"
+    },
+    {
+        "name": "Telephone call allowance",
+        "component_description": "telephone_call_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Tiffin Allowance",
+        "component_description": "tiffin_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Travel allowance",
+        "component_description": "travel_allowance",
+        "type": "allowance"
+    },
+    {
+        "name": "Deduction (for use of office vehicles)",
+        "component_description": "deduction_for_use_of_office_vehicles",
+        "type": "deduction"
+    },
+    {
+        "name": "General Provident Fund",
+        "component_description": "general_provident_fund",
+        "type": "deduction"
+    },
+    {
+        "name": "Income Tax",
+        "component_description": "income_tax",
+        "type": "deduction"
+    },
+    {
+        "name": "Others Deduction",
+        "component_description": "others_deduction",
+        "type": "deduction"
+    },
+    {
+        "name": "Revenue Stamp",
+        "component_description": "revenue_stamp",
+        "type": "deduction"
+    }
+]

@@ -1,0 +1,42 @@
+Act as a senior Laravel 12, Vue 3, Inertia.js, MySQL payroll engineer, financial audit lead, release engineer and security reviewer for Khulna Agricultural University EMS (KAU EMS).
+
+LANGUAGE: All explanations in Bangla. Keep code, filenames, commands and original report labels in English/Bangla as appropriate.
+
+OBJECTIVE: IMPLEMENT STEP 08 — PAYROLL FINAL QA AND DEPLOYMENT READINESS.
+
+INPUTS: Inspect the newest post-Step-07 app.zip, up-to-date SQL dump, all test/build logs, staging PDF samples, and previously supplied Gazette/reference reports. Verify actual installed source; don't trust prior patch descriptions alone.
+
+PREVIOUS STEPS:
+01 verified component configuration table and seeder (1421 historical assignments, 0 approved and 1421 pending in last confirmed preflight). Do NOT automatically activate unpublished zero placeholders.
+02 effective-date automatic Fixed/Percentage resolver.
+03 employee/month component overrides and source hash.
+04 Current/Arrear/Total single calculation and GPF separation.
+05 scale-based July–September 2026 arrear; OLD increment once; UNKNOWN evidence remains UNKNOWN.
+06 25-employee resumable preview/posting, explicit selection and hash-check. PREVIOUS BLOCKER: resources/js/Pages/Salary/GenerateBills/Index.vue line 1498 malformed href causing failed Vite build; Step 07 patch targets this.
+07 new posted-bill-only canonical HTML reports: SalaryOfficialReportSource, SalaryOfficialReportController, resources/views/salary/official-report.blade.php, print/save PDF, optional server Chromium PDF, bulk summary, arrear report, CSV and Excel from saved source; no report-side financial writes. Verify this was actually installed and built.
+
+CRITICAL USER INSTRUCTION: NO operational payroll role-based HR gate. Do not introduce authorizePayroll(), superadmin/payroll_hr-only restrictions, mandatory employee confirmation or multiple approval steps. Keep existing authentication. Preserve basic integrity, transaction, duplicate-payment and immutable historical financial data protections.
+
+UNRESOLVED ITEMS:
+- BASIC_INCREMENT_ADJUSTMENT published arrear rule was independently modified. ReviewOctoberArrearRules reported NO RULES COMMITTED and requires explicit manual reconciliation. No automatic publish or mutation.
+- All Step 01 components were PENDING at last confirmed check; no invented rates.
+- PHPUnit MySQL tests were frequently skipped on existing Windows setup; isolated MySQL clone needed.
+- Step 06 Vite build failed in previously reported log; full new build must pass.
+- Namecheap Chromium availability is unknown; native browser Print/Save PDF must always remain functional. Direct PDF download may only be enabled when server PDF binary works in staging.
+- New report source rejects snapshots that cannot reconcile. Test actual old and Phase 5 bills, particularly whether source-hash reserialization succeeds. Do not silently reinterpret old percentage rates as paid amounts.
+- July/August/September aggregate-only arrears are NOT monthly allocations. Never invent equal splits or mark missing payment sources verified zero.
+
+TASKS:
+1. Conduct file-by-file changed-source inventory and run php -l on all modified PHP files. Check routes and configs for no role gate.
+2. Confirm 2026 phased Basic and 2028 House Rent effective dates against original Gazette. Do not change October regular payroll policy silently.
+3. On isolated MySQL copy, exercise all SalaryOfficialReport endpoints: single bill, bulk 10/15/custom, arrear, HTML, JSON, CSV, Excel, optionally configured direct PDF. Check source hashes, line reconciliation, bank snapshot and READ-ONLY database before/after counts.
+4. Run all PHP unit + feature tests and JS unit tests, and npm ci/npm run build. Resolve all actual failures without redesign.
+5. Do numerical reconciliation for 1, 10, 15, 16 and ALL eligible employees. Compare Single Calculator, Salary Setup, Bulk Preview, saved Bill, CSV, Excel, official HTML and rendered PDF. Distinguish posted vs provisional vs UNKNOWN.
+6. Verify regular GPF vs Additional GPF, old increment once, signed House Rent, Special Benefit recovery, 3-month period, AD HOC, Study Leave, Increment Hold, overrides and employee-month isolation.
+7. Test repeat generation, race/concurrency, duplicate bill/arrear, stale source hash rejection, atomic rollback and bank advice isolation on disposable DB only. Never post to real production ledger during QA.
+8. Render representative A4 PDF samples, inspect all pages for Bangla/English fonts, table lines, page counts, signatures and clipping. Note direct PDF environment limits. If PDFs cannot be produced, document the blocker, do not claim visual pass.
+9. Run package dependency security audit; address vulnerabilities by tested upgrades only; avoid npm audit fix --force without compatibility review.
+10. Produce release checklist, exact Windows staging commands, Namecheap deployment instructions adapted to verified host facilities, DB and file backups, reversible deployment steps, smoke tests, post-deploy watchlist and rollback plan.
+11. Deliver an actual corrective PATCH-ONLY ZIP if any bugs are found, SHA256 manifest, detailed QA report, and production readiness verdict. Do not claim production readiness until the tests really passed.
+
+FINAL: Preserve UI and all existing payroll modules; no new HR authorization blockade; do not run seeders or financially modify production salary/GPF history. Explicitly list what passed, failed, skipped, and not run. If tests cannot run, give precise commands to execute in Windows staging and do not imply success.

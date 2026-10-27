@@ -1,0 +1,1635 @@
+action,source_row_id,target_salary_generate_id,employee_code,month_id,year,user_id,source_review_status,name,source_net,note
+insert,4919,,40173,6,2026,424,approved,"MD. MEHEDI HASAN",17942.50,
+insert,5014,,40033,6,2026,426,approved,"Tanvir Ahmed",20179.50,
+insert,5325,,40173,7,2026,424,approved,"MD. MEHEDI HASAN",18478.00,
+insert,5420,,40033,7,2026,426,approved,"Tanvir Ahmed",21047.50,
+insert,5850,,20137,9,2026,3,pending,"Dr. Shamim Ahmed Kamal Uddin Khan",111966.00,
+insert,5851,,1003,9,2026,4,pending,"GM Anisur Rahman",108160.00,
+insert,5852,,20080,9,2026,5,pending,"Md. Rajibul Karim",104594.00,
+insert,5853,,20081,9,2026,6,pending,"SM Moniruzzaman",103150.00,
+insert,5854,,20002,9,2026,7,pending,"Md. Rezaul Islam",80044.00,
+insert,5855,,20003,9,2026,8,pending,"MD. SHAFIUR RAHMAN KHAN",52283.00,
+insert,5856,,20004,9,2026,9,pending,"MD. JASHIM UDDIN",51202.50,
+insert,5857,,20005,9,2026,10,pending,"Anamul Kabir",54186.00,
+insert,5858,,20007,9,2026,11,pending,"Murad Bellah",54686.00,
+insert,5859,,20006,9,2026,12,pending,"Sazzadul Islam",54186.00,
+insert,5860,,20008,9,2026,13,pending,"Abdul Kaium",52283.00,
+insert,5861,,20009,9,2026,14,pending,"Md. Khirul Bashar Riaz",42901.00,
+insert,5862,,20010,9,2026,15,pending,"USUF ALI",40292.00,
+insert,5863,,20011,9,2026,16,pending,"Md Hasibul Islam",40292.00,
+insert,5864,,20012,9,2026,17,pending,"Sultan Mahmud",39292.00,
+insert,5865,,20020,9,2026,18,pending,"S. M. Nazim Jubaer",52283.00,
+insert,5866,,20013,9,2026,19,pending,"Jannatun Nayem",40292.00,
+insert,5867,,20014,9,2026,20,pending,"SK RASHEDUZZAMAN",52883.00,
+insert,5868,,20015,9,2026,21,pending,"Shahidul Islam",52283.00,
+insert,5869,,20016,9,2026,22,pending,"Md.Forkan Ahmed",40292.00,
+insert,5870,,20017,9,2026,23,pending,"Muhammad Ali",40292.00,
+insert,5871,,20018,9,2026,24,pending,"Saifullah Mansur",49847.00,
+insert,5872,,20024,9,2026,26,pending,"Khan Jabid Hasan",48839.00,
+insert,5873,,20022,9,2026,27,pending,"Tanbibur Rahman",48339.00,
+insert,5874,,20025,9,2026,28,pending,"Shariful islam",49847.00,
+insert,5875,,20021,9,2026,29,pending,"SAIFULLAH HAQUE",48339.00,
+insert,5876,,20026,9,2026,30,pending,"Md. Monoar Kowshar",32150.00,
+insert,5877,,20032,9,2026,31,pending,"Md. Fahad Khan",38936.00,
+insert,5878,,20029,9,2026,32,pending,"MST. AFSANA YASMIN",0.00,
+insert,5879,,20027,9,2026,33,pending,"Shaikh imran Ahmmed",38436.00,
+insert,5880,,20028,9,2026,34,pending,"CHITTA RANJAN MRIDHA",38436.00,
+insert,5881,,20031,9,2026,35,pending,"Alal Khan",36667.00,
+insert,5882,,20030,9,2026,36,pending,"Nahid Sultana Moon",38436.00,
+insert,5883,,20033,9,2026,37,pending,"Humira Parpen Rumpa",29785.00,
+insert,5884,,20034,9,2026,38,pending,"MD JAHANGIR HOSSAIN",30541.00,
+insert,5885,,20035,9,2026,39,pending,"Satyam Roy",30541.00,
+insert,5886,,20037,9,2026,40,pending,"MD WAHID MALLIK",30680.00,
+insert,5887,,20038,9,2026,41,pending,"Chandan kumar Sarkar",49847.00,
+insert,5888,,20039,9,2026,42,pending,"Sk. Faisal Ahmed",41901.00,
+insert,5889,,20040,9,2026,43,pending,"Nabila Rahman",42735.00,
+insert,5890,,20041,9,2026,44,pending,"SHIEK AMINUL ISLAM",41901.00,
+insert,5891,,20042,9,2026,45,pending,"Md. Al Mahmud",41901.00,
+insert,5892,,20043,9,2026,46,pending,"B. M. ISLAMUL HAQ",41901.00,
+insert,5893,,20044,9,2026,47,pending,"Krishibid Md. Mizanur Rahman",41901.00,
+insert,5894,,20045,9,2026,48,pending,"DELWAR HOSSAIN",42501.00,
+insert,5895,,20046,9,2026,49,pending,"DABOBRATA KUMAR SWAR",41901.00,
+insert,5896,,20047,9,2026,50,pending,"Sharmin Parvin",43235.00,
+insert,5897,,20048,9,2026,51,pending,"Md. Ashraful Islam",43945.50,
+insert,5898,,20050,9,2026,53,pending,"MD. NAJMUL HAQUE",41901.00,
+insert,5899,,20053,9,2026,54,pending,"Md. Masud Rana",32150.00,
+insert,5900,,20052,9,2026,55,pending,"Md Rasel Hasan",30540.00,
+insert,5901,,20051,9,2026,56,pending,"Md. Hasan Bali",30540.00,
+insert,5902,,20054,9,2026,57,pending,"MD.RAIHAN SHOBAN",32150.00,
+insert,5904,,20055,9,2026,59,pending,"Md.Khabir Uddin",31680.00,
+insert,5905,,20056,9,2026,60,pending,"ABDUL MATIN",31180.00,
+insert,5906,,20058,9,2026,61,pending,"MD. NAZMUL HASSAN",29285.00,
+insert,5907,,20059,9,2026,62,pending,"Molla Shofikul islam Sajib",29785.00,
+insert,5908,,20060,9,2026,63,pending,"Saharin Islam Mim",29285.00,
+insert,5909,,20061,9,2026,64,pending,"Ziarul Golder",29785.00,
+insert,5910,,20062,9,2026,65,pending,"Dip Lal Pandey",21165.00,
+insert,5911,,20063,9,2026,66,pending,"Ujjal Kumar Das",29785.00,
+insert,5912,,20064,9,2026,67,pending,"MITHUN KUMAR",29285.00,
+insert,5913,,20065,9,2026,68,pending,"Shailendronath Bairagi",29285.00,
+insert,5914,,20066,9,2026,69,pending,"Rumpa Akter",29285.00,
+insert,5915,,20067,9,2026,70,pending,"Khan Tanvir Arif",29285.00,
+insert,5916,,20068,9,2026,71,pending,"Mithun Mallick",29285.00,
+insert,5917,,20069,9,2026,72,pending,"SAIMA JHOTI",29785.00,
+insert,5918,,20076,9,2026,73,pending,"Md. Imran Munsi",29285.00,
+insert,5919,,20070,9,2026,74,pending,"SHEKHORE BISWAS",28012.00,
+insert,5920,,20071,9,2026,75,pending,"Razia Khatun",29285.00,
+insert,5921,,20072,9,2026,76,pending,"Md. Masum Billh",29285.00,
+insert,5922,,20073,9,2026,77,pending,"MD. NASIM AKAND",29785.00,
+insert,5923,,20074,9,2026,78,pending,"MD ABID HOSSAIN",29285.00,
+insert,5924,,20075,9,2026,79,pending,"SHABEQUN NAHAR",29785.00,
+insert,5925,,20077,9,2026,80,pending,"Md Aslam khan",29285.00,
+insert,5926,,20078,9,2026,82,pending,"Md. Murad Hossain",29285.00,
+insert,5927,,10026,9,2026,83,pending,"Dr. Md. Taslim Hossain",79344.00,
+insert,5928,,10030,9,2026,84,pending,"Dr. Israt Jahan Irin",83844.00,
+insert,5929,,10028,9,2026,85,pending,"Dr. Muhammad Ashiqul Alam",86568.00,
+insert,5930,,10027,9,2026,86,pending,"Dr. Nahid Rahman",78344.00,
+insert,5931,,10029,9,2026,87,pending,"Dr. M A Hannan",79344.00,
+insert,5932,,10020,9,2026,88,pending,"Tapati Roy",54470.00,
+insert,5933,,10024,9,2026,89,pending,"Dr. Mst. Mahamuda Khatun",66128.00,
+insert,5934,,10018,9,2026,90,pending,"Mohammed Arif Sadik polash",54470.00,
+insert,5935,,10019,9,2026,91,pending,"Keya Akter",56340.00,
+insert,5936,,10012,9,2026,92,pending,"Nigar Afsana",54470.00,
+insert,5937,,10023,9,2026,94,pending,"Shahabuddin Ahmed",61628.00,
+insert,5938,,10006,9,2026,95,pending,"Sharmin Jaman",58744.00,
+insert,5939,,10003,9,2026,96,pending,"PAPIA KHATUN",55140.00,
+insert,5940,,10022,9,2026,97,pending,"SWARUP KUMAR KUNDU",53840.00,
+insert,5941,,10008,9,2026,98,pending,"Jotirmoy Chakrobortty",54470.00,
+insert,5942,,10010,9,2026,99,pending,"Newton Chandra Paul",54470.00,
+insert,5943,,10016,9,2026,100,pending,"Nahid Hossain",54470.00,
+insert,5944,,10009,9,2026,101,pending,"Abu Rashed Md. Maukeeb",61628.00,
+insert,5945,,10017,9,2026,102,pending,"SHORIFUL Islam",58744.00,
+insert,5946,,10005,9,2026,103,pending,"Mustasim Femous",50770.00,
+insert,5947,,10002,9,2026,104,pending,"MD. JANNAT HOSSAIN",50770.00,
+insert,5948,,10025,9,2026,105,pending,"Md. Amir Hossain",54470.00,
+insert,5949,,10021,9,2026,106,pending,"Md. Salauddin",66128.00,
+insert,5950,,10007,9,2026,107,pending,"Tatia Biswas",56340.00,
+insert,5951,,10014,9,2026,108,pending,"Md. Morshedul Islam",61628.00,
+insert,5952,,10001,9,2026,109,pending,"M. Sohidullah",66128.00,
+insert,5953,,10072,9,2026,110,pending,"Dr. Mohammad Nazrul Islam",79344.00,
+insert,5954,,10053,9,2026,111,pending,"Dr. Asadujjaman",78344.00,
+insert,5955,,10066,9,2026,112,pending,"Rumana Biswas",61678.00,
+insert,5956,,10045,9,2026,113,pending,"Meer Rifath Jahan Usha",66178.00,
+insert,5957,,10032,9,2026,114,pending,"Md. Uzzal Hossain",64178.00,
+insert,5958,,10038,9,2026,115,pending,"Shahin Imran",62178.00,
+insert,5959,,10040,9,2026,116,pending,"Md. Asif Mahamud",43285.50,
+insert,5960,,10037,9,2026,117,pending,"BIDYUT MATUBBER",62878.00,
+insert,5961,,10041,9,2026,118,pending,"Rakibul Islam Md Rabbi",56390.00,
+insert,5962,,10033,9,2026,119,pending,"Shabuj Kanti Nath",56390.00,
+insert,5963,,10042,9,2026,120,pending,"Tusar Kanti Roy",61678.00,
+insert,5964,,10064,9,2026,121,pending,"Anika Tahsin Mou",56390.00,
+insert,5965,,10060,9,2026,122,pending,"Sanzib Kumar Barman",61678.00,
+insert,5966,,10047,9,2026,123,pending,"NUSRAT JAHAN MUMU",52715.00,
+insert,5967,,10074,9,2026,124,pending,"Tuhinul Hasan",61678.00,
+insert,5968,,10059,9,2026,125,pending,"Dr. Md. Mehedi Alam",75162.00,
+insert,5969,,10061,9,2026,126,pending,"Kishor Kumar Tikadar",56390.00,
+insert,5970,,10052,9,2026,127,pending,"Rabeya Akter",43285.50,
+insert,5971,,10055,9,2026,128,pending,"Fatema jahan",47725.50,
+insert,5972,,10048,9,2026,129,pending,"Israt Jahan Herin",66178.00,
+insert,5973,,10058,9,2026,130,pending,"Md. Asadur Rahman",52225.50,
+insert,5974,,10049,9,2026,131,pending,"Md. Zonayet",66178.00,
+insert,5975,,10046,9,2026,132,pending,"Afsana Yasmin",0.00,
+insert,5976,,10035,9,2026,133,pending,"Dr. Subarna Rani Kundu",66178.00,
+insert,5977,,10076,9,2026,134,pending,"Ishrat Khan",47725.50,
+insert,5978,,10070,9,2026,135,pending,"Fahmida Akter Jolly",52225.50,
+insert,5979,,10039,9,2026,136,pending,"Dr. Noushin Jahan",74662.00,
+insert,5980,,10071,9,2026,137,pending,"Gazi Tamiz Uddin",61678.00,
+insert,5981,,10068,9,2026,138,pending,"Mahbuba Akther Mishu",59770.00,
+insert,5982,,10036,9,2026,139,pending,"Zannatul Ferdous",56390.00,
+insert,5983,,10044,9,2026,140,pending,"Nilufa Yasmin Poly",66178.00,
+insert,5984,,10069,9,2026,141,pending,"Shourob Mohon Saha",56390.00,
+insert,5985,,10063,9,2026,142,pending,"Md. Jahurul Islam",66178.00,
+insert,5986,,10062,9,2026,143,pending,"Ferdous Ara Happy",61678.00,
+insert,5987,,10057,9,2026,144,pending,"Md. Jahid Hossain",52225.50,
+insert,5988,,10056,9,2026,145,pending,"Bably Akter",48225.50,
+insert,5989,,10034,9,2026,146,pending,"Shaolin Ferdouse",52225.50,
+insert,5990,,10077,9,2026,147,pending,"Salma Khatun",41985.00,
+insert,5991,,10079,9,2026,148,pending,"Priangka Goswami",41985.00,
+insert,5992,,10080,9,2026,149,pending,"Rashmia Sultana",46485.00,
+insert,5993,,10081,9,2026,150,pending,"Kazi Moushumi Akter",41985.00,
+insert,5994,,10082,9,2026,151,pending,"Karimun Nessa",54520.00,
+insert,5995,,10083,9,2026,152,pending,"Tanwne Sarker",41985.00,
+insert,5996,,10084,9,2026,153,pending,"Md. Habibur Rahman",41985.00,
+insert,5997,,10085,9,2026,154,pending,"Jesmin Ara",42985.00,
+insert,5998,,10086,9,2026,155,pending,"Rimu Das",60890.00,
+insert,5999,,10087,9,2026,156,pending,"Bhaskar Chandra Majumdar",46485.00,
+insert,6000,,10088,9,2026,157,pending,"Basir Ahammad",46485.00,
+insert,6001,,10089,9,2026,158,pending,"Dr. Debasish Pandit",62678.00,
+insert,6002,,10090,9,2026,159,pending,"Md. Hafizur Rahman, PhD",63294.00,
+insert,6003,,10091,9,2026,160,pending,"Homayora Yeasmin",41985.00,
+insert,6004,,10092,9,2026,161,pending,"Md. Ariful Islam",59020.00,
+insert,6005,,10093,9,2026,162,pending,"Puja Roy",46485.00,
+insert,6006,,10094,9,2026,163,pending,"Angkur Chowdhury",48529.50,
+insert,6007,,10095,9,2026,164,pending,"Sadia Salam",44529.50,
+insert,6008,,10096,9,2026,165,pending,"Zakia Sultana",55020.00,
+insert,6009,,10097,9,2026,166,pending,"Ismot Zereen",44029.50,
+insert,6010,,10098,9,2026,167,pending,"Joy Shankar Boydda",44029.50,
+insert,6011,,10099,9,2026,168,pending,"Onamika Chowdhuri Keya",59020.00,
+insert,6012,,10100,9,2026,169,pending,"Mst. SABINA Alim",44029.50,
+insert,6013,,10101,9,2026,170,pending,"Asmaul Husna",54520.00,
+insert,6014,,10102,9,2026,171,pending,"DR.Nazmin Sultana Runa",44529.50,
+insert,6015,,10103,9,2026,172,pending,"Solema Akter Shanta",48529.50,
+insert,6016,,10104,9,2026,173,pending,"Tithe Saha",49029.50,
+insert,6017,,10105,9,2026,174,pending,"Mousumi Jahan Sumi",59520.00,
+insert,6018,,10106,9,2026,175,pending,"PROSENJIT SARKER",41985.00,
+insert,6019,,10107,9,2026,176,pending,"Mahfuja Ferdous",37042.00,
+insert,6020,,10108,9,2026,177,pending,"Mst. Assrafi Siddika",0.00,
+insert,6021,,10109,9,2026,178,pending,"Md. Sahidul Islam",45029.50,
+insert,6022,,10110,9,2026,179,pending,"Dilruba Akter Mir",44029.50,
+insert,6023,,10111,9,2026,180,pending,"DR.Fowzia Bahar",59020.00,
+insert,6024,,10113,9,2026,182,pending,"Md. Asaduzzaman Lovelu",49029.50,
+insert,6025,,10115,9,2026,183,pending,"Dr. Most. Waheda Rahman Ansary",64702.00,
+insert,6026,,10121,9,2026,184,pending,"Anika Ahmed",36417.00,
+insert,6027,,10120,9,2026,186,pending,"Md Shamim Hasan",36417.00,
+insert,6028,,10119,9,2026,187,pending,"Shoumik Mojumdar",36417.00,
+insert,6029,,10117,9,2026,188,pending,"Zahrul Jannat Peya",54520.00,
+insert,6030,,10122,9,2026,189,pending,"Zannatul Ferdous Shifat",36417.00,
+insert,6031,,30004,9,2026,190,pending,"MD.SHAHIDUL ISLAM",24794.50,
+insert,6032,,30002,9,2026,191,pending,"Mizanur Rahman",26759.00,
+insert,6033,,30003,9,2026,193,pending,"MD. Ashraful kamal",24794.50,
+insert,6034,,30017,9,2026,194,pending,"Md. Abul Basar",24225.00,
+insert,6035,,30016,9,2026,195,pending,"Md. Anisur Rahman Rintu",24225.00,
+insert,6036,,30005,9,2026,196,pending,"MD. JHAHID HASAN",23349.00,
+insert,6037,,30006,9,2026,197,pending,"Imran Hossain",27259.00,
+insert,6038,,30007,9,2026,198,pending,"Md. Faruk Ali",25331.00,
+insert,6039,,40013,9,2026,199,pending,"Ahmed Foysal",21090.00,
+insert,6040,,30008,9,2026,200,pending,"MD JAMAL HOSSEN",24294.50,
+insert,6041,,40021,9,2026,201,pending,"Md.Akhtarul Islam",22675.00,
+insert,6042,,30018,9,2026,202,pending,"Md. Shahadat Hossin Kha",22826.00,
+insert,6043,,30020,9,2026,203,pending,"ANAYET BEPARI",23326.00,
+insert,6044,,30019,9,2026,204,pending,"Shak Md Arman",22326.00,
+insert,6045,,40012,9,2026,205,pending,Saifullah,23617.00,
+insert,6046,,40026,9,2026,206,pending,"MD AL AMIN",20047.50,
+insert,6047,,40024,9,2026,207,pending,"Khandaker Abul Kalam",21876.50,
+insert,6048,,30035,9,2026,208,pending,"Md. Maruf Hasan Gazi",23326.00,
+insert,6049,,30031,9,2026,209,pending,"MD JAKIR HOSSAIN",28491.00,
+insert,6050,,30030,9,2026,210,pending,"A.B.M. ARIFUL ISLAM TURAN",22826.00,
+insert,6051,,40028,9,2026,212,pending,"Md.Raju Sheik",20547.50,
+insert,6052,,40029,9,2026,213,pending,"Salam Moral",20179.50,
+insert,6053,,40022,9,2026,214,pending,"SANJIDA SHARMIN",20547.50,
+insert,6054,,40027,9,2026,215,pending,"Md. Ali Asim Howlader",19179.50,
+insert,6055,,40034,9,2026,216,pending,"MD. RASHADUL ISLAM",19179.50,
+insert,6056,,40035,9,2026,217,pending,"Fatema Akter",19179.50,
+insert,6057,,30046,9,2026,218,pending,"Sabira Khatun",27609.00,
+insert,6058,,30048,9,2026,219,pending,"Mizanur Rahman",28609.00,
+insert,6059,,40050,9,2026,220,pending,"MD NAZMUL ISLAM",20179.50,
+insert,6060,,40053,9,2026,221,pending,"MD. Habibur Rahaman",19679.50,
+insert,6061,,40054,9,2026,222,pending,"Mst. Parveen Islam",20179.50,
+insert,6062,,40055,9,2026,223,pending,"Mst. Rohema Akter Rekha",20179.50,
+insert,6063,,40056,9,2026,224,pending,"Md. Al Amin",20179.50,
+insert,6064,,40057,9,2026,225,pending,"Md.Sumon morol",20179.50,
+insert,6065,,40058,9,2026,226,pending,"Md. Sazzad Mohi",19179.50,
+insert,6066,,30074,9,2026,227,pending,"Aminul Hasan",21849.50,
+insert,6067,,40068,9,2026,228,pending,"Sorif Pathan",19679.50,
+insert,6068,,30071,9,2026,229,pending,"MD. AMRAN HOSSAIN",21849.50,
+insert,6069,,30098,9,2026,230,pending,"Nasir Ahmed",20919.50,
+insert,6070,,30065,9,2026,231,pending,"Sabiha Karim",21349.50,
+insert,6071,,30084,9,2026,232,pending,"Md. Mintu",26759.00,
+insert,6072,,30078,9,2026,233,pending,"Anjan Kumar Das",20419.50,
+insert,6073,,30082,9,2026,234,pending,"Rukiya Akter",20419.50,
+insert,6074,,30089,9,2026,235,pending,"Ananna Rahman Mumu",21419.50,
+insert,6075,,30096,9,2026,236,pending,"Md. Nurul Islam",20419.50,
+insert,6076,,30099,9,2026,237,pending,"Md. Mehede Hasan Rqny",20419.50,
+insert,6077,,30100,9,2026,238,pending,"Md. Kamruzzaman Shaikh",20419.50,
+insert,6078,,30101,9,2026,239,pending,"Jahir Abbas",20919.50,
+insert,6079,,30103,9,2026,240,pending,"H M Arif Hossain",20419.50,
+insert,6080,,40081,9,2026,241,pending,"MD.RASEL AHMED SHARIF",18478.00,
+insert,6081,,40083,9,2026,242,pending,"Md. Mostafizur Rahman",18478.00,
+insert,6082,,40087,9,2026,243,pending,"MD. WAHIDUZZAMAN",17942.50,
+insert,6083,,40092,9,2026,244,pending,"SABINA YASMIN",18478.00,
+insert,6084,,40093,9,2026,245,pending,"Mst. Nupur Khatun",18478.00,
+insert,6085,,30254,9,2026,246,pending,"DEBASHIS KUMAR",17475.00,
+insert,6086,,30090,9,2026,247,pending,"Md. Shariful Islam",20919.50,
+insert,6087,,30113,9,2026,248,pending,"Fakrul Islam",27259.00,
+insert,6088,,30116,9,2026,249,pending,"Md Delowar Hossain",26759.00,
+insert,6089,,30117,9,2026,250,pending,"Md.Muktajul Islam Sohag",26759.00,
+insert,6090,,30118,9,2026,251,pending,"Jewel Hawlader",26759.00,
+insert,6091,,30119,9,2026,252,pending,"Tamanna Amin Tisha",27259.00,
+insert,6092,,30120,9,2026,253,pending,"Soma Rani Saha",27759.00,
+insert,6093,,30121,9,2026,254,pending,"Md. Sharfuddin Khan",23767.50,
+insert,6094,,30122,9,2026,255,pending,"Halima Khatun Maina",20134.50,
+insert,6095,,30123,9,2026,256,pending,"SYED KHALID HASAN",20919.50,
+insert,6096,,30124,9,2026,257,pending,"MASUM HOSSAIN",20419.50,
+insert,6097,,30125,9,2026,258,pending,"MD. Refajul Sheikh",20419.50,
+insert,6098,,30126,9,2026,259,pending,"Arun Kumar Rahut",20419.50,
+insert,6099,,30127,9,2026,260,pending,"MD: ALAMIN",20419.50,
+insert,6100,,30128,9,2026,261,pending,ELIAUS,20919.50,
+insert,6101,,30129,9,2026,262,pending,"KANIKA MONDAL",20919.50,
+insert,6102,,30130,9,2026,263,pending,"Md. Anamul hoque",20419.50,
+insert,6103,,30131,9,2026,264,pending,"Md. Omar Faruque",20419.50,
+insert,6104,,30132,9,2026,265,pending,"Md. Ariful Islam",20919.50,
+insert,6105,,40135,9,2026,266,pending,"MD:MUKTO ALI",19427.50,
+insert,6106,,40136,9,2026,267,pending,"MD.Farukul Islam",20427.50,
+insert,6107,,40137,9,2026,268,pending,"SANJIDA AFRIN",19927.50,
+insert,6108,,40138,9,2026,269,pending,"Md. Omar Faruk",20427.50,
+insert,6109,,40139,9,2026,270,pending,"Hannan Akhand",17287.50,
+insert,6110,,40141,9,2026,271,pending,"BISHAL SARKAR",19427.50,
+insert,6111,,40142,9,2026,272,pending,"Md Nahidul Islam",18838.50,
+insert,6112,,40143,9,2026,273,pending,"MD.Mahamudul Hasan",18838.50,
+insert,6113,,40145,9,2026,274,pending,"MD. Al Mamon",19338.50,
+insert,6114,,40146,9,2026,275,pending,"Abdullah Al Fahim Sajjan",18838.50,
+insert,6115,,40147,9,2026,276,pending,"MD. AHID SHAIKH",19338.50,
+insert,6116,,40144,9,2026,277,pending,"Md. Nazmul Hossain",18838.50,
+insert,6117,,40149,9,2026,278,pending,"Md.Asif Ahmed",18838.50,
+insert,6118,,40150,9,2026,279,pending,"S.R.A SHOHAN",18838.50,
+insert,6119,,40151,9,2026,280,pending,"Didarul Alam",18838.50,
+insert,6120,,40152,9,2026,281,pending,"Md. ABDUS SALAM",18838.50,
+insert,6121,,40153,9,2026,282,pending,"Mir Sadrul Amin.",18838.50,
+insert,6122,,40154,9,2026,283,pending,"Omar Faruq",18838.50,
+insert,6123,,40155,9,2026,284,pending,"Md. Habibur Rahman",19838.50,
+insert,6124,,40156,9,2026,285,pending,"Dolon Kumar Das",18838.50,
+insert,6125,,40157,9,2026,286,pending,"Arifa Sultana",18838.50,
+insert,6126,,40148,9,2026,287,pending,"SABINA YEASMIN",18838.50,
+insert,6127,,40161,9,2026,288,pending,"ALOKA BISWAS",18478.00,
+insert,6128,,40162,9,2026,289,pending,"Md Raihan Islam",18978.00,
+insert,6129,,40163,9,2026,290,pending,"Anik Biswas",18478.00,
+insert,6130,,40164,9,2026,291,pending,"Md.Nasimul Islam",18978.00,
+insert,6131,,40165,9,2026,292,pending,"Lasker Nadimul Islam",18478.00,
+insert,6132,,40166,9,2026,293,pending,"Hawlader Manjur Hasan",18478.00,
+insert,6133,,40169,9,2026,294,pending,"S.M. Sujauddin",18478.00,
+insert,6134,,40170,9,2026,295,pending,"Kaziul Islam",18478.00,
+insert,6135,,40171,9,2026,296,pending,"MD.NAZMUL HUDA",18478.00,
+insert,6136,,40172,9,2026,297,pending,"Md. Shahinur Rahman",18478.00,
+insert,6137,,40174,9,2026,299,pending,"HAMIM SARDER",18478.00,
+insert,6138,,40175,9,2026,300,pending,"MD. RAYHAN MOLLA",19478.00,
+insert,6139,,40176,9,2026,301,pending,"MD TAHIDUL ISLAM",18478.00,
+insert,6140,,40177,9,2026,302,pending,"Md.Kazi Sabbir Hossen",18478.00,
+insert,6141,,40178,9,2026,303,pending,"Begum Nur-E-Jakia",19478.00,
+insert,6142,,40179,9,2026,304,pending,"MIZANUR RAHMAN",18478.00,
+insert,6143,,40180,9,2026,305,pending,"MD:MOKTAR HOSSEN",18478.00,
+insert,6144,,40181,9,2026,306,pending,"Beal Shaikh",18478.00,
+insert,6145,,40182,9,2026,307,pending,"Md. Sajib Shaikh",18478.00,
+insert,6146,,40183,9,2026,308,pending,"Fairuz Rahaman",18478.00,
+insert,6147,,40184,9,2026,309,pending,"Mohini Mondol Sima",18478.00,
+insert,6148,,40185,9,2026,310,pending,"ASIA KHATUN",18478.00,
+insert,6149,,40186,9,2026,311,pending,"Sohan Howladar",18478.00,
+insert,6150,,40187,9,2026,312,pending,"Shamin Al Fazal",18478.00,
+insert,6151,,40190,9,2026,313,pending,"Monwar Hossain",18478.00,
+insert,6152,,40191,9,2026,314,pending,"Md Ramjan",18478.00,
+insert,6153,,40192,9,2026,315,pending,Alamin,18478.00,
+insert,6154,,40194,9,2026,316,pending,"Kamrul Hasan",18478.00,
+insert,6155,,40195,9,2026,317,pending,"MST.Dilruba yeasmin",18478.00,
+insert,6156,,40196,9,2026,318,pending,"Abdullah al mamun",18478.00,
+insert,6157,,40193,9,2026,319,pending,"EFTEKHIAR MAHAMUD",18478.00,
+insert,6158,,40197,9,2026,320,pending,"Talukder Rafsunjani",19478.00,
+insert,6159,,40198,9,2026,321,pending,"Md.Shakil Hossain",18478.00,
+insert,6160,,40200,9,2026,323,pending,"MD Sohel",18478.00,
+insert,6161,,40201,9,2026,324,pending,"Krisno Kumar Day",18478.00,
+insert,6162,,40202,9,2026,325,pending,"Shariful Islam",18978.00,
+insert,6163,,40203,9,2026,326,pending,"Emran Howlader",18478.00,
+insert,6164,,40204,9,2026,327,pending,"MD. IMRAN THAKUR",18478.00,
+insert,6165,,40205,9,2026,328,pending,"Md. Alauddin Howlader",18478.00,
+insert,6166,,40206,9,2026,329,pending,"Margia Akter",18478.00,
+insert,6167,,40188,9,2026,330,pending,"MD MASUID ILAHI",18978.00,
+insert,6168,,40189,9,2026,331,pending,"Md.Nazmul Hossain",18478.00,
+insert,6169,,40168,9,2026,332,pending,"Saddam Hossain",18478.00,
+insert,6170,,40167,9,2026,333,pending,"JAHIDUL ISLAM HRIDOY",18478.00,
+insert,6171,,40210,9,2026,334,pending,"Md.Rafikul Islam Rubel",19478.00,
+insert,6172,,40211,9,2026,335,pending,"Rayhan Tarafder",18478.00,
+insert,6173,,40216,9,2026,336,pending,"Md. Kashem Ali",18942.50,
+insert,6174,,40217,9,2026,337,pending,"A. Rahman",19478.00,
+insert,6175,,40218,9,2026,338,pending,"Ibrahim Howlader Sujon",19478.00,
+insert,6176,,40215,9,2026,339,pending,"Tawhidur Rahaman",18478.00,
+insert,6177,,40158,9,2026,340,pending,"Sanjida Akter Shampa",0.00,
+insert,6178,,40159,9,2026,341,pending,"SATHI RANI SUTRADHAR",18838.50,
+insert,6179,,40160,9,2026,342,pending,"MD.Sadek Hossain opu",18838.50,
+insert,6180,,40207,9,2026,343,pending,"Sudipta bala",18478.00,
+insert,6181,,40208,9,2026,344,pending,"Md.Jalal uddin",18478.00,
+insert,6182,,40219,9,2026,345,pending,"Ruhal Amin",19478.00,
+insert,6183,,40221,9,2026,346,pending,"PariTosh Das",14112.50,
+insert,6184,,40223,9,2026,347,pending,"NAZMA AKTHER",18478.00,
+insert,6185,,40224,9,2026,348,pending,"samento das",18478.00,
+insert,6186,,40225,9,2026,349,pending,"Taum Rani Das",19478.00,
+insert,6187,,40226,9,2026,350,pending,"Sudam Halder",18478.00,
+insert,6188,,40227,9,2026,351,pending,"Tahmina Khatun",18978.00,
+insert,6189,,40228,9,2026,352,pending,"Md.Razaul Karim",19478.00,
+insert,6190,,40229,9,2026,353,pending,"G. M. HASAN AL-MAHMUD.",18978.00,
+insert,6191,,40230,9,2026,354,pending,"Sajal Rauth",19478.00,
+insert,6192,,40222,9,2026,355,pending,"Mst. Ratna Khatun",18978.00,
+insert,6193,,40220,9,2026,356,pending,"Md. Babul Dosrji",18478.00,
+insert,6194,,40212,9,2026,357,pending,"Md.Shahidul Sikder",18478.00,
+insert,6195,,40213,9,2026,358,pending,"Md Saidul Islam",19478.00,
+insert,6196,,40214,9,2026,359,pending,"Sheikh Shaon",17942.50,
+insert,6197,,40231,9,2026,360,pending,"SACHIN DAS",18478.00,
+insert,6198,,40268,9,2026,362,pending,"Md Emdadul Hoque Khan",18442.50,
+insert,6199,,40239,9,2026,363,pending,"POLOCK JODDER",17942.50,
+insert,6200,,40237,9,2026,364,pending,"SAFIQUZZAMAN MOLLICK",17942.50,
+insert,6201,,40236,9,2026,365,pending,"Arif Mridha",18442.50,
+insert,6202,,40257,9,2026,366,pending,"Nuzmul Hasan Foysal",18442.50,
+insert,6203,,40242,9,2026,367,pending,"REJWAN HOSSAIN TUHIN",17942.50,
+insert,6204,,40258,9,2026,368,pending,"Dipankor kumar saha",17990.00,
+insert,6205,,40256,9,2026,369,pending,"MD Mynul Islam",17942.50,
+insert,6206,,40241,9,2026,370,pending,"MAHAMUDA KHANOM JUTHI",17942.50,
+insert,6207,,40260,9,2026,371,pending,"Mainul Islam",17942.50,
+insert,6208,,40255,9,2026,372,pending,"Rafsan jani",17942.50,
+insert,6209,,40259,9,2026,373,pending,"MD. JAHANGIR ALAM",18442.50,
+insert,6210,,40249,9,2026,374,pending,"Shovon Biswas",17942.50,
+insert,6211,,40240,9,2026,375,pending,"MD Aslam",17942.50,
+insert,6212,,40253,9,2026,376,pending,"Ratna Rani Hela",17942.50,
+insert,6213,,40250,9,2026,377,pending,"Jasmin Akhter Shati",17942.50,
+insert,6214,,40248,9,2026,378,pending,"Nasrin Sultana",17942.50,
+insert,6215,,30262,9,2026,379,pending,"SOHAG HOSSEN",19536.00,
+insert,6216,,30234,9,2026,380,pending,"Md Al Amin Howlader",13593.00,
+insert,6217,,40266,9,2026,381,pending,"Shamim Hosain",18442.50,
+insert,6218,,40265,9,2026,382,pending,"Md. Ariful Islam",17942.50,
+insert,6219,,40245,9,2026,383,pending,"MD SUMON MRIDHA",17942.50,
+insert,6220,,40246,9,2026,384,pending,"Md. Safique",17942.50,
+insert,6221,,40247,9,2026,385,pending,"MD Abdus Satter",17942.50,
+insert,6222,,30243,9,2026,386,pending,"MD. JIHAD SHEIKH",22729.00,
+insert,6223,,30261,9,2026,387,pending,"Tanjira Sultana",23229.00,
+insert,6224,,30244,9,2026,388,pending,"AYAT ULLAH MUZAHID",23229.00,
+insert,6225,,30264,9,2026,389,pending,"Abdur Rahim",25565.50,
+insert,6226,,30233,9,2026,390,pending,"Yeasmin Haq",25565.50,
+insert,6227,,30263,9,2026,391,pending,"MD.BAIZID ADNAN",25565.50,
+insert,6228,,40272,9,2026,392,pending,"Rena Akter",18942.50,
+insert,6229,,40270,9,2026,393,pending,"MOUSUMI AKTER",19135.50,
+insert,6230,,40271,9,2026,394,pending,"Md. Alamgir Hossain",18635.50,
+insert,6231,,40275,9,2026,395,pending,"Joynal Islam",18442.50,
+insert,6232,,40238,9,2026,396,pending,"Mansur Hillal",17942.50,
+insert,6233,,40267,9,2026,397,pending,"Md. Sobus Mia",17866.50,
+insert,6234,,30036,9,2026,398,pending,"Roman Sheikh",26316.00,
+insert,6235,,30073,9,2026,399,pending,"SHAIKH JAKIA SULTANA",25816.00,
+insert,6236,,30072,9,2026,400,pending,"PRITOM KUMAR KUNDU",19727.50,
+insert,6237,,40059,9,2026,401,pending,"Minhazul Abedin Kazol",18572.50,
+insert,6238,,40060,9,2026,402,pending,"Shariful Islam",19072.50,
+insert,6239,,30075,9,2026,403,pending,"Nur Nabi Akhter",25816.00,
+insert,6240,,30043,9,2026,404,pending,"Sujan Mondal",25816.00,
+insert,6241,,40051,9,2026,405,pending,"MD.TANIJ HOWLADER",19661.50,
+insert,6242,,30067,9,2026,406,pending,"Md golam kibria howlader",20727.50,
+insert,6243,,30066,9,2026,407,pending,"Mst. Mursida Aktar",20727.50,
+insert,6244,,40052,9,2026,408,pending,"Khursida khatun",19447.50,
+insert,6245,,40061,9,2026,409,pending,"Shahriar Ahmed",19447.50,
+insert,6246,,30235,9,2026,411,pending,"Tanvir Ahmed",22729.00,
+insert,6247,,40104,9,2026,412,pending,"Debasish Roy",18478.00,
+insert,6248,,30070,9,2026,413,pending,"Nasir Uddin",27609.00,
+insert,6249,,30076,9,2026,414,pending,"Rani Khatun",26759.00,
+insert,6250,,20079,9,2026,415,pending,"Mohammed Shahid Ali",93558.00,
+insert,6251,,20090,9,2026,416,pending,"Dr Aroni Biswash",35590.00,
+insert,6252,,10160,9,2026,417,pending,"S. M. Nasir Uddin",69702.00,
+insert,6253,,30081,9,2026,418,pending,"MD SHAHADAT HOSSAIN",20140.00,
+insert,6254,,20082,9,2026,419,pending,"Prof. Dr. Md. Asaduzzaman Sarker",71506.23,
+insert,6255,,20023,9,2026,420,pending,"Nafisa Jebin Mila",45045.00,
+insert,6256,,30133,9,2026,421,pending,"Martuja azad",20419.50,
+insert,6257,,40140,9,2026,422,pending,"Ronjon Debnath",19427.50,
+insert,6258,,20049,9,2026,423,pending,"Md. Mehedi Hasan",42501.00,
+insert,6259,,40173,9,2026,424,pending,"MD. MEHEDI HASAN",18478.00,
+insert,6260,,40274,9,2026,425,pending,"MD. MEHEDI HASAN",17942.50,
+insert,6261,,40033,9,2026,426,pending,"Tanvir Ahmed",0.00,
+skip,4611,4611,10026,6,2026,83,approved,"Dr. Md. Taslim Hossain",76862.00,identical
+skip,4612,4612,10030,6,2026,84,approved,"Dr. Israt Jahan Irin",81362.00,identical
+skip,4613,4613,10028,6,2026,85,approved,"Dr. Muhammad Ashiqul Alam",83708.00,identical
+skip,4614,4614,10027,6,2026,86,approved,"Dr. Nahid Rahman",75862.00,identical
+skip,4615,4615,10029,6,2026,87,approved,"Dr. M A Hannan",76862.00,identical
+skip,4616,4616,10020,6,2026,88,approved,"Tapati Roy",54470.00,identical
+skip,4617,4617,10024,6,2026,89,approved,"Dr. Mst. Mahamuda Khatun",64444.00,identical
+skip,4618,4618,10018,6,2026,90,approved,"Mohammed Arif Sadik polash",54470.00,identical
+skip,4619,4619,10019,6,2026,91,approved,"Keya Akter",56340.00,identical
+skip,4620,4620,10012,6,2026,92,approved,"Nigar Afsana",54470.00,identical
+skip,4621,4621,10023,6,2026,94,approved,"Shahabuddin Ahmed",54470.00,identical
+skip,4622,4622,10006,6,2026,95,approved,"Sharmin Jaman",58744.00,identical
+skip,4623,4623,10003,6,2026,96,approved,"PAPIA KHATUN",56340.00,identical
+skip,4624,4624,10022,6,2026,97,approved,"SWARUP KUMAR KUNDU",56340.00,identical
+skip,4625,4625,10008,6,2026,98,approved,"Jotirmoy Chakrobortty",54470.00,identical
+skip,4626,4626,10010,6,2026,99,approved,"Newton Chandra Paul",54470.00,identical
+skip,4627,4627,10016,6,2026,100,approved,"Nahid Hossain",54470.00,identical
+skip,4628,4628,10009,6,2026,101,approved,"Abu Rashed Md. Maukeeb",59944.00,identical
+skip,4629,4629,10017,6,2026,102,approved,"SHORIFUL Islam",58744.00,identical
+skip,4630,4630,10005,6,2026,103,approved,"Mustasim Femous",54470.00,identical
+skip,4631,4631,10002,6,2026,104,approved,"MD. JANNAT HOSSAIN",54470.00,identical
+skip,4632,4632,10025,6,2026,105,approved,"Md. Amir Hossain",54470.00,identical
+skip,4633,4633,10021,6,2026,106,approved,"Md. Salauddin",64444.00,identical
+skip,4634,4634,10007,6,2026,107,approved,"Tatia Biswas",56340.00,identical
+skip,4635,4635,10014,6,2026,108,approved,"Md. Morshedul Islam",59944.00,identical
+skip,4636,4636,10001,6,2026,109,approved,"M. Sohidullah",64444.00,identical
+skip,4637,4637,10072,6,2026,110,approved,"Dr. Mohammad Nazrul Islam",76862.00,identical
+skip,4638,4638,10053,6,2026,111,approved,"Dr. Asadujjaman",75862.00,identical
+skip,4639,4639,10066,6,2026,112,approved,"Rumana Biswas",59994.00,identical
+skip,4640,4640,10045,6,2026,113,approved,"Meer Rifath Jahan Usha",64494.00,identical
+skip,4641,4641,10032,6,2026,114,approved,"Md. Uzzal Hossain",62494.00,identical
+skip,4642,4642,10038,6,2026,115,approved,"Shahin Imran",59994.00,identical
+skip,4643,4643,10040,6,2026,116,approved,"Md. Asif Mahamud",43285.50,identical
+skip,4644,4644,10037,6,2026,117,approved,"BIDYUT MATUBBER",58794.00,identical
+skip,4645,4645,10041,6,2026,118,approved,"Rakibul Islam Md Rabbi",56390.00,identical
+skip,4646,4646,10033,6,2026,119,approved,"Shabuj Kanti Nath",56390.00,identical
+skip,4647,4647,10042,6,2026,120,approved,"Tusar Kanti Roy",59994.00,identical
+skip,4648,4648,10064,6,2026,121,approved,"Anika Tahsin Mou",56390.00,identical
+skip,4649,4649,10060,6,2026,122,approved,"Sanzib Kumar Barman",59994.00,identical
+skip,4650,4650,10047,6,2026,123,approved,"NUSRAT JAHAN MUMU",52715.00,identical
+skip,4651,4651,10074,6,2026,124,approved,"Tuhinul Hasan",59994.00,identical
+skip,4652,4652,10059,6,2026,125,approved,"Dr. Md. Mehedi Alam",72862.00,identical
+skip,4653,4653,10061,6,2026,126,approved,"Kishor Kumar Tikadar",56390.00,identical
+skip,4654,4654,10052,6,2026,127,approved,"Rabeya Akter",43285.50,identical
+skip,4655,4655,10055,6,2026,128,approved,"Fatema jahan",47375.50,identical
+skip,4656,4656,10048,6,2026,129,approved,"Israt Jahan Herin",64494.00,identical
+skip,4657,4657,10058,6,2026,130,approved,"Md. Asadur Rahman",51875.50,identical
+skip,4658,4658,10049,6,2026,131,approved,"Md. Zonayet",64494.00,identical
+skip,4659,4659,10046,6,2026,132,approved,"Afsana Yasmin",53915.00,identical
+skip,4660,4660,10035,6,2026,133,approved,"Dr. Subarna Rani Kundu",64494.00,identical
+skip,4661,4661,10076,6,2026,134,approved,"Ishrat Khan",47375.50,identical
+skip,4662,4662,10070,6,2026,135,approved,"Fahmida Akter Jolly",51875.50,identical
+skip,4663,4663,10039,6,2026,136,approved,"Dr. Noushin Jahan",72362.00,identical
+skip,4664,4664,10071,6,2026,137,approved,"Gazi Tamiz Uddin",59994.00,identical
+skip,4665,4665,10068,6,2026,138,approved,"Mahbuba Akther Mishu",59165.00,identical
+skip,4666,4666,10036,6,2026,139,approved,"Zannatul Ferdous",56390.00,identical
+skip,4667,4667,10044,6,2026,140,approved,"Nilufa Yasmin Poly",64494.00,identical
+skip,4668,4668,10069,6,2026,141,approved,"Shourob Mohon Saha",56390.00,identical
+skip,4669,4669,10063,6,2026,142,approved,"Md. Jahurul Islam",64494.00,identical
+skip,4670,4670,10062,6,2026,143,approved,"Ferdous Ara Happy",59994.00,identical
+skip,4671,4671,10057,6,2026,144,approved,"Md. Jahid Hossain",51875.50,identical
+skip,4672,4672,10056,6,2026,145,approved,"Bably Akter",47875.50,identical
+skip,4673,4673,10034,6,2026,146,approved,"Shaolin Ferdouse",51875.50,identical
+skip,4674,4674,10077,6,2026,147,approved,"Salma Khatun",41242.00,identical
+skip,4675,4675,10079,6,2026,148,approved,"Priangka Goswami",41242.00,identical
+skip,4676,4676,10080,6,2026,149,approved,"Rashmia Sultana",45742.00,identical
+skip,4677,4677,10081,6,2026,150,approved,"Kazi Moushumi Akter",41242.00,identical
+skip,4678,4678,10082,6,2026,151,approved,"Karimun Nessa",53915.00,identical
+skip,4679,4679,10083,6,2026,152,approved,"Tanwne Sarker",41242.00,identical
+skip,4680,4680,10084,6,2026,153,approved,"Md. Habibur Rahman",41242.00,identical
+skip,4681,4681,10085,6,2026,154,approved,"Jesmin Ara",42242.00,identical
+skip,4682,4682,10086,6,2026,155,approved,"Rimu Das",58415.00,identical
+skip,4683,4683,10087,6,2026,156,approved,"Bhaskar Chandra Majumdar",45742.00,identical
+skip,4684,4684,10088,6,2026,157,approved,"Basir Ahammad",45742.00,identical
+skip,4685,4685,10089,6,2026,158,approved,"Dr. Debasish Pandit",60994.00,identical
+skip,4686,4686,10090,6,2026,159,approved,"Md. Hafizur Rahman, PhD",62090.00,identical
+skip,4687,4687,10091,6,2026,160,approved,"Homayora Yeasmin",41242.00,identical
+skip,4688,4688,10092,6,2026,161,approved,"Md. Ariful Islam",58415.00,identical
+skip,4689,4689,10093,6,2026,162,approved,"Puja Roy",45742.00,identical
+skip,4690,4690,10094,6,2026,163,approved,"Angkur Chowdhury",43185.00,identical
+skip,4691,4691,10095,6,2026,164,approved,"Sadia Salam",43685.00,identical
+skip,4692,4692,10096,6,2026,165,approved,"Zakia Sultana",54415.00,identical
+skip,4693,4693,10097,6,2026,166,approved,"Ismot Zereen",43185.00,identical
+skip,4694,4694,10098,6,2026,167,approved,"Joy Shankar Boydda",43185.00,identical
+skip,4695,4695,10099,6,2026,168,approved,"Onamika Chowdhuri Keya",58415.00,identical
+skip,4696,4696,10100,6,2026,169,approved,"Mst. SABINA Alim",43185.00,identical
+skip,4697,4697,10101,6,2026,170,approved,"Asmaul Husna",53915.00,identical
+skip,4698,4698,10102,6,2026,171,approved,"DR.Nazmin Sultana Runa",43685.00,identical
+skip,4699,4699,10103,6,2026,172,approved,"Solema Akter Shanta",47685.00,identical
+skip,4700,4700,10104,6,2026,173,approved,"Tithe Saha",48185.00,identical
+skip,4701,4701,10105,6,2026,174,approved,"Mousumi Jahan Sumi",58915.00,identical
+skip,4702,4702,10106,6,2026,175,approved,"PROSENJIT SARKER",41985.00,identical
+skip,4703,4703,10107,6,2026,176,approved,"Mahfuja Ferdous",40042.00,identical
+skip,4704,4704,10108,6,2026,177,approved,"Mst. Assrafi Siddika",43185.00,identical
+skip,4705,4705,10109,6,2026,178,approved,"Md. Sahidul Islam",44185.00,identical
+skip,4706,4706,10110,6,2026,179,approved,"Dilruba Akter Mir",43185.00,identical
+skip,4707,4707,10111,6,2026,180,approved,"DR.Fowzia Bahar",58415.00,identical
+skip,4708,4708,10113,6,2026,182,approved,"Md. Asaduzzaman Lovelu",48185.00,identical
+skip,4709,4709,10115,6,2026,183,approved,"Dr. Most. Waheda Rahman Ansary",62878.00,identical
+skip,4710,4710,10121,6,2026,184,approved,"Anika Ahmed",35935.00,identical
+skip,4711,4711,10120,6,2026,186,approved,"Md Shamim Hasan",35935.00,identical
+skip,4712,4712,10119,6,2026,187,approved,"Shoumik Mojumdar",35935.00,identical
+skip,4713,4713,10117,6,2026,188,approved,"Zahrul Jannat Peya",53915.00,identical
+skip,4714,4714,10122,6,2026,189,approved,"Zannatul Ferdous Shifat",35935.00,identical
+skip,4715,4715,10160,6,2026,417,approved,"S. M. Nasir Uddin",62878.00,identical
+skip,4716,4716,20001,6,2026,2,approved,"Prof. Dr. Md. Nazmul Ahsan",114970.00,identical
+skip,4717,4717,20137,6,2026,3,approved,"Dr. Shamim Ahmed Kamal Uddin Khan",111966.00,identical
+skip,4718,4718,20080,6,2026,5,approved,"Md. Rajibul Karim",100576.00,identical
+skip,4719,4719,20081,6,2026,6,approved,"SM Moniruzzaman",108785.00,identical
+skip,4720,4720,20002,6,2026,7,approved,"Md. Rezaul Islam",76810.00,identical
+skip,4721,4721,20003,6,2026,8,approved,"MD. SHAFIUR RAHMAN KHAN",49847.00,identical
+skip,4722,4722,20004,6,2026,9,approved,"MD. JASHIM UDDIN",48839.00,identical
+skip,4723,4723,20005,6,2026,10,approved,"Anamul Kabir",52283.00,identical
+skip,4724,4724,20007,6,2026,11,approved,"Murad Bellah",52783.00,identical
+skip,4725,4725,20006,6,2026,12,approved,"Sazzadul Islam",52283.00,identical
+skip,4726,4726,20008,6,2026,13,approved,"Abdul Kaium",49847.00,identical
+skip,4727,4727,20009,6,2026,14,approved,"Md. Khirul Bashar Riaz",40958.00,identical
+skip,4728,4728,20010,6,2026,15,approved,"USUF ALI",38436.00,identical
+skip,4729,4729,20011,6,2026,16,approved,"Md Hasibul Islam",38436.00,identical
+skip,4730,4730,20012,6,2026,17,approved,"Sultan Mahmud",37436.00,identical
+skip,4731,4731,20020,6,2026,18,approved,"S. M. Nazim Jubaer",49847.00,identical
+skip,4732,4732,20013,6,2026,19,approved,"Jannatun Nayem",38436.00,identical
+skip,4733,4733,20014,6,2026,20,approved,"SK RASHEDUZZAMAN",50447.00,identical
+skip,4734,4734,20015,6,2026,21,approved,"Shahidul Islam",49847.00,identical
+skip,4735,4735,20016,6,2026,22,approved,"Md.Forkan Ahmed",38436.00,identical
+skip,4736,4736,20017,6,2026,23,approved,"Muhammad Ali",38436.00,identical
+skip,4737,4737,20018,6,2026,24,approved,"Saifullah Mansur",49847.00,identical
+skip,4738,4738,20024,6,2026,26,approved,"Khan Jabid Hasan",46591.50,identical
+skip,4739,4739,20022,6,2026,27,approved,"Tanbibur Rahman",46091.50,identical
+skip,4740,4740,20025,6,2026,28,approved,"Shariful islam",47527.00,identical
+skip,4741,4741,20021,6,2026,29,approved,"SAIFULLAH HAQUE",46091.50,identical
+skip,4742,4742,20026,6,2026,30,approved,"Md. Monoar Kowshar",30680.00,identical
+skip,4743,4743,20032,6,2026,31,approved,"Md. Fahad Khan",37167.00,identical
+skip,4744,4744,20029,6,2026,32,approved,"MST. AFSANA YASMIN",36667.00,identical
+skip,4745,4745,20027,6,2026,33,approved,"Shaikh imran Ahmmed",36667.00,identical
+skip,4746,4746,20028,6,2026,34,approved,"CHITTA RANJAN MRIDHA",36667.00,identical
+skip,4747,4747,20031,6,2026,35,approved,"Alal Khan",34985.00,identical
+skip,4748,4748,20030,6,2026,36,approved,"Nahid Sultana Moon",36667.00,identical
+skip,4749,4749,20033,6,2026,37,approved,"Humira Parpen Rumpa",67204.92,identical
+skip,4750,4750,20034,6,2026,38,approved,"MD JAHANGIR HOSSAIN",29285.50,identical
+skip,4751,4751,20035,6,2026,39,approved,"Satyam Roy",29285.50,identical
+skip,4752,4752,20037,6,2026,40,approved,"MD WAHID MALLIK",29285.00,identical
+skip,4753,4753,20038,6,2026,41,approved,"Chandan kumar Sarkar",81884.27,identical
+skip,4754,4754,20039,6,2026,42,approved,"Sk. Faisal Ahmed",39958.00,identical
+skip,4755,4755,20040,6,2026,43,approved,"Nabila Rahman",40792.00,identical
+skip,4756,4756,20041,6,2026,44,approved,"SHIEK AMINUL ISLAM",39958.00,identical
+skip,4757,4757,20042,6,2026,45,approved,"Md. Al Mahmud",39958.00,identical
+skip,4758,4758,20043,6,2026,46,approved,"B. M. ISLAMUL HAQ",39958.00,identical
+skip,4759,4759,20044,6,2026,47,approved,"Krishibid Md. Mizanur Rahman",39958.00,identical
+skip,4760,4760,20045,6,2026,48,approved,"DELWAR HOSSAIN",40558.00,identical
+skip,4761,4761,20046,6,2026,49,approved,"DABOBRATA KUMAR SWAR",39958.00,identical
+skip,4762,4762,20047,6,2026,50,approved,"Sharmin Parvin",41292.00,identical
+skip,4763,4763,20048,6,2026,51,approved,"Md. Ashraful Islam",41901.00,identical
+skip,4765,4765,20050,6,2026,53,approved,"MD. NAJMUL HAQUE",39958.00,identical
+skip,4766,4766,20053,6,2026,54,approved,"Md. Masud Rana",30680.00,identical
+skip,4767,4767,20052,6,2026,55,approved,"Md Rasel Hasan",29284.50,identical
+skip,4768,4768,20051,6,2026,56,approved,"Md. Hasan Bali",29284.50,identical
+skip,4769,4769,20054,6,2026,57,approved,"MD.RAIHAN SHOBAN",30680.00,identical
+skip,4770,4770,20057,6,2026,58,approved,"Ashik Ahmed",29785.00,identical
+skip,4771,4771,20055,6,2026,59,approved,"Md.Khabir Uddin",30285.00,identical
+skip,4772,4772,20056,6,2026,60,approved,"ABDUL MATIN",29785.00,identical
+skip,4773,4773,20058,6,2026,61,approved,"MD. NAZMUL HASSAN",28012.00,identical
+skip,4774,4774,20059,6,2026,62,approved,"Molla Shofikul islam Sajib",28512.00,identical
+skip,4775,4775,20060,6,2026,63,approved,"Saharin Islam Mim",28012.00,identical
+skip,4776,4776,20061,6,2026,64,approved,"Ziarul Golder",28512.00,identical
+skip,4777,4777,20063,6,2026,66,approved,"Ujjal Kumar Das",28512.00,identical
+skip,4778,4778,20064,6,2026,67,approved,"MITHUN KUMAR",28012.00,identical
+skip,4779,4779,20065,6,2026,68,approved,"Shailendronath Bairagi",28012.00,identical
+skip,4780,4780,20066,6,2026,69,approved,"Rumpa Akter",28012.00,identical
+skip,4781,4781,20067,6,2026,70,approved,"Khan Tanvir Arif",28012.00,identical
+skip,4782,4782,20068,6,2026,71,approved,"Mithun Mallick",28012.00,identical
+skip,4783,4783,20069,6,2026,72,approved,"SAIMA JHOTI",28512.00,identical
+skip,4784,4784,20076,6,2026,73,approved,"Md. Imran Munsi",28012.00,identical
+skip,4785,4785,20070,6,2026,74,approved,"SHEKHORE BISWAS",28012.00,identical
+skip,4786,4786,20071,6,2026,75,approved,"Razia Khatun",28012.00,identical
+skip,4787,4787,20072,6,2026,76,approved,"Md. Masum Billh",28012.00,identical
+skip,4788,4788,20073,6,2026,77,approved,"MD. NASIM AKAND",28512.00,identical
+skip,4789,4789,20074,6,2026,78,approved,"MD ABID HOSSAIN",28012.00,identical
+skip,4790,4790,20075,6,2026,79,approved,"SHABEQUN NAHAR",28512.00,identical
+skip,4791,4791,20077,6,2026,80,approved,"Md Aslam khan",28012.00,identical
+skip,4792,4792,20078,6,2026,82,approved,"Md. Murad Hossain",28012.00,identical
+skip,4793,4793,20079,6,2026,415,approved,"Mohammed Shahid Ali",89988.00,identical
+skip,4794,4794,20090,6,2026,416,approved,"Dr Aroni Biswash",35396.00,identical
+skip,4795,4795,20062,6,2026,65,approved,"Dip Lal Pandey",21165.00,identical
+skip,4796,4796,30004,6,2026,190,approved,"MD.SHAHIDUL ISLAM",23725.00,identical
+skip,4797,4797,30002,6,2026,191,approved,"Mizanur Rahman",25565.50,identical
+skip,4798,4798,30003,6,2026,193,approved,"MD. Ashraful kamal",23225.00,identical
+skip,4799,4799,30017,6,2026,194,approved,"Md. Abul Basar",23202.00,identical
+skip,4800,4800,30016,6,2026,195,approved,"Md. Anisur Rahman Rintu",23202.00,identical
+skip,4801,4801,30005,6,2026,196,approved,"MD. JHAHID HASAN",22326.00,identical
+skip,4802,4802,30006,6,2026,197,approved,"Imran Hossain",26065.50,identical
+skip,4803,4803,30007,6,2026,198,approved,"Md. Faruk Ali",24638.00,identical
+skip,4804,4804,30008,6,2026,200,approved,"MD JAMAL HOSSEN",23225.00,identical
+skip,4805,4805,30018,6,2026,202,approved,"Md. Shahadat Hossin Kha",21849.50,identical
+skip,4806,4806,30020,6,2026,203,approved,"ANAYET BEPARI",22349.50,identical
+skip,4807,4807,30019,6,2026,204,approved,"Shak Md Arman",21349.50,identical
+skip,4808,4808,30035,6,2026,208,approved,"Md. Maruf Hasan Gazi",22349.50,identical
+skip,4809,4809,30031,6,2026,209,approved,"MD JAKIR HOSSAIN",27609.00,identical
+skip,4810,4810,30030,6,2026,210,approved,"A.B.M. ARIFUL ISLAM TURAN",21849.50,identical
+skip,4811,4811,30046,6,2026,218,approved,"Sabira Khatun",26759.00,identical
+skip,4812,4812,30048,6,2026,219,approved,"Mizanur Rahman",27259.00,identical
+skip,4813,4813,30074,6,2026,227,approved,"Aminul Hasan",20919.50,identical
+skip,4814,4814,30071,6,2026,229,approved,"MD. AMRAN HOSSAIN",20919.50,identical
+skip,4815,4815,30098,6,2026,230,approved,"Nasir Ahmed",20036.00,identical
+skip,4816,4816,30065,6,2026,231,approved,"Sabiha Karim",20419.50,identical
+skip,4817,4817,30084,6,2026,232,approved,"Md. Mintu",25565.50,identical
+skip,4818,4818,30078,6,2026,233,approved,"Anjan Kumar Das",19536.00,identical
+skip,4819,4819,30082,6,2026,234,approved,"Rukiya Akter",19536.00,identical
+skip,4820,4820,30089,6,2026,235,approved,"Ananna Rahman Mumu",20536.00,identical
+skip,4821,4821,30096,6,2026,236,approved,"Md. Nurul Islam",19536.00,identical
+skip,4822,4822,30099,6,2026,237,approved,"Md. Mehede Hasan Rqny",19536.00,identical
+skip,4823,4823,30100,6,2026,238,approved,"Md. Kamruzzaman Shaikh",19536.00,identical
+skip,4824,4824,30101,6,2026,239,approved,"Jahir Abbas",20036.00,identical
+skip,4825,4825,30103,6,2026,240,approved,"H M Arif Hossain",19536.00,identical
+skip,4826,4826,30254,6,2026,246,approved,"DEBASHIS KUMAR",15548.50,identical
+skip,4827,4827,30090,6,2026,247,approved,"Md. Shariful Islam",20036.00,identical
+skip,4828,4828,30113,6,2026,248,approved,"Fakrul Islam",26065.50,identical
+skip,4829,4829,30116,6,2026,249,approved,"Md Delowar Hossain",25565.50,identical
+skip,4830,4830,30117,6,2026,250,approved,"Md.Muktajul Islam Sohag",25565.50,identical
+skip,4831,4831,30118,6,2026,251,approved,"Jewel Hawlader",25565.50,identical
+skip,4832,4832,30119,6,2026,252,approved,"Tamanna Amin Tisha",26065.50,identical
+skip,4833,4833,30120,6,2026,253,approved,"Soma Rani Saha",26565.50,identical
+skip,4834,4834,30121,6,2026,254,approved,"Md. Sharfuddin Khan",22729.00,identical
+skip,4835,4835,30122,6,2026,255,approved,"Halima Khatun Maina",19536.00,identical
+skip,4836,4836,30123,6,2026,256,approved,"SYED KHALID HASAN",20036.00,identical
+skip,4837,4837,30124,6,2026,257,approved,"MASUM HOSSAIN",19536.00,identical
+skip,4838,4838,30125,6,2026,258,approved,"MD. Refajul Sheikh",19536.00,identical
+skip,4839,4839,30126,6,2026,259,approved,"Arun Kumar Rahut",19536.00,identical
+skip,4840,4840,30127,6,2026,260,approved,"MD: ALAMIN",19536.00,identical
+skip,4841,4841,30128,6,2026,261,approved,ELIAUS,20036.00,identical
+skip,4842,4842,30129,6,2026,262,approved,"KANIKA MONDAL",20036.00,identical
+skip,4843,4843,30130,6,2026,263,approved,"Md. Anamul hoque",19536.00,identical
+skip,4844,4844,30131,6,2026,264,approved,"Md. Omar Faruque",19536.00,identical
+skip,4845,4845,30132,6,2026,265,approved,"Md. Ariful Islam",19536.00,identical
+skip,4846,4846,30262,6,2026,379,approved,"SOHAG HOSSEN",18709.00,identical
+skip,4847,4847,30234,6,2026,380,approved,"Md Al Amin Howlader",13049.50,identical
+skip,4848,4848,30243,6,2026,386,approved,"MD. JIHAD SHEIKH",21737.00,identical
+skip,4849,4849,30261,6,2026,387,approved,"Tanjira Sultana",22237.00,identical
+skip,4850,4850,30244,6,2026,388,approved,"AYAT ULLAH MUZAHID",22237.00,identical
+skip,4851,4851,30264,6,2026,389,approved,"Abdur Rahim",24434.00,identical
+skip,4852,4852,30233,6,2026,390,approved,"Yeasmin Haq",24434.00,identical
+skip,4853,4853,30263,6,2026,391,approved,"MD.BAIZID ADNAN",24434.00,identical
+skip,4854,4854,30036,6,2026,398,approved,"Roman Sheikh",27586.50,identical
+skip,4855,4855,30073,6,2026,399,approved,"SHAIKH JAKIA SULTANA",27086.50,identical
+skip,4856,4856,30072,6,2026,400,approved,"PRITOM KUMAR KUNDU",20668.00,identical
+skip,4857,4857,30075,6,2026,403,approved,"Nur Nabi Akhter",27086.50,identical
+skip,4858,4858,30043,6,2026,404,approved,"Sujan Mondal",27086.50,identical
+skip,4859,4859,30067,6,2026,406,approved,"Md golam kibria howlader",21668.00,identical
+skip,4860,4860,30066,6,2026,407,approved,"Mst. Mursida Aktar",21668.00,identical
+skip,4861,4861,30070,6,2026,413,approved,"Nasir Uddin",26759.00,identical
+skip,4862,4862,30076,6,2026,414,approved,"Rani Khatun",25565.50,identical
+skip,4863,4863,40013,6,2026,199,approved,"Ahmed Foysal",21090.00,identical
+skip,4864,4864,40021,6,2026,201,approved,"Md.Akhtarul Islam",21729.50,identical
+skip,4865,4865,40012,6,2026,205,approved,Saifullah,22945.00,identical
+skip,4866,4866,40026,6,2026,206,approved,"MD AL AMIN",19179.50,identical
+skip,4867,4867,40024,6,2026,207,approved,"Khandaker Abul Kalam",21288.50,identical
+skip,4868,4868,40028,6,2026,212,approved,"Md.Raju Sheik",19679.50,identical
+skip,4869,4869,40029,6,2026,213,approved,"Salam Moral",20179.50,identical
+skip,4870,4870,40022,6,2026,214,approved,"SANJIDA SHARMIN",19679.50,identical
+skip,4871,4871,40027,6,2026,215,approved,"Md. Ali Asim Howlader",18478.00,identical
+skip,4872,4872,40034,6,2026,216,approved,"MD. RASHADUL ISLAM",18478.00,identical
+skip,4873,4873,40035,6,2026,217,approved,"Fatema Akter",18478.00,identical
+skip,4874,4874,40050,6,2026,220,approved,"MD NAZMUL ISLAM",19478.00,identical
+skip,4875,4875,40053,6,2026,221,approved,"MD. Habibur Rahaman",18978.00,identical
+skip,4876,4876,40054,6,2026,222,approved,"Mst. Parveen Islam",19478.00,identical
+skip,4877,4877,40055,6,2026,223,approved,"Mst. Rohema Akter Rekha",19478.00,identical
+skip,4878,4878,40056,6,2026,224,approved,"Md. Al Amin",19478.00,identical
+skip,4879,4879,40057,6,2026,225,approved,"Md.Sumon morol",19478.00,identical
+skip,4880,4880,40058,6,2026,226,approved,"Md. Sazzad Mohi",18478.00,identical
+skip,4881,4881,40068,6,2026,228,approved,"Sorif Pathan",18978.00,identical
+skip,4882,4882,40081,6,2026,241,approved,"MD.RASEL AHMED SHARIF",17942.50,identical
+skip,4883,4883,40083,6,2026,242,approved,"Md. Mostafizur Rahman",17942.50,identical
+skip,4884,4884,40087,6,2026,243,approved,"MD. WAHIDUZZAMAN",17942.50,identical
+skip,4885,4885,40092,6,2026,244,approved,"SABINA YASMIN",17942.50,identical
+skip,4886,4886,40093,6,2026,245,approved,"Mst. Nupur Khatun",17942.50,identical
+skip,4887,4887,40135,6,2026,266,approved,"MD:MUKTO ALI",18635.50,identical
+skip,4888,4888,40136,6,2026,267,approved,"MD.Farukul Islam",19635.50,identical
+skip,4889,4889,40137,6,2026,268,approved,"SANJIDA AFRIN",19135.50,identical
+skip,4890,4890,40138,6,2026,269,approved,"Md. Omar Faruk",19135.50,identical
+skip,4891,4891,40139,6,2026,270,approved,"Hannan Akhand",13513.25,identical
+skip,4892,4892,40141,6,2026,271,approved,"BISHAL SARKAR",18635.50,identical
+skip,4893,4893,40142,6,2026,272,approved,"Md Nahidul Islam",18257.50,identical
+skip,4894,4894,40143,6,2026,273,approved,"MD.Mahamudul Hasan",18257.50,identical
+skip,4895,4895,40145,6,2026,274,approved,"MD. Al Mamon",18757.50,identical
+skip,4896,4896,40146,6,2026,275,approved,"Abdullah Al Fahim Sajjan",18257.50,identical
+skip,4897,4897,40147,6,2026,276,approved,"MD. AHID SHAIKH",18757.50,identical
+skip,4898,4898,40144,6,2026,277,approved,"Md. Nazmul Hossain",18257.50,identical
+skip,4899,4899,40149,6,2026,278,approved,"Md.Asif Ahmed",18257.50,identical
+skip,4900,4900,40150,6,2026,279,approved,"S.R.A SHOHAN",18257.50,identical
+skip,4901,4901,40151,6,2026,280,approved,"Didarul Alam",18257.50,identical
+skip,4902,4902,40152,6,2026,281,approved,"Md. ABDUS SALAM",18257.50,identical
+skip,4903,4903,40153,6,2026,282,approved,"Mir Sadrul Amin.",18257.50,identical
+skip,4904,4904,40154,6,2026,283,approved,"Omar Faruq",18257.50,identical
+skip,4905,4905,40155,6,2026,284,approved,"Md. Habibur Rahman",19257.50,identical
+skip,4906,4906,40156,6,2026,285,approved,"Dolon Kumar Das",18257.50,identical
+skip,4907,4907,40157,6,2026,286,approved,"Arifa Sultana",18257.50,identical
+skip,4908,4908,40148,6,2026,287,approved,"SABINA YEASMIN",18257.50,identical
+skip,4909,4909,40161,6,2026,288,approved,"ALOKA BISWAS",17942.50,identical
+skip,4910,4910,40162,6,2026,289,approved,"Md Raihan Islam",18442.50,identical
+skip,4911,4911,40163,6,2026,290,approved,"Anik Biswas",17942.50,identical
+skip,4912,4912,40164,6,2026,291,approved,"Md.Nasimul Islam",18442.50,identical
+skip,4913,4913,40165,6,2026,292,approved,"Lasker Nadimul Islam",17942.50,identical
+skip,4914,4914,40166,6,2026,293,approved,"Hawlader Manjur Hasan",17942.50,identical
+skip,4915,4915,40169,6,2026,294,approved,"S.M. Sujauddin",17942.50,identical
+skip,4916,4916,40170,6,2026,295,approved,"Kaziul Islam",17942.50,identical
+skip,4917,4917,40171,6,2026,296,approved,"MD.NAZMUL HUDA",17942.50,identical
+skip,4918,4918,40172,6,2026,297,approved,"Md. Shahinur Rahman",17942.50,identical
+skip,4920,4920,40174,6,2026,299,approved,"HAMIM SARDER",17942.50,identical
+skip,4921,4921,40175,6,2026,300,approved,"MD. RAYHAN MOLLA",18442.50,identical
+skip,4922,4922,40176,6,2026,301,approved,"MD TAHIDUL ISLAM",17942.50,identical
+skip,4923,4923,40177,6,2026,302,approved,"Md.Kazi Sabbir Hossen",17942.50,identical
+skip,4924,4924,40178,6,2026,303,approved,"Begum Nur-E-Jakia",18942.50,identical
+skip,4925,4925,40179,6,2026,304,approved,"MIZANUR RAHMAN",17942.50,identical
+skip,4926,4926,40180,6,2026,305,approved,"MD:MOKTAR HOSSEN",17942.50,identical
+skip,4927,4927,40181,6,2026,306,approved,"Beal Shaikh",17942.50,identical
+skip,4928,4928,40182,6,2026,307,approved,"Md. Sajib Shaikh",17942.50,identical
+skip,4929,4929,40183,6,2026,308,approved,"Fairuz Rahaman",17942.50,identical
+skip,4930,4930,40184,6,2026,309,approved,"Mohini Mondol Sima",17942.50,identical
+skip,4931,4931,40185,6,2026,310,approved,"ASIA KHATUN",17942.50,identical
+skip,4932,4932,40186,6,2026,311,approved,"Sohan Howladar",17942.50,identical
+skip,4933,4933,40187,6,2026,312,approved,"Shamin Al Fazal",17942.50,identical
+skip,4934,4934,40190,6,2026,313,approved,"Monwar Hossain",17942.50,identical
+skip,4935,4935,40191,6,2026,314,approved,"Md Ramjan",17942.50,identical
+skip,4936,4936,40192,6,2026,315,approved,Alamin,17942.50,identical
+skip,4937,4937,40194,6,2026,316,approved,"Kamrul Hasan",17942.50,identical
+skip,4938,4938,40195,6,2026,317,approved,"MST.Dilruba yeasmin",17942.50,identical
+skip,4939,4939,40196,6,2026,318,approved,"Abdullah al mamun",17942.50,identical
+skip,4940,4940,40193,6,2026,319,approved,"EFTEKHIAR MAHAMUD",17942.50,identical
+skip,4941,4941,40197,6,2026,320,approved,"Talukder Rafsunjani",18942.50,identical
+skip,4942,4942,40198,6,2026,321,approved,"Md.Shakil Hossain",17942.50,identical
+skip,4943,4943,40200,6,2026,323,approved,"MD Sohel",17942.50,identical
+skip,4944,4944,40201,6,2026,324,approved,"Krisno Kumar Day",17942.50,identical
+skip,4945,4945,40202,6,2026,325,approved,"Shariful Islam",18442.50,identical
+skip,4946,4946,40203,6,2026,326,approved,"Emran Howlader",17942.50,identical
+skip,4947,4947,40204,6,2026,327,approved,"MD. IMRAN THAKUR",17942.50,identical
+skip,4948,4948,40205,6,2026,328,approved,"Md. Alauddin Howlader",17942.50,identical
+skip,4949,4949,40206,6,2026,329,approved,"Margia Akter",17942.50,identical
+skip,4950,4950,40188,6,2026,330,approved,"MD MASUID ILAHI",18442.50,identical
+skip,4951,4951,40189,6,2026,331,approved,"Md.Nazmul Hossain",17942.50,identical
+skip,4952,4952,40168,6,2026,332,approved,"Saddam Hossain",17942.50,identical
+skip,4953,4953,40167,6,2026,333,approved,"JAHIDUL ISLAM HRIDOY",17942.50,identical
+skip,4954,4954,40210,6,2026,334,approved,"Md.Rafikul Islam Rubel",18942.50,identical
+skip,4955,4955,40211,6,2026,335,approved,"Rayhan Tarafder",17942.50,identical
+skip,4956,4956,40216,6,2026,336,approved,"Md. Kashem Ali",18942.50,identical
+skip,4957,4957,40217,6,2026,337,approved,"A. Rahman",18942.50,identical
+skip,4958,4958,40218,6,2026,338,approved,"Ibrahim Howlader Sujon",18942.50,identical
+skip,4959,4959,40215,6,2026,339,approved,"Tawhidur Rahaman",17942.50,identical
+skip,4960,4960,40158,6,2026,340,approved,"Sanjida Akter Shampa",18757.50,identical
+skip,4961,4961,40159,6,2026,341,approved,"SATHI RANI SUTRADHAR",18257.50,identical
+skip,4962,4962,40160,6,2026,342,approved,"MD.Sadek Hossain opu",18257.50,identical
+skip,4963,4963,40207,6,2026,343,approved,"Sudipta bala",17942.50,identical
+skip,4964,4964,40208,6,2026,344,approved,"Md.Jalal uddin",17942.50,identical
+skip,4965,4965,40219,6,2026,345,approved,"Ruhal Amin",18942.50,identical
+skip,4966,4966,40221,6,2026,346,approved,"PariTosh Das",12666.75,identical
+skip,4967,4967,40223,6,2026,347,approved,"NAZMA AKTHER",17942.50,identical
+skip,4968,4968,40224,6,2026,348,approved,"samento das",17942.50,identical
+skip,4969,4969,40225,6,2026,349,approved,"Taum Rani Das",18942.50,identical
+skip,4970,4970,40226,6,2026,350,approved,"Sudam Halder",17942.50,identical
+skip,4971,4971,40227,6,2026,351,approved,"Tahmina Khatun",18442.50,identical
+skip,4972,4972,40228,6,2026,352,approved,"Md.Razaul Karim",18942.50,identical
+skip,4973,4973,40229,6,2026,353,approved,"G. M. HASAN AL-MAHMUD.",18442.50,identical
+skip,4974,4974,40230,6,2026,354,approved,"Sajal Rauth",18942.50,identical
+skip,4975,4975,40222,6,2026,355,approved,"Mst. Ratna Khatun",18442.50,identical
+skip,4976,4976,40220,6,2026,356,approved,"Md. Babul Dosrji",17942.50,identical
+skip,4977,4977,40212,6,2026,357,approved,"Md.Shahidul Sikder",17942.50,identical
+skip,4978,4978,40213,6,2026,358,approved,"Md Saidul Islam",18942.50,identical
+skip,4979,4979,40214,6,2026,359,approved,"Sheikh Shaon",17942.50,identical
+skip,4980,4980,40231,6,2026,360,approved,"SACHIN DAS",17942.50,identical
+skip,4981,4981,40268,6,2026,362,approved,"Md Emdadul Hoque Khan",17866.50,identical
+skip,4982,4982,40239,6,2026,363,approved,"POLOCK JODDER",17366.50,identical
+skip,4983,4983,40237,6,2026,364,approved,"SAFIQUZZAMAN MOLLICK",17366.50,identical
+skip,4984,4984,40236,6,2026,365,approved,"Arif Mridha",17866.50,identical
+skip,4985,4985,40257,6,2026,366,approved,"Nuzmul Hasan Foysal",17866.50,identical
+skip,4986,4986,40242,6,2026,367,approved,"REJWAN HOSSAIN TUHIN",17366.50,identical
+skip,4987,4987,40258,6,2026,368,approved,"Dipankor kumar saha",17366.00,identical
+skip,4988,4988,40256,6,2026,369,approved,"MD Mynul Islam",17366.50,identical
+skip,4989,4989,40241,6,2026,370,approved,"MAHAMUDA KHANOM JUTHI",17366.50,identical
+skip,4990,4990,40260,6,2026,371,approved,"Mainul Islam",17366.50,identical
+skip,4991,4991,40255,6,2026,372,approved,"Rafsan jani",17366.50,identical
+skip,4992,4992,40259,6,2026,373,approved,"MD. JAHANGIR ALAM",17866.50,identical
+skip,4993,4993,40249,6,2026,374,approved,"Shovon Biswas",17366.50,identical
+skip,4994,4994,40240,6,2026,375,approved,"MD Aslam",17366.50,identical
+skip,4995,4995,40253,6,2026,376,approved,"Ratna Rani Hela",17366.50,identical
+skip,4996,4996,40250,6,2026,377,approved,"Jasmin Akhter Shati",17366.50,identical
+skip,4997,4997,40248,6,2026,378,approved,"Nasrin Sultana",17366.50,identical
+skip,4998,4998,40266,6,2026,381,approved,"Shamim Hosain",17866.50,identical
+skip,4999,4999,40265,6,2026,382,approved,"Md. Ariful Islam",17366.50,identical
+skip,5000,5000,40245,6,2026,383,approved,"MD SUMON MRIDHA",17366.50,identical
+skip,5001,5001,40246,6,2026,384,approved,"Md. Safique",17366.50,identical
+skip,5002,5002,40247,6,2026,385,approved,"MD Abdus Satter",17366.50,identical
+skip,5003,5003,40272,6,2026,392,approved,"Rena Akter",18366.50,identical
+skip,5004,5004,40270,6,2026,393,approved,"MOUSUMI AKTER",18600.00,identical
+skip,5005,5005,40271,6,2026,394,approved,"Md. Alamgir Hossain",18100.00,identical
+skip,5006,5006,40275,6,2026,395,approved,"Joynal Islam",17866.50,identical
+skip,5007,5007,40238,6,2026,396,approved,"Mansur Hillal",17366.50,identical
+skip,5008,5008,40267,6,2026,397,approved,"Md. Sobus Mia",17866.50,identical
+skip,5009,5009,40059,6,2026,401,approved,"Minhazul Abedin Kazol",18572.50,identical
+skip,5010,5010,40060,6,2026,402,approved,"Shariful Islam",19072.50,identical
+skip,5011,5011,40051,6,2026,405,approved,"MD.TANIJ HOWLADER",19661.50,identical
+skip,5012,5012,40052,6,2026,408,approved,"Khursida khatun",19447.50,identical
+skip,5013,5013,40061,6,2026,409,approved,"Shahriar Ahmed",19447.50,identical
+skip,5015,5015,40104,6,2026,412,approved,"Debasish Roy",17942.50,identical
+skip,5016,5016,10026,7,2026,83,approved,"Dr. Md. Taslim Hossain",79344.00,identical
+skip,5017,5017,10030,7,2026,84,approved,"Dr. Israt Jahan Irin",83844.00,identical
+skip,5018,5018,10028,7,2026,85,approved,"Dr. Muhammad Ashiqul Alam",86568.00,identical
+skip,5019,5019,10027,7,2026,86,approved,"Dr. Nahid Rahman",78344.00,identical
+skip,5020,5020,10029,7,2026,87,approved,"Dr. M A Hannan",79344.00,identical
+skip,5021,5021,10020,7,2026,88,approved,"Tapati Roy",54470.00,identical
+skip,5022,5022,10024,7,2026,89,approved,"Dr. Mst. Mahamuda Khatun",66128.00,identical
+skip,5023,5023,10018,7,2026,90,approved,"Mohammed Arif Sadik polash",54470.00,identical
+skip,5024,5024,10019,7,2026,91,approved,"Keya Akter",56340.00,identical
+skip,5025,5025,10012,7,2026,92,approved,"Nigar Afsana",54470.00,identical
+skip,5026,5026,10023,7,2026,94,approved,"Shahabuddin Ahmed",61628.00,identical
+skip,5027,5027,10006,7,2026,95,approved,"Sharmin Jaman",58744.00,identical
+skip,5028,5028,10003,7,2026,96,approved,"PAPIA KHATUN",55140.00,identical
+skip,5029,5029,10022,7,2026,97,approved,"SWARUP KUMAR KUNDU",53840.00,identical
+skip,5030,5030,10008,7,2026,98,approved,"Jotirmoy Chakrobortty",54470.00,identical
+skip,5031,5031,10010,7,2026,99,approved,"Newton Chandra Paul",54470.00,identical
+skip,5032,5032,10016,7,2026,100,approved,"Nahid Hossain",54470.00,identical
+skip,5033,5033,10009,7,2026,101,approved,"Abu Rashed Md. Maukeeb",61628.00,identical
+skip,5034,5034,10017,7,2026,102,approved,"SHORIFUL Islam",58744.00,identical
+skip,5035,5035,10005,7,2026,103,approved,"Mustasim Femous",50770.00,identical
+skip,5036,5036,10002,7,2026,104,approved,"MD. JANNAT HOSSAIN",50770.00,identical
+skip,5037,5037,10025,7,2026,105,approved,"Md. Amir Hossain",54470.00,identical
+skip,5038,5038,10021,7,2026,106,approved,"Md. Salauddin",66128.00,identical
+skip,5039,5039,10007,7,2026,107,approved,"Tatia Biswas",56340.00,identical
+skip,5040,5040,10014,7,2026,108,approved,"Md. Morshedul Islam",61628.00,identical
+skip,5041,5041,10001,7,2026,109,approved,"M. Sohidullah",66128.00,identical
+skip,5042,5042,10072,7,2026,110,approved,"Dr. Mohammad Nazrul Islam",79344.00,identical
+skip,5043,5043,10053,7,2026,111,approved,"Dr. Asadujjaman",78344.00,identical
+skip,5044,5044,10066,7,2026,112,approved,"Rumana Biswas",61678.00,identical
+skip,5045,5045,10045,7,2026,113,approved,"Meer Rifath Jahan Usha",66178.00,identical
+skip,5046,5046,10032,7,2026,114,approved,"Md. Uzzal Hossain",64178.00,identical
+skip,5047,5047,10038,7,2026,115,approved,"Shahin Imran",62178.00,identical
+skip,5048,5048,10040,7,2026,116,approved,"Md. Asif Mahamud",43285.50,identical
+skip,5049,5049,10037,7,2026,117,approved,"BIDYUT MATUBBER",62878.00,identical
+skip,5050,5050,10041,7,2026,118,approved,"Rakibul Islam Md Rabbi",56390.00,identical
+skip,5051,5051,10033,7,2026,119,approved,"Shabuj Kanti Nath",56390.00,identical
+skip,5052,5052,10042,7,2026,120,approved,"Tusar Kanti Roy",61678.00,identical
+skip,5053,5053,10064,7,2026,121,approved,"Anika Tahsin Mou",56390.00,identical
+skip,5054,5054,10060,7,2026,122,approved,"Sanzib Kumar Barman",61678.00,identical
+skip,5055,5055,10047,7,2026,123,approved,"NUSRAT JAHAN MUMU",52715.00,identical
+skip,5056,5056,10074,7,2026,124,approved,"Tuhinul Hasan",61678.00,identical
+skip,5057,5057,10059,7,2026,125,approved,"Dr. Md. Mehedi Alam",75162.00,identical
+skip,5058,5058,10061,7,2026,126,approved,"Kishor Kumar Tikadar",56390.00,identical
+skip,5059,5059,10052,7,2026,127,approved,"Rabeya Akter",43285.50,identical
+skip,5060,5060,10055,7,2026,128,approved,"Fatema jahan",47725.50,identical
+skip,5061,5061,10048,7,2026,129,approved,"Israt Jahan Herin",66178.00,identical
+skip,5062,5062,10058,7,2026,130,approved,"Md. Asadur Rahman",52225.50,identical
+skip,5063,5063,10049,7,2026,131,approved,"Md. Zonayet",66178.00,identical
+skip,5064,5064,10046,7,2026,132,approved,"Afsana Yasmin",54520.00,identical
+skip,5065,5065,10035,7,2026,133,approved,"Dr. Subarna Rani Kundu",66178.00,identical
+skip,5066,5066,10076,7,2026,134,approved,"Ishrat Khan",47725.50,identical
+skip,5067,5067,10070,7,2026,135,approved,"Fahmida Akter Jolly",52225.50,identical
+skip,5068,5068,10039,7,2026,136,approved,"Dr. Noushin Jahan",74662.00,identical
+skip,5069,5069,10071,7,2026,137,approved,"Gazi Tamiz Uddin",61678.00,identical
+skip,5070,5070,10068,7,2026,138,approved,"Mahbuba Akther Mishu",59770.00,identical
+skip,5071,5071,10036,7,2026,139,approved,"Zannatul Ferdous",56390.00,identical
+skip,5072,5072,10044,7,2026,140,approved,"Nilufa Yasmin Poly",66178.00,identical
+skip,5073,5073,10069,7,2026,141,approved,"Shourob Mohon Saha",56390.00,identical
+skip,5074,5074,10063,7,2026,142,approved,"Md. Jahurul Islam",66178.00,identical
+skip,5075,5075,10062,7,2026,143,approved,"Ferdous Ara Happy",61678.00,identical
+skip,5076,5076,10057,7,2026,144,approved,"Md. Jahid Hossain",52225.50,identical
+skip,5077,5077,10056,7,2026,145,approved,"Bably Akter",48225.50,identical
+skip,5078,5078,10034,7,2026,146,approved,"Shaolin Ferdouse",52225.50,identical
+skip,5079,5079,10077,7,2026,147,approved,"Salma Khatun",41985.00,identical
+skip,5080,5080,10079,7,2026,148,approved,"Priangka Goswami",41985.00,identical
+skip,5081,5081,10080,7,2026,149,approved,"Rashmia Sultana",46485.00,identical
+skip,5082,5082,10081,7,2026,150,approved,"Kazi Moushumi Akter",41985.00,identical
+skip,5083,5083,10082,7,2026,151,approved,"Karimun Nessa",54520.00,identical
+skip,5084,5084,10083,7,2026,152,approved,"Tanwne Sarker",41985.00,identical
+skip,5085,5085,10084,7,2026,153,approved,"Md. Habibur Rahman",41985.00,identical
+skip,5086,5086,10085,7,2026,154,approved,"Jesmin Ara",42985.00,identical
+skip,5087,5087,10086,7,2026,155,approved,"Rimu Das",60890.00,identical
+skip,5088,5088,10087,7,2026,156,approved,"Bhaskar Chandra Majumdar",46485.00,identical
+skip,5089,5089,10088,7,2026,157,approved,"Basir Ahammad",46485.00,identical
+skip,5090,5090,10089,7,2026,158,approved,"Dr. Debasish Pandit",62678.00,identical
+skip,5091,5091,10090,7,2026,159,approved,"Md. Hafizur Rahman, PhD",63294.00,identical
+skip,5092,5092,10091,7,2026,160,approved,"Homayora Yeasmin",41985.00,identical
+skip,5093,5093,10092,7,2026,161,approved,"Md. Ariful Islam",59020.00,identical
+skip,5094,5094,10093,7,2026,162,approved,"Puja Roy",46485.00,identical
+skip,5095,5095,10094,7,2026,163,approved,"Angkur Chowdhury",48529.50,identical
+skip,5096,5096,10095,7,2026,164,approved,"Sadia Salam",44529.50,identical
+skip,5097,5097,10096,7,2026,165,approved,"Zakia Sultana",64020.00,identical
+skip,5098,5098,10097,7,2026,166,approved,"Ismot Zereen",44029.50,identical
+skip,5099,5099,10098,7,2026,167,approved,"Joy Shankar Boydda",44029.50,identical
+skip,5100,5100,10099,7,2026,168,approved,"Onamika Chowdhuri Keya",59020.00,identical
+skip,5101,5101,10100,7,2026,169,approved,"Mst. SABINA Alim",44029.50,identical
+skip,5102,5102,10101,7,2026,170,approved,"Asmaul Husna",54520.00,identical
+skip,5103,5103,10102,7,2026,171,approved,"DR.Nazmin Sultana Runa",44529.50,identical
+skip,5104,5104,10103,7,2026,172,approved,"Solema Akter Shanta",48529.50,identical
+skip,5105,5105,10104,7,2026,173,approved,"Tithe Saha",49029.50,identical
+skip,5106,5106,10105,7,2026,174,approved,"Mousumi Jahan Sumi",59520.00,identical
+skip,5107,5107,10106,7,2026,175,approved,"PROSENJIT SARKER",41985.00,identical
+skip,5108,5108,10107,7,2026,176,approved,"Mahfuja Ferdous",37042.00,identical
+skip,5109,5109,10108,7,2026,177,approved,"Mst. Assrafi Siddika",44029.50,identical
+skip,5110,5110,10109,7,2026,178,approved,"Md. Sahidul Islam",45029.50,identical
+skip,5111,5111,10110,7,2026,179,approved,"Dilruba Akter Mir",44029.50,identical
+skip,5112,5112,10111,7,2026,180,approved,"DR.Fowzia Bahar",59020.00,identical
+skip,5113,5113,10113,7,2026,182,approved,"Md. Asaduzzaman Lovelu",49029.50,identical
+skip,5114,5114,10115,7,2026,183,approved,"Dr. Most. Waheda Rahman Ansary",64702.00,identical
+skip,5115,5115,10121,7,2026,184,approved,"Anika Ahmed",36417.00,identical
+skip,5116,5116,10120,7,2026,186,approved,"Md Shamim Hasan",36417.00,identical
+skip,5117,5117,10119,7,2026,187,approved,"Shoumik Mojumdar",36417.00,identical
+skip,5118,5118,10117,7,2026,188,approved,"Zahrul Jannat Peya",54520.00,identical
+skip,5119,5119,10122,7,2026,189,approved,"Zannatul Ferdous Shifat",36417.00,identical
+skip,5120,5120,10160,7,2026,417,approved,"S. M. Nasir Uddin",64702.00,identical
+skip,5121,5121,20001,7,2026,2,approved,"Prof. Dr. Md. Nazmul Ahsan",114970.00,identical
+skip,5122,5122,20137,7,2026,3,approved,"Dr. Shamim Ahmed Kamal Uddin Khan",111966.00,identical
+skip,5123,5123,20080,7,2026,5,approved,"Md. Rajibul Karim",104594.00,identical
+skip,5124,5124,20081,7,2026,6,approved,"SM Moniruzzaman",103150.00,identical
+skip,5125,5125,20002,7,2026,7,approved,"Md. Rezaul Islam",80044.00,identical
+skip,5126,5126,20003,7,2026,8,approved,"MD. SHAFIUR RAHMAN KHAN",52283.00,identical
+skip,5127,5127,20004,7,2026,9,approved,"MD. JASHIM UDDIN",51202.50,identical
+skip,5128,5128,20005,7,2026,10,approved,"Anamul Kabir",54186.00,identical
+skip,5129,5129,20007,7,2026,11,approved,"Murad Bellah",54686.00,identical
+skip,5130,5130,20006,7,2026,12,approved,"Sazzadul Islam",54186.00,identical
+skip,5131,5131,20008,7,2026,13,approved,"Abdul Kaium",52283.00,identical
+skip,5132,5132,20009,7,2026,14,approved,"Md. Khirul Bashar Riaz",42901.00,identical
+skip,5133,5133,20010,7,2026,15,approved,"USUF ALI",40292.00,identical
+skip,5134,5134,20011,7,2026,16,approved,"Md Hasibul Islam",40292.00,identical
+skip,5135,5135,20012,7,2026,17,approved,"Sultan Mahmud",39292.00,identical
+skip,5136,5136,20020,7,2026,18,approved,"S. M. Nazim Jubaer",52283.00,identical
+skip,5137,5137,20013,7,2026,19,approved,"Jannatun Nayem",40292.00,identical
+skip,5138,5138,20014,7,2026,20,approved,"SK RASHEDUZZAMAN",52883.00,identical
+skip,5139,5139,20015,7,2026,21,approved,"Shahidul Islam",52283.00,identical
+skip,5140,5140,20016,7,2026,22,approved,"Md.Forkan Ahmed",40292.00,identical
+skip,5141,5141,20017,7,2026,23,approved,"Muhammad Ali",40292.00,identical
+skip,5142,5142,20018,7,2026,24,approved,"Saifullah Mansur",49847.00,identical
+skip,5143,5143,20024,7,2026,26,approved,"Khan Jabid Hasan",48839.00,identical
+skip,5144,5144,20022,7,2026,27,approved,"Tanbibur Rahman",48339.00,identical
+skip,5145,5145,20025,7,2026,28,approved,"Shariful islam",49847.00,identical
+skip,5146,5146,20021,7,2026,29,approved,"SAIFULLAH HAQUE",48339.00,identical
+skip,5147,5147,20026,7,2026,30,approved,"Md. Monoar Kowshar",32150.00,identical
+skip,5148,5148,20032,7,2026,31,approved,"Md. Fahad Khan",38936.00,identical
+skip,5149,5149,20029,7,2026,32,approved,"MST. AFSANA YASMIN",38436.00,identical
+skip,5150,5150,20027,7,2026,33,approved,"Shaikh imran Ahmmed",38436.00,identical
+skip,5151,5151,20028,7,2026,34,approved,"CHITTA RANJAN MRIDHA",38436.00,identical
+skip,5152,5152,20031,7,2026,35,approved,"Alal Khan",36667.00,identical
+skip,5153,5153,20030,7,2026,36,approved,"Nahid Sultana Moon",38436.00,identical
+skip,5154,5154,20033,7,2026,37,approved,"Humira Parpen Rumpa",29785.00,identical
+skip,5155,5155,20034,7,2026,38,approved,"MD JAHANGIR HOSSAIN",30541.00,identical
+skip,5156,5156,20035,7,2026,39,approved,"Satyam Roy",30541.00,identical
+skip,5157,5157,20037,7,2026,40,approved,"MD WAHID MALLIK",30680.00,identical
+skip,5158,5158,20038,7,2026,41,approved,"Chandan kumar Sarkar",49847.00,identical
+skip,5159,5159,20039,7,2026,42,approved,"Sk. Faisal Ahmed",41901.00,identical
+skip,5160,5160,20040,7,2026,43,approved,"Nabila Rahman",42735.00,identical
+skip,5161,5161,20041,7,2026,44,approved,"SHIEK AMINUL ISLAM",41901.00,identical
+skip,5162,5162,20042,7,2026,45,approved,"Md. Al Mahmud",41901.00,identical
+skip,5163,5163,20043,7,2026,46,approved,"B. M. ISLAMUL HAQ",41901.00,identical
+skip,5164,5164,20044,7,2026,47,approved,"Krishibid Md. Mizanur Rahman",41901.00,identical
+skip,5165,5165,20045,7,2026,48,approved,"DELWAR HOSSAIN",42501.00,identical
+skip,5166,5166,20046,7,2026,49,approved,"DABOBRATA KUMAR SWAR",41901.00,identical
+skip,5167,5167,20047,7,2026,50,approved,"Sharmin Parvin",43235.00,identical
+skip,5168,5168,20048,7,2026,51,approved,"Md. Ashraful Islam",43945.50,identical
+skip,5170,5170,20050,7,2026,53,approved,"MD. NAJMUL HAQUE",41901.00,identical
+skip,5171,5171,20053,7,2026,54,approved,"Md. Masud Rana",32150.00,identical
+skip,5172,5172,20052,7,2026,55,approved,"Md Rasel Hasan",30540.00,identical
+skip,5173,5173,20051,7,2026,56,approved,"Md. Hasan Bali",30540.00,identical
+skip,5174,5174,20054,7,2026,57,approved,"MD.RAIHAN SHOBAN",32150.00,identical
+skip,5175,5175,20057,7,2026,58,approved,"Ashik Ahmed",31180.00,identical
+skip,5176,5176,20055,7,2026,59,approved,"Md.Khabir Uddin",31680.00,identical
+skip,5177,5177,20056,7,2026,60,approved,"ABDUL MATIN",31180.00,identical
+skip,5178,5178,20058,7,2026,61,approved,"MD. NAZMUL HASSAN",29285.00,identical
+skip,5179,5179,20059,7,2026,62,approved,"Molla Shofikul islam Sajib",29785.00,identical
+skip,5180,5180,20060,7,2026,63,approved,"Saharin Islam Mim",29285.00,identical
+skip,5181,5181,20061,7,2026,64,approved,"Ziarul Golder",29785.00,identical
+skip,5182,5182,20063,7,2026,66,approved,"Ujjal Kumar Das",29785.00,identical
+skip,5183,5183,20064,7,2026,67,approved,"MITHUN KUMAR",29285.00,identical
+skip,5184,5184,20065,7,2026,68,approved,"Shailendronath Bairagi",29285.00,identical
+skip,5185,5185,20066,7,2026,69,approved,"Rumpa Akter",29285.00,identical
+skip,5186,5186,20067,7,2026,70,approved,"Khan Tanvir Arif",29285.00,identical
+skip,5187,5187,20068,7,2026,71,approved,"Mithun Mallick",29285.00,identical
+skip,5188,5188,20069,7,2026,72,approved,"SAIMA JHOTI",29785.00,identical
+skip,5189,5189,20076,7,2026,73,approved,"Md. Imran Munsi",29285.00,identical
+skip,5190,5190,20070,7,2026,74,approved,"SHEKHORE BISWAS",28012.00,identical
+skip,5191,5191,20071,7,2026,75,approved,"Razia Khatun",29285.00,identical
+skip,5192,5192,20072,7,2026,76,approved,"Md. Masum Billh",29285.00,identical
+skip,5193,5193,20073,7,2026,77,approved,"MD. NASIM AKAND",29785.00,identical
+skip,5194,5194,20074,7,2026,78,approved,"MD ABID HOSSAIN",29285.00,identical
+skip,5195,5195,20075,7,2026,79,approved,"SHABEQUN NAHAR",29785.00,identical
+skip,5196,5196,20077,7,2026,80,approved,"Md Aslam khan",29285.00,identical
+skip,5197,5197,20078,7,2026,82,approved,"Md. Murad Hossain",29285.00,identical
+skip,5198,5198,20079,7,2026,415,approved,"Mohammed Shahid Ali",93558.00,identical
+skip,5199,5199,20090,7,2026,416,approved,"Dr Aroni Biswash",35590.00,identical
+skip,5200,5200,20062,7,2026,65,approved,"Dip Lal Pandey",21165.00,identical
+skip,5201,5201,30004,7,2026,190,approved,"MD.SHAHIDUL ISLAM",24794.50,identical
+skip,5202,5202,30002,7,2026,191,approved,"Mizanur Rahman",26759.00,identical
+skip,5203,5203,30003,7,2026,193,approved,"MD. Ashraful kamal",24794.50,identical
+skip,5204,5204,30017,7,2026,194,approved,"Md. Abul Basar",24225.00,identical
+skip,5205,5205,30016,7,2026,195,approved,"Md. Anisur Rahman Rintu",24225.00,identical
+skip,5206,5206,30005,7,2026,196,approved,"MD. JHAHID HASAN",23349.00,identical
+skip,5207,5207,30006,7,2026,197,approved,"Imran Hossain",27259.00,identical
+skip,5208,5208,30007,7,2026,198,approved,"Md. Faruk Ali",25331.00,identical
+skip,5209,5209,30008,7,2026,200,approved,"MD JAMAL HOSSEN",24294.50,identical
+skip,5210,5210,30018,7,2026,202,approved,"Md. Shahadat Hossin Kha",22826.00,identical
+skip,5211,5211,30020,7,2026,203,approved,"ANAYET BEPARI",23326.00,identical
+skip,5212,5212,30019,7,2026,204,approved,"Shak Md Arman",22326.00,identical
+skip,5213,5213,30035,7,2026,208,approved,"Md. Maruf Hasan Gazi",23326.00,identical
+skip,5214,5214,30031,7,2026,209,approved,"MD JAKIR HOSSAIN",28491.00,identical
+skip,5215,5215,30030,7,2026,210,approved,"A.B.M. ARIFUL ISLAM TURAN",22826.00,identical
+skip,5216,5216,30046,7,2026,218,approved,"Sabira Khatun",27609.00,identical
+skip,5217,5217,30048,7,2026,219,approved,"Mizanur Rahman",28609.00,identical
+skip,5218,5218,30074,7,2026,227,approved,"Aminul Hasan",21849.50,identical
+skip,5219,5219,30071,7,2026,229,approved,"MD. AMRAN HOSSAIN",21849.50,identical
+skip,5220,5220,30098,7,2026,230,approved,"Nasir Ahmed",20919.50,identical
+skip,5221,5221,30065,7,2026,231,approved,"Sabiha Karim",21349.50,identical
+skip,5222,5222,30084,7,2026,232,approved,"Md. Mintu",26759.00,identical
+skip,5223,5223,30078,7,2026,233,approved,"Anjan Kumar Das",20419.50,identical
+skip,5224,5224,30082,7,2026,234,approved,"Rukiya Akter",20419.50,identical
+skip,5225,5225,30089,7,2026,235,approved,"Ananna Rahman Mumu",21419.50,identical
+skip,5226,5226,30096,7,2026,236,approved,"Md. Nurul Islam",20419.50,identical
+skip,5227,5227,30099,7,2026,237,approved,"Md. Mehede Hasan Rqny",20419.50,identical
+skip,5228,5228,30100,7,2026,238,approved,"Md. Kamruzzaman Shaikh",20419.50,identical
+skip,5229,5229,30101,7,2026,239,approved,"Jahir Abbas",20919.50,identical
+skip,5230,5230,30103,7,2026,240,approved,"H M Arif Hossain",20419.50,identical
+skip,5231,5231,30254,7,2026,246,approved,"DEBASHIS KUMAR",17475.00,identical
+skip,5232,5232,30090,7,2026,247,approved,"Md. Shariful Islam",20919.50,identical
+skip,5233,5233,30113,7,2026,248,approved,"Fakrul Islam",27259.00,identical
+skip,5234,5234,30116,7,2026,249,approved,"Md Delowar Hossain",26759.00,identical
+skip,5235,5235,30117,7,2026,250,approved,"Md.Muktajul Islam Sohag",26759.00,identical
+skip,5236,5236,30118,7,2026,251,approved,"Jewel Hawlader",26759.00,identical
+skip,5237,5237,30119,7,2026,252,approved,"Tamanna Amin Tisha",27259.00,identical
+skip,5238,5238,30120,7,2026,253,approved,"Soma Rani Saha",27759.00,identical
+skip,5239,5239,30121,7,2026,254,approved,"Md. Sharfuddin Khan",23767.50,identical
+skip,5240,5240,30122,7,2026,255,approved,"Halima Khatun Maina",20134.50,identical
+skip,5241,5241,30123,7,2026,256,approved,"SYED KHALID HASAN",20919.50,identical
+skip,5242,5242,30124,7,2026,257,approved,"MASUM HOSSAIN",20419.50,identical
+skip,5243,5243,30125,7,2026,258,approved,"MD. Refajul Sheikh",20419.50,identical
+skip,5244,5244,30126,7,2026,259,approved,"Arun Kumar Rahut",20419.50,identical
+skip,5245,5245,30127,7,2026,260,approved,"MD: ALAMIN",20419.50,identical
+skip,5246,5246,30128,7,2026,261,approved,ELIAUS,20919.50,identical
+skip,5247,5247,30129,7,2026,262,approved,"KANIKA MONDAL",20919.50,identical
+skip,5248,5248,30130,7,2026,263,approved,"Md. Anamul hoque",20419.50,identical
+skip,5249,5249,30131,7,2026,264,approved,"Md. Omar Faruque",20419.50,identical
+skip,5250,5250,30132,7,2026,265,approved,"Md. Ariful Islam",20419.50,identical
+skip,5251,5251,30262,7,2026,379,approved,"SOHAG HOSSEN",19536.00,identical
+skip,5252,5252,30234,7,2026,380,approved,"Md Al Amin Howlader",13593.00,identical
+skip,5253,5253,30243,7,2026,386,approved,"MD. JIHAD SHEIKH",22729.00,identical
+skip,5254,5254,30261,7,2026,387,approved,"Tanjira Sultana",23229.00,identical
+skip,5255,5255,30244,7,2026,388,approved,"AYAT ULLAH MUZAHID",23229.00,identical
+skip,5256,5256,30264,7,2026,389,approved,"Abdur Rahim",25565.50,identical
+skip,5257,5257,30233,7,2026,390,approved,"Yeasmin Haq",25565.50,identical
+skip,5258,5258,30263,7,2026,391,approved,"MD.BAIZID ADNAN",25565.50,identical
+skip,5259,5259,30036,7,2026,398,approved,"Roman Sheikh",28857.00,identical
+skip,5260,5260,30073,7,2026,399,approved,"SHAIKH JAKIA SULTANA",28357.00,identical
+skip,5261,5261,30072,7,2026,400,approved,"PRITOM KUMAR KUNDU",21608.50,identical
+skip,5262,5262,30075,7,2026,403,approved,"Nur Nabi Akhter",28357.00,identical
+skip,5263,5263,30043,7,2026,404,approved,"Sujan Mondal",28357.00,identical
+skip,5264,5264,30067,7,2026,406,approved,"Md golam kibria howlader",22608.50,identical
+skip,5265,5265,30066,7,2026,407,approved,"Mst. Mursida Aktar",22608.50,identical
+skip,5266,5266,30070,7,2026,413,approved,"Nasir Uddin",27609.00,identical
+skip,5267,5267,30076,7,2026,414,approved,"Rani Khatun",26759.00,identical
+skip,5268,5268,30081,7,2026,418,approved,"MD SHAHADAT HOSSAIN",5288.13,identical
+skip,5269,5269,40013,7,2026,199,approved,"Ahmed Foysal",21090.00,identical
+skip,5270,5270,40021,7,2026,201,approved,"Md.Akhtarul Islam",22675.00,identical
+skip,5271,5271,40012,7,2026,205,approved,Saifullah,23617.00,identical
+skip,5272,5272,40026,7,2026,206,approved,"MD AL AMIN",20047.50,identical
+skip,5273,5273,40024,7,2026,207,approved,"Khandaker Abul Kalam",21876.50,identical
+skip,5274,5274,40028,7,2026,212,approved,"Md.Raju Sheik",20547.50,identical
+skip,5275,5275,40029,7,2026,213,approved,"Salam Moral",20179.50,identical
+skip,5276,5276,40022,7,2026,214,approved,"SANJIDA SHARMIN",20547.50,identical
+skip,5277,5277,40027,7,2026,215,approved,"Md. Ali Asim Howlader",19179.50,identical
+skip,5278,5278,40034,7,2026,216,approved,"MD. RASHADUL ISLAM",19179.50,identical
+skip,5279,5279,40035,7,2026,217,approved,"Fatema Akter",19179.50,identical
+skip,5280,5280,40050,7,2026,220,approved,"MD NAZMUL ISLAM",20179.50,identical
+skip,5281,5281,40053,7,2026,221,approved,"MD. Habibur Rahaman",19679.50,identical
+skip,5282,5282,40054,7,2026,222,approved,"Mst. Parveen Islam",20179.50,identical
+skip,5283,5283,40055,7,2026,223,approved,"Mst. Rohema Akter Rekha",20179.50,identical
+skip,5284,5284,40056,7,2026,224,approved,"Md. Al Amin",20179.50,identical
+skip,5285,5285,40057,7,2026,225,approved,"Md.Sumon morol",20179.50,identical
+skip,5286,5286,40058,7,2026,226,approved,"Md. Sazzad Mohi",19179.50,identical
+skip,5287,5287,40068,7,2026,228,approved,"Sorif Pathan",19679.50,identical
+skip,5288,5288,40081,7,2026,241,approved,"MD.RASEL AHMED SHARIF",18478.00,identical
+skip,5289,5289,40083,7,2026,242,approved,"Md. Mostafizur Rahman",18478.00,identical
+skip,5290,5290,40087,7,2026,243,approved,"MD. WAHIDUZZAMAN",17942.50,identical
+skip,5291,5291,40092,7,2026,244,approved,"SABINA YASMIN",18478.00,identical
+skip,5292,5292,40093,7,2026,245,approved,"Mst. Nupur Khatun",18478.00,identical
+skip,5293,5293,40135,7,2026,266,approved,"MD:MUKTO ALI",19427.50,identical
+skip,5294,5294,40136,7,2026,267,approved,"MD.Farukul Islam",20427.50,identical
+skip,5295,5295,40137,7,2026,268,approved,"SANJIDA AFRIN",19927.50,identical
+skip,5296,5296,40138,7,2026,269,approved,"Md. Omar Faruk",20927.50,identical
+skip,5297,5297,40139,7,2026,270,approved,"Hannan Akhand",17287.50,identical
+skip,5298,5298,40141,7,2026,271,approved,"BISHAL SARKAR",19427.50,identical
+skip,5299,5299,40142,7,2026,272,approved,"Md Nahidul Islam",18838.50,identical
+skip,5300,5300,40143,7,2026,273,approved,"MD.Mahamudul Hasan",18838.50,identical
+skip,5301,5301,40145,7,2026,274,approved,"MD. Al Mamon",19338.50,identical
+skip,5302,5302,40146,7,2026,275,approved,"Abdullah Al Fahim Sajjan",18838.50,identical
+skip,5303,5303,40147,7,2026,276,approved,"MD. AHID SHAIKH",19338.50,identical
+skip,5304,5304,40144,7,2026,277,approved,"Md. Nazmul Hossain",18838.50,identical
+skip,5305,5305,40149,7,2026,278,approved,"Md.Asif Ahmed",18838.50,identical
+skip,5306,5306,40150,7,2026,279,approved,"S.R.A SHOHAN",18838.50,identical
+skip,5307,5307,40151,7,2026,280,approved,"Didarul Alam",18838.50,identical
+skip,5308,5308,40152,7,2026,281,approved,"Md. ABDUS SALAM",18838.50,identical
+skip,5309,5309,40153,7,2026,282,approved,"Mir Sadrul Amin.",18838.50,identical
+skip,5310,5310,40154,7,2026,283,approved,"Omar Faruq",18838.50,identical
+skip,5311,5311,40155,7,2026,284,approved,"Md. Habibur Rahman",19838.50,identical
+skip,5312,5312,40156,7,2026,285,approved,"Dolon Kumar Das",18838.50,identical
+skip,5313,5313,40157,7,2026,286,approved,"Arifa Sultana",18838.50,identical
+skip,5314,5314,40148,7,2026,287,approved,"SABINA YEASMIN",18838.50,identical
+skip,5315,5315,40161,7,2026,288,approved,"ALOKA BISWAS",18478.00,identical
+skip,5316,5316,40162,7,2026,289,approved,"Md Raihan Islam",18978.00,identical
+skip,5317,5317,40163,7,2026,290,approved,"Anik Biswas",18478.00,identical
+skip,5318,5318,40164,7,2026,291,approved,"Md.Nasimul Islam",18978.00,identical
+skip,5319,5319,40165,7,2026,292,approved,"Lasker Nadimul Islam",18478.00,identical
+skip,5320,5320,40166,7,2026,293,approved,"Hawlader Manjur Hasan",18478.00,identical
+skip,5321,5321,40169,7,2026,294,approved,"S.M. Sujauddin",18478.00,identical
+skip,5322,5322,40170,7,2026,295,approved,"Kaziul Islam",18478.00,identical
+skip,5323,5323,40171,7,2026,296,approved,"MD.NAZMUL HUDA",18478.00,identical
+skip,5324,5324,40172,7,2026,297,approved,"Md. Shahinur Rahman",18478.00,identical
+skip,5326,5326,40174,7,2026,299,approved,"HAMIM SARDER",18478.00,identical
+skip,5327,5327,40175,7,2026,300,approved,"MD. RAYHAN MOLLA",18978.00,identical
+skip,5328,5328,40176,7,2026,301,approved,"MD TAHIDUL ISLAM",18478.00,identical
+skip,5329,5329,40177,7,2026,302,approved,"Md.Kazi Sabbir Hossen",18478.00,identical
+skip,5330,5330,40178,7,2026,303,approved,"Begum Nur-E-Jakia",19478.00,identical
+skip,5331,5331,40179,7,2026,304,approved,"MIZANUR RAHMAN",18478.00,identical
+skip,5332,5332,40180,7,2026,305,approved,"MD:MOKTAR HOSSEN",18478.00,identical
+skip,5333,5333,40181,7,2026,306,approved,"Beal Shaikh",18478.00,identical
+skip,5334,5334,40182,7,2026,307,approved,"Md. Sajib Shaikh",18478.00,identical
+skip,5335,5335,40183,7,2026,308,approved,"Fairuz Rahaman",18478.00,identical
+skip,5336,5336,40184,7,2026,309,approved,"Mohini Mondol Sima",18478.00,identical
+skip,5337,5337,40185,7,2026,310,approved,"ASIA KHATUN",18478.00,identical
+skip,5338,5338,40186,7,2026,311,approved,"Sohan Howladar",18478.00,identical
+skip,5339,5339,40187,7,2026,312,approved,"Shamin Al Fazal",18478.00,identical
+skip,5340,5340,40190,7,2026,313,approved,"Monwar Hossain",18478.00,identical
+skip,5341,5341,40191,7,2026,314,approved,"Md Ramjan",18478.00,identical
+skip,5342,5342,40192,7,2026,315,approved,Alamin,18478.00,identical
+skip,5343,5343,40194,7,2026,316,approved,"Kamrul Hasan",18478.00,identical
+skip,5344,5344,40195,7,2026,317,approved,"MST.Dilruba yeasmin",18478.00,identical
+skip,5345,5345,40196,7,2026,318,approved,"Abdullah al mamun",18478.00,identical
+skip,5346,5346,40193,7,2026,319,approved,"EFTEKHIAR MAHAMUD",18478.00,identical
+skip,5347,5347,40197,7,2026,320,approved,"Talukder Rafsunjani",19478.00,identical
+skip,5348,5348,40198,7,2026,321,approved,"Md.Shakil Hossain",18478.00,identical
+skip,5349,5349,40200,7,2026,323,approved,"MD Sohel",18478.00,identical
+skip,5350,5350,40201,7,2026,324,approved,"Krisno Kumar Day",18478.00,identical
+skip,5351,5351,40202,7,2026,325,approved,"Shariful Islam",18978.00,identical
+skip,5352,5352,40203,7,2026,326,approved,"Emran Howlader",18478.00,identical
+skip,5353,5353,40204,7,2026,327,approved,"MD. IMRAN THAKUR",18478.00,identical
+skip,5354,5354,40205,7,2026,328,approved,"Md. Alauddin Howlader",18478.00,identical
+skip,5355,5355,40206,7,2026,329,approved,"Margia Akter",18478.00,identical
+skip,5356,5356,40188,7,2026,330,approved,"MD MASUID ILAHI",18978.00,identical
+skip,5357,5357,40189,7,2026,331,approved,"Md.Nazmul Hossain",18478.00,identical
+skip,5358,5358,40168,7,2026,332,approved,"Saddam Hossain",18478.00,identical
+skip,5359,5359,40167,7,2026,333,approved,"JAHIDUL ISLAM HRIDOY",18478.00,identical
+skip,5360,5360,40210,7,2026,334,approved,"Md.Rafikul Islam Rubel",19478.00,identical
+skip,5361,5361,40211,7,2026,335,approved,"Rayhan Tarafder",18478.00,identical
+skip,5362,5362,40216,7,2026,336,approved,"Md. Kashem Ali",18942.50,identical
+skip,5363,5363,40217,7,2026,337,approved,"A. Rahman",19478.00,identical
+skip,5364,5364,40218,7,2026,338,approved,"Ibrahim Howlader Sujon",19478.00,identical
+skip,5365,5365,40215,7,2026,339,approved,"Tawhidur Rahaman",18478.00,identical
+skip,5366,5366,40158,7,2026,340,approved,"Sanjida Akter Shampa",19338.50,identical
+skip,5367,5367,40159,7,2026,341,approved,"SATHI RANI SUTRADHAR",18838.50,identical
+skip,5368,5368,40160,7,2026,342,approved,"MD.Sadek Hossain opu",18838.50,identical
+skip,5369,5369,40207,7,2026,343,approved,"Sudipta bala",18478.00,identical
+skip,5370,5370,40208,7,2026,344,approved,"Md.Jalal uddin",18478.00,identical
+skip,5371,5371,40219,7,2026,345,approved,"Ruhal Amin",19478.00,identical
+skip,5372,5372,40221,7,2026,346,approved,"PariTosh Das",14112.50,identical
+skip,5373,5373,40223,7,2026,347,approved,"NAZMA AKTHER",18478.00,identical
+skip,5374,5374,40224,7,2026,348,approved,"samento das",18478.00,identical
+skip,5375,5375,40225,7,2026,349,approved,"Taum Rani Das",19478.00,identical
+skip,5376,5376,40226,7,2026,350,approved,"Sudam Halder",18478.00,identical
+skip,5377,5377,40227,7,2026,351,approved,"Tahmina Khatun",18978.00,identical
+skip,5378,5378,40228,7,2026,352,approved,"Md.Razaul Karim",19478.00,identical
+skip,5379,5379,40229,7,2026,353,approved,"G. M. HASAN AL-MAHMUD.",18978.00,identical
+skip,5380,5380,40230,7,2026,354,approved,"Sajal Rauth",19478.00,identical
+skip,5381,5381,40222,7,2026,355,approved,"Mst. Ratna Khatun",18978.00,identical
+skip,5382,5382,40220,7,2026,356,approved,"Md. Babul Dosrji",18478.00,identical
+skip,5383,5383,40212,7,2026,357,approved,"Md.Shahidul Sikder",18478.00,identical
+skip,5384,5384,40213,7,2026,358,approved,"Md Saidul Islam",19478.00,identical
+skip,5385,5385,40214,7,2026,359,approved,"Sheikh Shaon",17942.50,identical
+skip,5386,5386,40231,7,2026,360,approved,"SACHIN DAS",18478.00,identical
+skip,5387,5387,40268,7,2026,362,approved,"Md Emdadul Hoque Khan",18442.50,identical
+skip,5388,5388,40239,7,2026,363,approved,"POLOCK JODDER",17942.50,identical
+skip,5389,5389,40237,7,2026,364,approved,"SAFIQUZZAMAN MOLLICK",17942.50,identical
+skip,5390,5390,40236,7,2026,365,approved,"Arif Mridha",18442.50,identical
+skip,5391,5391,40257,7,2026,366,approved,"Nuzmul Hasan Foysal",18442.50,identical
+skip,5392,5392,40242,7,2026,367,approved,"REJWAN HOSSAIN TUHIN",17942.50,identical
+skip,5393,5393,40258,7,2026,368,approved,"Dipankor kumar saha",17990.00,identical
+skip,5394,5394,40256,7,2026,369,approved,"MD Mynul Islam",17942.50,identical
+skip,5395,5395,40241,7,2026,370,approved,"MAHAMUDA KHANOM JUTHI",17942.50,identical
+skip,5396,5396,40260,7,2026,371,approved,"Mainul Islam",17942.50,identical
+skip,5397,5397,40255,7,2026,372,approved,"Rafsan jani",17942.50,identical
+skip,5398,5398,40259,7,2026,373,approved,"MD. JAHANGIR ALAM",18442.50,identical
+skip,5399,5399,40249,7,2026,374,approved,"Shovon Biswas",17942.50,identical
+skip,5400,5400,40240,7,2026,375,approved,"MD Aslam",17942.50,identical
+skip,5401,5401,40253,7,2026,376,approved,"Ratna Rani Hela",17942.50,identical
+skip,5402,5402,40250,7,2026,377,approved,"Jasmin Akhter Shati",17942.50,identical
+skip,5403,5403,40248,7,2026,378,approved,"Nasrin Sultana",17942.50,identical
+skip,5404,5404,40266,7,2026,381,approved,"Shamim Hosain",18442.50,identical
+skip,5405,5405,40265,7,2026,382,approved,"Md. Ariful Islam",17942.50,identical
+skip,5406,5406,40245,7,2026,383,approved,"MD SUMON MRIDHA",17942.50,identical
+skip,5407,5407,40246,7,2026,384,approved,"Md. Safique",17942.50,identical
+skip,5408,5408,40247,7,2026,385,approved,"MD Abdus Satter",17942.50,identical
+skip,5409,5409,40272,7,2026,392,approved,"Rena Akter",18942.50,identical
+skip,5410,5410,40270,7,2026,393,approved,"MOUSUMI AKTER",19135.50,identical
+skip,5411,5411,40271,7,2026,394,approved,"Md. Alamgir Hossain",18635.50,identical
+skip,5412,5412,40275,7,2026,395,approved,"Joynal Islam",18442.50,identical
+skip,5413,5413,40238,7,2026,396,approved,"Mansur Hillal",17942.50,identical
+skip,5414,5414,40267,7,2026,397,approved,"Md. Sobus Mia",17866.50,identical
+skip,5415,5415,40059,7,2026,401,approved,"Minhazul Abedin Kazol",18572.50,identical
+skip,5416,5416,40060,7,2026,402,approved,"Shariful Islam",19072.50,identical
+skip,5417,5417,40051,7,2026,405,approved,"MD.TANIJ HOWLADER",19661.50,identical
+skip,5418,5418,40052,7,2026,408,approved,"Khursida khatun",19447.50,identical
+skip,5419,5419,40061,7,2026,409,approved,"Shahriar Ahmed",19447.50,identical
+skip,5421,5421,40104,7,2026,412,approved,"Debasish Roy",18478.00,identical
+skip,5435,5435,20023,7,2026,420,approved,"Nafisa Jebin Mila",45045.00,identical
+skip,5436,5436,30081,8,2026,418,approved,"MD SHAHADAT HOSSAIN",20140.00,identical
+skip,5437,5437,30043,8,2026,404,approved,"Sujan Mondal",25816.00,identical
+skip,5438,5438,30036,8,2026,398,approved,"Roman Sheikh",26316.00,identical
+skip,5439,5439,30075,8,2026,403,approved,"Nur Nabi Akhter",25816.00,identical
+skip,5440,5440,30073,8,2026,399,approved,"SHAIKH JAKIA SULTANA",25816.00,identical
+skip,5441,5441,30066,8,2026,407,approved,"Mst. Mursida Aktar",20727.50,identical
+skip,5442,5442,30072,8,2026,400,approved,"PRITOM KUMAR KUNDU",19727.50,identical
+skip,5443,5443,30132,8,2026,265,approved,"Md. Ariful Islam",20919.50,identical
+skip,5444,5444,30234,8,2026,380,approved,"Md Al Amin Howlader",13593.00,identical
+skip,5445,5445,30133,8,2026,421,approved,"Martuja azad",20419.50,identical
+skip,5446,5446,30067,8,2026,406,approved,"Md golam kibria howlader",20727.50,identical
+skip,5449,5449,40138,8,2026,269,approved,"Md. Omar Faruk",20427.50,identical
+skip,5450,5450,40175,8,2026,300,approved,"MD. RAYHAN MOLLA",19478.00,identical
+skip,5452,5452,40140,8,2026,422,approved,"Ronjon Debnath",19427.50,identical
+skip,5453,5453,30235,8,2026,411,approved,"Tanvir Ahmed",22729.00,identical
+skip,5454,5454,20049,8,2026,423,approved,"Md. Mehedi Hasan",42501.00,identical
+skip,5455,5455,40173,8,2026,424,approved,"MD. MEHEDI HASAN",18478.00,identical
+skip,5456,5456,40274,8,2026,425,approved,"MD. MEHEDI HASAN",17942.50,identical
+skip,5457,5457,10026,8,2026,83,approved,"Dr. Md. Taslim Hossain",79344.00,identical
+skip,5458,5458,10030,8,2026,84,approved,"Dr. Israt Jahan Irin",83844.00,identical
+skip,5459,5459,10028,8,2026,85,approved,"Dr. Muhammad Ashiqul Alam",86568.00,identical
+skip,5460,5460,10027,8,2026,86,approved,"Dr. Nahid Rahman",78344.00,identical
+skip,5461,5461,10029,8,2026,87,approved,"Dr. M A Hannan",79344.00,identical
+skip,5462,5462,10020,8,2026,88,approved,"Tapati Roy",54470.00,identical
+skip,5463,5463,10024,8,2026,89,approved,"Dr. Mst. Mahamuda Khatun",66128.00,identical
+skip,5464,5464,10018,8,2026,90,approved,"Mohammed Arif Sadik polash",54470.00,identical
+skip,5465,5465,10019,8,2026,91,approved,"Keya Akter",56340.00,identical
+skip,5466,5466,10012,8,2026,92,approved,"Nigar Afsana",54470.00,identical
+skip,5467,5467,10023,8,2026,94,approved,"Shahabuddin Ahmed",61628.00,identical
+skip,5468,5468,10006,8,2026,95,approved,"Sharmin Jaman",58744.00,identical
+skip,5469,5469,10003,8,2026,96,approved,"PAPIA KHATUN",55140.00,identical
+skip,5470,5470,10022,8,2026,97,approved,"SWARUP KUMAR KUNDU",53840.00,identical
+skip,5471,5471,10008,8,2026,98,approved,"Jotirmoy Chakrobortty",54470.00,identical
+skip,5472,5472,10010,8,2026,99,approved,"Newton Chandra Paul",54470.00,identical
+skip,5473,5473,10016,8,2026,100,approved,"Nahid Hossain",54470.00,identical
+skip,5474,5474,10009,8,2026,101,approved,"Abu Rashed Md. Maukeeb",61628.00,identical
+skip,5475,5475,10017,8,2026,102,approved,"SHORIFUL Islam",58744.00,identical
+skip,5476,5476,10005,8,2026,103,approved,"Mustasim Femous",50770.00,identical
+skip,5477,5477,10002,8,2026,104,approved,"MD. JANNAT HOSSAIN",50770.00,identical
+skip,5478,5478,10025,8,2026,105,approved,"Md. Amir Hossain",54470.00,identical
+skip,5479,5479,10021,8,2026,106,approved,"Md. Salauddin",66128.00,identical
+skip,5480,5480,10007,8,2026,107,approved,"Tatia Biswas",56340.00,identical
+skip,5481,5481,10014,8,2026,108,approved,"Md. Morshedul Islam",61628.00,identical
+skip,5482,5482,10001,8,2026,109,approved,"M. Sohidullah",66128.00,identical
+skip,5483,5483,10072,8,2026,110,approved,"Dr. Mohammad Nazrul Islam",79344.00,identical
+skip,5484,5484,10053,8,2026,111,approved,"Dr. Asadujjaman",78344.00,identical
+skip,5485,5485,10066,8,2026,112,approved,"Rumana Biswas",61678.00,identical
+skip,5486,5486,10045,8,2026,113,approved,"Meer Rifath Jahan Usha",66178.00,identical
+skip,5487,5487,10032,8,2026,114,approved,"Md. Uzzal Hossain",64178.00,identical
+skip,5488,5488,10038,8,2026,115,approved,"Shahin Imran",62178.00,identical
+skip,5489,5489,10040,8,2026,116,approved,"Md. Asif Mahamud",43285.50,identical
+skip,5490,5490,10037,8,2026,117,approved,"BIDYUT MATUBBER",62878.00,identical
+skip,5491,5491,10041,8,2026,118,approved,"Rakibul Islam Md Rabbi",56390.00,identical
+skip,5492,5492,10033,8,2026,119,approved,"Shabuj Kanti Nath",56390.00,identical
+skip,5493,5493,10042,8,2026,120,approved,"Tusar Kanti Roy",61678.00,identical
+skip,5494,5494,10064,8,2026,121,approved,"Anika Tahsin Mou",56390.00,identical
+skip,5495,5495,10060,8,2026,122,approved,"Sanzib Kumar Barman",61678.00,identical
+skip,5496,5496,10047,8,2026,123,approved,"NUSRAT JAHAN MUMU",52715.00,identical
+skip,5497,5497,10074,8,2026,124,approved,"Tuhinul Hasan",61678.00,identical
+skip,5498,5498,10059,8,2026,125,approved,"Dr. Md. Mehedi Alam",75162.00,identical
+skip,5499,5499,10061,8,2026,126,approved,"Kishor Kumar Tikadar",56390.00,identical
+skip,5500,5500,10052,8,2026,127,approved,"Rabeya Akter",43285.50,identical
+skip,5501,5501,10055,8,2026,128,approved,"Fatema jahan",47725.50,identical
+skip,5502,5502,10048,8,2026,129,approved,"Israt Jahan Herin",66178.00,identical
+skip,5503,5503,10058,8,2026,130,approved,"Md. Asadur Rahman",52225.50,identical
+skip,5504,5504,10049,8,2026,131,approved,"Md. Zonayet",66178.00,identical
+skip,5505,5505,10046,8,2026,132,approved,"Afsana Yasmin",54520.00,identical
+skip,5506,5506,10035,8,2026,133,approved,"Dr. Subarna Rani Kundu",66178.00,identical
+skip,5507,5507,10076,8,2026,134,approved,"Ishrat Khan",47725.50,identical
+skip,5508,5508,10070,8,2026,135,approved,"Fahmida Akter Jolly",52225.50,identical
+skip,5509,5509,10039,8,2026,136,approved,"Dr. Noushin Jahan",74662.00,identical
+skip,5510,5510,10071,8,2026,137,approved,"Gazi Tamiz Uddin",61678.00,identical
+skip,5511,5511,10068,8,2026,138,approved,"Mahbuba Akther Mishu",59770.00,identical
+skip,5512,5512,10036,8,2026,139,approved,"Zannatul Ferdous",56390.00,identical
+skip,5513,5513,10044,8,2026,140,approved,"Nilufa Yasmin Poly",66178.00,identical
+skip,5514,5514,10069,8,2026,141,approved,"Shourob Mohon Saha",56390.00,identical
+skip,5515,5515,10063,8,2026,142,approved,"Md. Jahurul Islam",66178.00,identical
+skip,5516,5516,10062,8,2026,143,approved,"Ferdous Ara Happy",61678.00,identical
+skip,5517,5517,10057,8,2026,144,approved,"Md. Jahid Hossain",52225.50,identical
+skip,5518,5518,10056,8,2026,145,approved,"Bably Akter",48225.50,identical
+skip,5519,5519,10034,8,2026,146,approved,"Shaolin Ferdouse",52225.50,identical
+skip,5520,5520,10077,8,2026,147,approved,"Salma Khatun",41985.00,identical
+skip,5521,5521,10079,8,2026,148,approved,"Priangka Goswami",41985.00,identical
+skip,5522,5522,10080,8,2026,149,approved,"Rashmia Sultana",46485.00,identical
+skip,5523,5523,10081,8,2026,150,approved,"Kazi Moushumi Akter",41985.00,identical
+skip,5524,5524,10082,8,2026,151,approved,"Karimun Nessa",54520.00,identical
+skip,5525,5525,10083,8,2026,152,approved,"Tanwne Sarker",41985.00,identical
+skip,5526,5526,10084,8,2026,153,approved,"Md. Habibur Rahman",41985.00,identical
+skip,5527,5527,10085,8,2026,154,approved,"Jesmin Ara",42985.00,identical
+skip,5528,5528,10086,8,2026,155,approved,"Rimu Das",60890.00,identical
+skip,5529,5529,10087,8,2026,156,approved,"Bhaskar Chandra Majumdar",46485.00,identical
+skip,5530,5530,10088,8,2026,157,approved,"Basir Ahammad",46485.00,identical
+skip,5531,5531,10089,8,2026,158,approved,"Dr. Debasish Pandit",62678.00,identical
+skip,5532,5532,10090,8,2026,159,approved,"Md. Hafizur Rahman, PhD",63294.00,identical
+skip,5533,5533,10091,8,2026,160,approved,"Homayora Yeasmin",41985.00,identical
+skip,5534,5534,10092,8,2026,161,approved,"Md. Ariful Islam",59020.00,identical
+skip,5535,5535,10093,8,2026,162,approved,"Puja Roy",46485.00,identical
+skip,5536,5536,10094,8,2026,163,approved,"Angkur Chowdhury",48529.50,identical
+skip,5537,5537,10095,8,2026,164,approved,"Sadia Salam",44529.50,identical
+skip,5538,5538,10096,8,2026,165,approved,"Zakia Sultana",55020.00,identical
+skip,5539,5539,10097,8,2026,166,approved,"Ismot Zereen",44029.50,identical
+skip,5540,5540,10098,8,2026,167,approved,"Joy Shankar Boydda",44029.50,identical
+skip,5541,5541,10099,8,2026,168,approved,"Onamika Chowdhuri Keya",59020.00,identical
+skip,5542,5542,10100,8,2026,169,approved,"Mst. SABINA Alim",44029.50,identical
+skip,5543,5543,10101,8,2026,170,approved,"Asmaul Husna",54520.00,identical
+skip,5544,5544,10102,8,2026,171,approved,"DR.Nazmin Sultana Runa",44529.50,identical
+skip,5545,5545,10103,8,2026,172,approved,"Solema Akter Shanta",48529.50,identical
+skip,5546,5546,10104,8,2026,173,approved,"Tithe Saha",49029.50,identical
+skip,5547,5547,10105,8,2026,174,approved,"Mousumi Jahan Sumi",59520.00,identical
+skip,5548,5548,10106,8,2026,175,approved,"PROSENJIT SARKER",41985.00,identical
+skip,5549,5549,10107,8,2026,176,approved,"Mahfuja Ferdous",37042.00,identical
+skip,5550,5550,10108,8,2026,177,approved,"Mst. Assrafi Siddika",44029.50,identical
+skip,5551,5551,10109,8,2026,178,approved,"Md. Sahidul Islam",45029.50,identical
+skip,5552,5552,10110,8,2026,179,approved,"Dilruba Akter Mir",44029.50,identical
+skip,5553,5553,10111,8,2026,180,approved,"DR.Fowzia Bahar",59020.00,identical
+skip,5554,5554,10113,8,2026,182,approved,"Md. Asaduzzaman Lovelu",49029.50,identical
+skip,5555,5555,10115,8,2026,183,approved,"Dr. Most. Waheda Rahman Ansary",64702.00,identical
+skip,5556,5556,10121,8,2026,184,approved,"Anika Ahmed",36417.00,identical
+skip,5557,5557,10120,8,2026,186,approved,"Md Shamim Hasan",36417.00,identical
+skip,5558,5558,10119,8,2026,187,approved,"Shoumik Mojumdar",36417.00,identical
+skip,5559,5559,10117,8,2026,188,approved,"Zahrul Jannat Peya",54520.00,identical
+skip,5560,5560,10122,8,2026,189,approved,"Zannatul Ferdous Shifat",36417.00,identical
+skip,5561,5561,10160,8,2026,417,approved,"S. M. Nasir Uddin",69702.00,identical
+skip,5562,5562,20137,8,2026,3,approved,"Dr. Shamim Ahmed Kamal Uddin Khan",111966.00,identical
+skip,5563,5563,20080,8,2026,5,approved,"Md. Rajibul Karim",104594.00,identical
+skip,5564,5564,20081,8,2026,6,approved,"SM Moniruzzaman",103150.00,identical
+skip,5565,5565,20002,8,2026,7,approved,"Md. Rezaul Islam",80044.00,identical
+skip,5566,5566,20003,8,2026,8,approved,"MD. SHAFIUR RAHMAN KHAN",52283.00,identical
+skip,5567,5567,20004,8,2026,9,approved,"MD. JASHIM UDDIN",51202.50,identical
+skip,5568,5568,20005,8,2026,10,approved,"Anamul Kabir",54186.00,identical
+skip,5569,5569,20007,8,2026,11,approved,"Murad Bellah",54686.00,identical
+skip,5570,5570,20006,8,2026,12,approved,"Sazzadul Islam",54186.00,identical
+skip,5571,5571,20008,8,2026,13,approved,"Abdul Kaium",52283.00,identical
+skip,5572,5572,20009,8,2026,14,approved,"Md. Khirul Bashar Riaz",42901.00,identical
+skip,5573,5573,20010,8,2026,15,approved,"USUF ALI",40292.00,identical
+skip,5574,5574,20011,8,2026,16,approved,"Md Hasibul Islam",40292.00,identical
+skip,5575,5575,20012,8,2026,17,approved,"Sultan Mahmud",39292.00,identical
+skip,5576,5576,20020,8,2026,18,approved,"S. M. Nazim Jubaer",52283.00,identical
+skip,5577,5577,20013,8,2026,19,approved,"Jannatun Nayem",40292.00,identical
+skip,5578,5578,20014,8,2026,20,approved,"SK RASHEDUZZAMAN",52883.00,identical
+skip,5579,5579,20015,8,2026,21,approved,"Shahidul Islam",52283.00,identical
+skip,5580,5580,20016,8,2026,22,approved,"Md.Forkan Ahmed",40292.00,identical
+skip,5581,5581,20017,8,2026,23,approved,"Muhammad Ali",40292.00,identical
+skip,5582,5582,20018,8,2026,24,approved,"Saifullah Mansur",49847.00,identical
+skip,5583,5583,20024,8,2026,26,approved,"Khan Jabid Hasan",48839.00,identical
+skip,5584,5584,20022,8,2026,27,approved,"Tanbibur Rahman",48339.00,identical
+skip,5585,5585,20025,8,2026,28,approved,"Shariful islam",49847.00,identical
+skip,5586,5586,20021,8,2026,29,approved,"SAIFULLAH HAQUE",48339.00,identical
+skip,5587,5587,20026,8,2026,30,approved,"Md. Monoar Kowshar",32150.00,identical
+skip,5588,5588,20032,8,2026,31,approved,"Md. Fahad Khan",38936.00,identical
+skip,5589,5589,20029,8,2026,32,approved,"MST. AFSANA YASMIN",38436.00,identical
+skip,5590,5590,20027,8,2026,33,approved,"Shaikh imran Ahmmed",38436.00,identical
+skip,5591,5591,20028,8,2026,34,approved,"CHITTA RANJAN MRIDHA",38436.00,identical
+skip,5592,5592,20031,8,2026,35,approved,"Alal Khan",36667.00,identical
+skip,5593,5593,20030,8,2026,36,approved,"Nahid Sultana Moon",38436.00,identical
+skip,5594,5594,20033,8,2026,37,approved,"Humira Parpen Rumpa",29785.00,identical
+skip,5595,5595,20034,8,2026,38,approved,"MD JAHANGIR HOSSAIN",30541.00,identical
+skip,5596,5596,20035,8,2026,39,approved,"Satyam Roy",30541.00,identical
+skip,5597,5597,20037,8,2026,40,approved,"MD WAHID MALLIK",30680.00,identical
+skip,5598,5598,20038,8,2026,41,approved,"Chandan kumar Sarkar",49847.00,identical
+skip,5599,5599,20039,8,2026,42,approved,"Sk. Faisal Ahmed",41901.00,identical
+skip,5600,5600,20040,8,2026,43,approved,"Nabila Rahman",42735.00,identical
+skip,5601,5601,20041,8,2026,44,approved,"SHIEK AMINUL ISLAM",41901.00,identical
+skip,5602,5602,20042,8,2026,45,approved,"Md. Al Mahmud",41901.00,identical
+skip,5603,5603,20043,8,2026,46,approved,"B. M. ISLAMUL HAQ",41901.00,identical
+skip,5604,5604,20044,8,2026,47,approved,"Krishibid Md. Mizanur Rahman",41901.00,identical
+skip,5605,5605,20045,8,2026,48,approved,"DELWAR HOSSAIN",42501.00,identical
+skip,5606,5606,20046,8,2026,49,approved,"DABOBRATA KUMAR SWAR",41901.00,identical
+skip,5607,5607,20047,8,2026,50,approved,"Sharmin Parvin",43235.00,identical
+skip,5608,5608,20048,8,2026,51,approved,"Md. Ashraful Islam",43945.50,identical
+skip,5609,5609,20050,8,2026,53,approved,"MD. NAJMUL HAQUE",41901.00,identical
+skip,5610,5610,20053,8,2026,54,approved,"Md. Masud Rana",32150.00,identical
+skip,5611,5611,20052,8,2026,55,approved,"Md Rasel Hasan",30540.00,identical
+skip,5612,5612,20051,8,2026,56,approved,"Md. Hasan Bali",30540.00,identical
+skip,5613,5613,20054,8,2026,57,approved,"MD.RAIHAN SHOBAN",32150.00,identical
+skip,5614,5614,20057,8,2026,58,approved,"Ashik Ahmed",31180.00,identical
+skip,5615,5615,20055,8,2026,59,approved,"Md.Khabir Uddin",31680.00,identical
+skip,5616,5616,20056,8,2026,60,approved,"ABDUL MATIN",31180.00,identical
+skip,5617,5617,20058,8,2026,61,approved,"MD. NAZMUL HASSAN",29285.00,identical
+skip,5618,5618,20059,8,2026,62,approved,"Molla Shofikul islam Sajib",29785.00,identical
+skip,5619,5619,20060,8,2026,63,approved,"Saharin Islam Mim",29285.00,identical
+skip,5620,5620,20061,8,2026,64,approved,"Ziarul Golder",29785.00,identical
+skip,5621,5621,20063,8,2026,66,approved,"Ujjal Kumar Das",29785.00,identical
+skip,5622,5622,20064,8,2026,67,approved,"MITHUN KUMAR",29285.00,identical
+skip,5623,5623,20065,8,2026,68,approved,"Shailendronath Bairagi",29285.00,identical
+skip,5624,5624,20066,8,2026,69,approved,"Rumpa Akter",29285.00,identical
+skip,5625,5625,20067,8,2026,70,approved,"Khan Tanvir Arif",29285.00,identical
+skip,5626,5626,20068,8,2026,71,approved,"Mithun Mallick",29285.00,identical
+skip,5627,5627,20069,8,2026,72,approved,"SAIMA JHOTI",29785.00,identical
+skip,5628,5628,20076,8,2026,73,approved,"Md. Imran Munsi",29285.00,identical
+skip,5629,5629,20070,8,2026,74,approved,"SHEKHORE BISWAS",28012.00,identical
+skip,5630,5630,20071,8,2026,75,approved,"Razia Khatun",29285.00,identical
+skip,5631,5631,20072,8,2026,76,approved,"Md. Masum Billh",29285.00,identical
+skip,5632,5632,20073,8,2026,77,approved,"MD. NASIM AKAND",29785.00,identical
+skip,5633,5633,20074,8,2026,78,approved,"MD ABID HOSSAIN",29285.00,identical
+skip,5634,5634,20075,8,2026,79,approved,"SHABEQUN NAHAR",29785.00,identical
+skip,5635,5635,20077,8,2026,80,approved,"Md Aslam khan",29285.00,identical
+skip,5636,5636,20078,8,2026,82,approved,"Md. Murad Hossain",29285.00,identical
+skip,5637,5637,20023,8,2026,420,approved,"Nafisa Jebin Mila",45045.00,identical
+skip,5638,5638,20079,8,2026,415,approved,"Mohammed Shahid Ali",93558.00,identical
+skip,5639,5639,20090,8,2026,416,approved,"Dr Aroni Biswash",35590.00,identical
+skip,5640,5640,20082,8,2026,419,approved,"Prof. Dr. Md. Asaduzzaman Sarker",71506.23,identical
+skip,5641,5641,20062,8,2026,65,approved,"Dip Lal Pandey",21165.00,identical
+skip,5642,5642,30004,8,2026,190,approved,"MD.SHAHIDUL ISLAM",24794.50,identical
+skip,5643,5643,30002,8,2026,191,approved,"Mizanur Rahman",26759.00,identical
+skip,5644,5644,30003,8,2026,193,approved,"MD. Ashraful kamal",24794.50,identical
+skip,5645,5645,30017,8,2026,194,approved,"Md. Abul Basar",24225.00,identical
+skip,5646,5646,30016,8,2026,195,approved,"Md. Anisur Rahman Rintu",24225.00,identical
+skip,5647,5647,30005,8,2026,196,approved,"MD. JHAHID HASAN",23349.00,identical
+skip,5648,5648,30006,8,2026,197,approved,"Imran Hossain",27259.00,identical
+skip,5649,5649,30007,8,2026,198,approved,"Md. Faruk Ali",25331.00,identical
+skip,5650,5650,30008,8,2026,200,approved,"MD JAMAL HOSSEN",24294.50,identical
+skip,5651,5651,30018,8,2026,202,approved,"Md. Shahadat Hossin Kha",22826.00,identical
+skip,5652,5652,30020,8,2026,203,approved,"ANAYET BEPARI",23326.00,identical
+skip,5653,5653,30019,8,2026,204,approved,"Shak Md Arman",22326.00,identical
+skip,5654,5654,30035,8,2026,208,approved,"Md. Maruf Hasan Gazi",23326.00,identical
+skip,5655,5655,30031,8,2026,209,approved,"MD JAKIR HOSSAIN",28491.00,identical
+skip,5656,5656,30030,8,2026,210,approved,"A.B.M. ARIFUL ISLAM TURAN",22826.00,identical
+skip,5657,5657,30046,8,2026,218,approved,"Sabira Khatun",27609.00,identical
+skip,5658,5658,30048,8,2026,219,approved,"Mizanur Rahman",28609.00,identical
+skip,5659,5659,30074,8,2026,227,approved,"Aminul Hasan",21849.50,identical
+skip,5660,5660,30071,8,2026,229,approved,"MD. AMRAN HOSSAIN",21849.50,identical
+skip,5661,5661,30098,8,2026,230,approved,"Nasir Ahmed",20919.50,identical
+skip,5662,5662,30065,8,2026,231,approved,"Sabiha Karim",21349.50,identical
+skip,5663,5663,30084,8,2026,232,approved,"Md. Mintu",26759.00,identical
+skip,5664,5664,30078,8,2026,233,approved,"Anjan Kumar Das",20419.50,identical
+skip,5665,5665,30082,8,2026,234,approved,"Rukiya Akter",20419.50,identical
+skip,5666,5666,30089,8,2026,235,approved,"Ananna Rahman Mumu",21419.50,identical
+skip,5667,5667,30096,8,2026,236,approved,"Md. Nurul Islam",20419.50,identical
+skip,5668,5668,30099,8,2026,237,approved,"Md. Mehede Hasan Rqny",20419.50,identical
+skip,5669,5669,30100,8,2026,238,approved,"Md. Kamruzzaman Shaikh",20419.50,identical
+skip,5670,5670,30101,8,2026,239,approved,"Jahir Abbas",20919.50,identical
+skip,5671,5671,30103,8,2026,240,approved,"H M Arif Hossain",20419.50,identical
+skip,5672,5672,30254,8,2026,246,approved,"DEBASHIS KUMAR",17475.00,identical
+skip,5673,5673,30090,8,2026,247,approved,"Md. Shariful Islam",20919.50,identical
+skip,5674,5674,30113,8,2026,248,approved,"Fakrul Islam",27259.00,identical
+skip,5675,5675,30116,8,2026,249,approved,"Md Delowar Hossain",26759.00,identical
+skip,5676,5676,30117,8,2026,250,approved,"Md.Muktajul Islam Sohag",26759.00,identical
+skip,5677,5677,30118,8,2026,251,approved,"Jewel Hawlader",26759.00,identical
+skip,5678,5678,30119,8,2026,252,approved,"Tamanna Amin Tisha",27259.00,identical
+skip,5679,5679,30120,8,2026,253,approved,"Soma Rani Saha",27759.00,identical
+skip,5680,5680,30121,8,2026,254,approved,"Md. Sharfuddin Khan",23767.50,identical
+skip,5681,5681,30122,8,2026,255,approved,"Halima Khatun Maina",20134.50,identical
+skip,5682,5682,30123,8,2026,256,approved,"SYED KHALID HASAN",20919.50,identical
+skip,5683,5683,30124,8,2026,257,approved,"MASUM HOSSAIN",20419.50,identical
+skip,5684,5684,30125,8,2026,258,approved,"MD. Refajul Sheikh",20419.50,identical
+skip,5685,5685,30126,8,2026,259,approved,"Arun Kumar Rahut",20419.50,identical
+skip,5686,5686,30127,8,2026,260,approved,"MD: ALAMIN",20419.50,identical
+skip,5687,5687,30128,8,2026,261,approved,ELIAUS,20919.50,identical
+skip,5688,5688,30129,8,2026,262,approved,"KANIKA MONDAL",20919.50,identical
+skip,5689,5689,30130,8,2026,263,approved,"Md. Anamul hoque",20419.50,identical
+skip,5690,5690,30131,8,2026,264,approved,"Md. Omar Faruque",20419.50,identical
+skip,5691,5691,30262,8,2026,379,approved,"SOHAG HOSSEN",19536.00,identical
+skip,5692,5692,30243,8,2026,386,approved,"MD. JIHAD SHEIKH",22729.00,identical
+skip,5693,5693,30261,8,2026,387,approved,"Tanjira Sultana",23229.00,identical
+skip,5694,5694,30244,8,2026,388,approved,"AYAT ULLAH MUZAHID",23229.00,identical
+skip,5695,5695,30264,8,2026,389,approved,"Abdur Rahim",25565.50,identical
+skip,5696,5696,30233,8,2026,390,approved,"Yeasmin Haq",25565.50,identical
+skip,5697,5697,30263,8,2026,391,approved,"MD.BAIZID ADNAN",25565.50,identical
+skip,5698,5698,30070,8,2026,413,approved,"Nasir Uddin",27609.00,identical
+skip,5699,5699,30076,8,2026,414,approved,"Rani Khatun",26759.00,identical
+skip,5700,5700,40013,8,2026,199,approved,"Ahmed Foysal",21090.00,identical
+skip,5701,5701,40021,8,2026,201,approved,"Md.Akhtarul Islam",22675.00,identical
+skip,5702,5702,40012,8,2026,205,approved,Saifullah,23617.00,identical
+skip,5703,5703,40026,8,2026,206,approved,"MD AL AMIN",20047.50,identical
+skip,5704,5704,40024,8,2026,207,approved,"Khandaker Abul Kalam",21876.50,identical
+skip,5705,5705,40028,8,2026,212,approved,"Md.Raju Sheik",20547.50,identical
+skip,5706,5706,40029,8,2026,213,approved,"Salam Moral",20179.50,identical
+skip,5707,5707,40022,8,2026,214,approved,"SANJIDA SHARMIN",20547.50,identical
+skip,5708,5708,40027,8,2026,215,approved,"Md. Ali Asim Howlader",19179.50,identical
+skip,5709,5709,40034,8,2026,216,approved,"MD. RASHADUL ISLAM",19179.50,identical
+skip,5710,5710,40035,8,2026,217,approved,"Fatema Akter",19179.50,identical
+skip,5711,5711,40050,8,2026,220,approved,"MD NAZMUL ISLAM",20179.50,identical
+skip,5712,5712,40053,8,2026,221,approved,"MD. Habibur Rahaman",19679.50,identical
+skip,5713,5713,40054,8,2026,222,approved,"Mst. Parveen Islam",20179.50,identical
+skip,5714,5714,40055,8,2026,223,approved,"Mst. Rohema Akter Rekha",20179.50,identical
+skip,5715,5715,40056,8,2026,224,approved,"Md. Al Amin",20179.50,identical
+skip,5716,5716,40057,8,2026,225,approved,"Md.Sumon morol",20179.50,identical
+skip,5717,5717,40058,8,2026,226,approved,"Md. Sazzad Mohi",19179.50,identical
+skip,5718,5718,40068,8,2026,228,approved,"Sorif Pathan",19679.50,identical
+skip,5719,5719,40081,8,2026,241,approved,"MD.RASEL AHMED SHARIF",18478.00,identical
+skip,5720,5720,40083,8,2026,242,approved,"Md. Mostafizur Rahman",18478.00,identical
+skip,5721,5721,40087,8,2026,243,approved,"MD. WAHIDUZZAMAN",17942.50,identical
+skip,5722,5722,40092,8,2026,244,approved,"SABINA YASMIN",18478.00,identical
+skip,5723,5723,40093,8,2026,245,approved,"Mst. Nupur Khatun",18478.00,identical
+skip,5724,5724,40135,8,2026,266,approved,"MD:MUKTO ALI",19427.50,identical
+skip,5725,5725,40136,8,2026,267,approved,"MD.Farukul Islam",20427.50,identical
+skip,5726,5726,40137,8,2026,268,approved,"SANJIDA AFRIN",19927.50,identical
+skip,5727,5727,40139,8,2026,270,approved,"Hannan Akhand",17287.50,identical
+skip,5728,5728,40141,8,2026,271,approved,"BISHAL SARKAR",19427.50,identical
+skip,5729,5729,40142,8,2026,272,approved,"Md Nahidul Islam",18838.50,identical
+skip,5730,5730,40143,8,2026,273,approved,"MD.Mahamudul Hasan",18838.50,identical
+skip,5731,5731,40145,8,2026,274,approved,"MD. Al Mamon",19338.50,identical
+skip,5732,5732,40146,8,2026,275,approved,"Abdullah Al Fahim Sajjan",18838.50,identical
+skip,5733,5733,40147,8,2026,276,approved,"MD. AHID SHAIKH",19338.50,identical
+skip,5734,5734,40144,8,2026,277,approved,"Md. Nazmul Hossain",18838.50,identical
+skip,5735,5735,40149,8,2026,278,approved,"Md.Asif Ahmed",18838.50,identical
+skip,5736,5736,40150,8,2026,279,approved,"S.R.A SHOHAN",18838.50,identical
+skip,5737,5737,40151,8,2026,280,approved,"Didarul Alam",18838.50,identical
+skip,5738,5738,40152,8,2026,281,approved,"Md. ABDUS SALAM",18838.50,identical
+skip,5739,5739,40153,8,2026,282,approved,"Mir Sadrul Amin.",18838.50,identical
+skip,5740,5740,40154,8,2026,283,approved,"Omar Faruq",18838.50,identical
+skip,5741,5741,40155,8,2026,284,approved,"Md. Habibur Rahman",19838.50,identical
+skip,5742,5742,40156,8,2026,285,approved,"Dolon Kumar Das",18838.50,identical
+skip,5743,5743,40157,8,2026,286,approved,"Arifa Sultana",18838.50,identical
+skip,5744,5744,40148,8,2026,287,approved,"SABINA YEASMIN",18838.50,identical
+skip,5745,5745,40161,8,2026,288,approved,"ALOKA BISWAS",18478.00,identical
+skip,5746,5746,40162,8,2026,289,approved,"Md Raihan Islam",18978.00,identical
+skip,5747,5747,40163,8,2026,290,approved,"Anik Biswas",18478.00,identical
+skip,5748,5748,40164,8,2026,291,approved,"Md.Nasimul Islam",18978.00,identical
+skip,5749,5749,40165,8,2026,292,approved,"Lasker Nadimul Islam",18478.00,identical
+skip,5750,5750,40166,8,2026,293,approved,"Hawlader Manjur Hasan",18478.00,identical
+skip,5751,5751,40169,8,2026,294,approved,"S.M. Sujauddin",18478.00,identical
+skip,5752,5752,40170,8,2026,295,approved,"Kaziul Islam",18478.00,identical
+skip,5753,5753,40171,8,2026,296,approved,"MD.NAZMUL HUDA",18478.00,identical
+skip,5754,5754,40172,8,2026,297,approved,"Md. Shahinur Rahman",18478.00,identical
+skip,5755,5755,40174,8,2026,299,approved,"HAMIM SARDER",18478.00,identical
+skip,5756,5756,40176,8,2026,301,approved,"MD TAHIDUL ISLAM",18478.00,identical
+skip,5757,5757,40177,8,2026,302,approved,"Md.Kazi Sabbir Hossen",18478.00,identical
+skip,5758,5758,40178,8,2026,303,approved,"Begum Nur-E-Jakia",19478.00,identical
+skip,5759,5759,40179,8,2026,304,approved,"MIZANUR RAHMAN",18478.00,identical
+skip,5760,5760,40180,8,2026,305,approved,"MD:MOKTAR HOSSEN",18478.00,identical
+skip,5761,5761,40181,8,2026,306,approved,"Beal Shaikh",18478.00,identical
+skip,5762,5762,40182,8,2026,307,approved,"Md. Sajib Shaikh",18478.00,identical
+skip,5763,5763,40183,8,2026,308,approved,"Fairuz Rahaman",18478.00,identical
+skip,5764,5764,40184,8,2026,309,approved,"Mohini Mondol Sima",18478.00,identical
+skip,5765,5765,40185,8,2026,310,approved,"ASIA KHATUN",18478.00,identical
+skip,5766,5766,40186,8,2026,311,approved,"Sohan Howladar",18478.00,identical
+skip,5767,5767,40187,8,2026,312,approved,"Shamin Al Fazal",18478.00,identical
+skip,5768,5768,40190,8,2026,313,approved,"Monwar Hossain",18478.00,identical
+skip,5769,5769,40191,8,2026,314,approved,"Md Ramjan",18478.00,identical
+skip,5770,5770,40192,8,2026,315,approved,Alamin,18478.00,identical
+skip,5771,5771,40194,8,2026,316,approved,"Kamrul Hasan",18478.00,identical
+skip,5772,5772,40195,8,2026,317,approved,"MST.Dilruba yeasmin",18478.00,identical
+skip,5773,5773,40196,8,2026,318,approved,"Abdullah al mamun",18478.00,identical
+skip,5774,5774,40193,8,2026,319,approved,"EFTEKHIAR MAHAMUD",18478.00,identical
+skip,5775,5775,40197,8,2026,320,approved,"Talukder Rafsunjani",19478.00,identical
+skip,5776,5776,40198,8,2026,321,approved,"Md.Shakil Hossain",18478.00,identical
+skip,5777,5777,40200,8,2026,323,approved,"MD Sohel",18478.00,identical
+skip,5778,5778,40201,8,2026,324,approved,"Krisno Kumar Day",18478.00,identical
+skip,5779,5779,40202,8,2026,325,approved,"Shariful Islam",18978.00,identical
+skip,5780,5780,40203,8,2026,326,approved,"Emran Howlader",18478.00,identical
+skip,5781,5781,40204,8,2026,327,approved,"MD. IMRAN THAKUR",18478.00,identical
+skip,5782,5782,40205,8,2026,328,approved,"Md. Alauddin Howlader",18478.00,identical
+skip,5783,5783,40206,8,2026,329,approved,"Margia Akter",18478.00,identical
+skip,5784,5784,40188,8,2026,330,approved,"MD MASUID ILAHI",18978.00,identical
+skip,5785,5785,40189,8,2026,331,approved,"Md.Nazmul Hossain",18478.00,identical
+skip,5786,5786,40168,8,2026,332,approved,"Saddam Hossain",18478.00,identical
+skip,5787,5787,40167,8,2026,333,approved,"JAHIDUL ISLAM HRIDOY",18478.00,identical
+skip,5788,5788,40210,8,2026,334,approved,"Md.Rafikul Islam Rubel",19478.00,identical
+skip,5789,5789,40211,8,2026,335,approved,"Rayhan Tarafder",18478.00,identical
+skip,5790,5790,40216,8,2026,336,approved,"Md. Kashem Ali",18942.50,identical
+skip,5791,5791,40217,8,2026,337,approved,"A. Rahman",19478.00,identical
+skip,5792,5792,40218,8,2026,338,approved,"Ibrahim Howlader Sujon",19478.00,identical
+skip,5793,5793,40215,8,2026,339,approved,"Tawhidur Rahaman",18478.00,identical
+skip,5794,5794,40158,8,2026,340,approved,"Sanjida Akter Shampa",19338.50,identical
+skip,5795,5795,40159,8,2026,341,approved,"SATHI RANI SUTRADHAR",18838.50,identical
+skip,5796,5796,40160,8,2026,342,approved,"MD.Sadek Hossain opu",18838.50,identical
+skip,5797,5797,40207,8,2026,343,approved,"Sudipta bala",18478.00,identical
+skip,5798,5798,40208,8,2026,344,approved,"Md.Jalal uddin",18478.00,identical
+skip,5799,5799,40219,8,2026,345,approved,"Ruhal Amin",19478.00,identical
+skip,5800,5800,40221,8,2026,346,approved,"PariTosh Das",14112.50,identical
+skip,5801,5801,40223,8,2026,347,approved,"NAZMA AKTHER",18478.00,identical
+skip,5802,5802,40224,8,2026,348,approved,"samento das",18478.00,identical
+skip,5803,5803,40225,8,2026,349,approved,"Taum Rani Das",19478.00,identical
+skip,5804,5804,40226,8,2026,350,approved,"Sudam Halder",18478.00,identical
+skip,5805,5805,40227,8,2026,351,approved,"Tahmina Khatun",18978.00,identical
+skip,5806,5806,40228,8,2026,352,approved,"Md.Razaul Karim",19478.00,identical
+skip,5807,5807,40229,8,2026,353,approved,"G. M. HASAN AL-MAHMUD.",18978.00,identical
+skip,5808,5808,40230,8,2026,354,approved,"Sajal Rauth",19478.00,identical
+skip,5809,5809,40222,8,2026,355,approved,"Mst. Ratna Khatun",18978.00,identical
+skip,5810,5810,40220,8,2026,356,approved,"Md. Babul Dosrji",18478.00,identical
+skip,5811,5811,40212,8,2026,357,approved,"Md.Shahidul Sikder",18478.00,identical
+skip,5812,5812,40213,8,2026,358,approved,"Md Saidul Islam",19478.00,identical
+skip,5813,5813,40214,8,2026,359,approved,"Sheikh Shaon",17942.50,identical
+skip,5814,5814,40231,8,2026,360,approved,"SACHIN DAS",18478.00,identical
+skip,5815,5815,40268,8,2026,362,approved,"Md Emdadul Hoque Khan",18442.50,identical
+skip,5816,5816,40239,8,2026,363,approved,"POLOCK JODDER",17942.50,identical
+skip,5817,5817,40237,8,2026,364,approved,"SAFIQUZZAMAN MOLLICK",17942.50,identical
+skip,5818,5818,40236,8,2026,365,approved,"Arif Mridha",18442.50,identical
+skip,5819,5819,40257,8,2026,366,approved,"Nuzmul Hasan Foysal",18442.50,identical
+skip,5820,5820,40242,8,2026,367,approved,"REJWAN HOSSAIN TUHIN",17942.50,identical
+skip,5821,5821,40258,8,2026,368,approved,"Dipankor kumar saha",17990.00,identical
+skip,5822,5822,40256,8,2026,369,approved,"MD Mynul Islam",17942.50,identical
+skip,5823,5823,40241,8,2026,370,approved,"MAHAMUDA KHANOM JUTHI",17942.50,identical
+skip,5824,5824,40260,8,2026,371,approved,"Mainul Islam",17942.50,identical
+skip,5825,5825,40255,8,2026,372,approved,"Rafsan jani",17942.50,identical
+skip,5826,5826,40259,8,2026,373,approved,"MD. JAHANGIR ALAM",18442.50,identical
+skip,5827,5827,40249,8,2026,374,approved,"Shovon Biswas",17942.50,identical
+skip,5828,5828,40240,8,2026,375,approved,"MD Aslam",17942.50,identical
+skip,5829,5829,40253,8,2026,376,approved,"Ratna Rani Hela",17942.50,identical
+skip,5830,5830,40250,8,2026,377,approved,"Jasmin Akhter Shati",17942.50,identical
+skip,5831,5831,40248,8,2026,378,approved,"Nasrin Sultana",17942.50,identical
+skip,5832,5832,40266,8,2026,381,approved,"Shamim Hosain",18442.50,identical
+skip,5833,5833,40265,8,2026,382,approved,"Md. Ariful Islam",17942.50,identical
+skip,5834,5834,40245,8,2026,383,approved,"MD SUMON MRIDHA",17942.50,identical
+skip,5835,5835,40246,8,2026,384,approved,"Md. Safique",17942.50,identical
+skip,5836,5836,40247,8,2026,385,approved,"MD Abdus Satter",17942.50,identical
+skip,5837,5837,40272,8,2026,392,approved,"Rena Akter",18942.50,identical
+skip,5838,5838,40270,8,2026,393,approved,"MOUSUMI AKTER",19135.50,identical
+skip,5839,5839,40271,8,2026,394,approved,"Md. Alamgir Hossain",18635.50,identical
+skip,5840,5840,40275,8,2026,395,approved,"Joynal Islam",18442.50,identical
+skip,5841,5841,40238,8,2026,396,approved,"Mansur Hillal",17942.50,identical
+skip,5842,5842,40267,8,2026,397,approved,"Md. Sobus Mia",17866.50,identical
+skip,5843,5843,40059,8,2026,401,approved,"Minhazul Abedin Kazol",18572.50,identical
+skip,5844,5844,40060,8,2026,402,approved,"Shariful Islam",19072.50,identical
+skip,5845,5845,40051,8,2026,405,approved,"MD.TANIJ HOWLADER",19661.50,identical
+skip,5846,5846,40052,8,2026,408,approved,"Khursida khatun",19447.50,identical
+skip,5847,5847,40061,8,2026,409,approved,"Shahriar Ahmed",19447.50,identical
+skip,5848,5848,40033,8,2026,426,approved,"Tanvir Ahmed",21047.50,identical
+skip,5849,5849,40104,8,2026,412,approved,"Debasish Roy",18478.00,identical
+conflict,5448,5455,40173,8,2026,424,approved,"MD. MEHEDI HASAN",18478.00,differs
+conflict,5903,5850,20057,9,2026,58,pending,"Ashik Ahmed",31180.00,differs

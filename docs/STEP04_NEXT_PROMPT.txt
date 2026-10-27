@@ -1,0 +1,33 @@
+Act as a senior Laravel 12, Vue 3, Inertia.js, MySQL payroll transaction engineer, financial auditor, and QA lead.
+
+PROJECT: Khulna Agricultural University Employee Management System (KAU EMS).
+LANGUAGE: Explain in Bangla. Preserve code, identifiers, filenames, and calculations in English.
+
+CURRENT HANDOVER:
+Step 01 — salary_component_effective_rules migration ran on Windows staging; verified seeder dry-run: 1421 assignments, 0 APPROVED, 0 EXCLUDED, 1421 PENDING. DO NOT activate unpublished zero templates.
+Step 02 — Central SalaryEffectiveComponentResolver installed in source and relevant tests passed locally on Windows staging (7 resolver tests, 11 calculation tests, 8 bill tests). MySQL-dependent feature tests skipped. Subsequent npm ci succeeded; complete Vite build result not yet evidenced.
+Step 03 — Employee-specific component override patch prepared against latest app(1).zip. Contains salary_component_employee_overrides, salary_component_override_events, optional component_override_hash on calculation versions, SalaryEmployeeComponentOverrideService, authenticated HR-only override controller endpoint, Single Salary Calculator modal, saved snapshot stale-source detection, and Source Resolver integrations. Installation and independent staging MySQL QA still required. Do NOT assume Step 03 is installed without checking files and migrate:status.
+
+OBJECTIVE: Implement complete Step 04 — Unified Single Salary Calculator with Current / Arrear / Total while preserving the existing KAU EMS interface, logic, classes, routes, and historical payroll.
+
+TASK 1 — Audit latest attached app.zip, SQL dump, all Step 01–03 source/migrations, tests and user-provided staging outputs. Treat the actual latest code as authoritative. Identify every source of Basic, component rate, allowance, GPF and arrear value. Never assume the previous patch is installed merely because it exists.
+
+TASK 2 — One salary computation pathway for Salary Calculator, Salary Setup preview, Salary Bill Composition and future Bulk Generation. Explicitly reconcile component source priority: monthly employee override > date-valid published Grade/Designation rule > legacy saved employee row > warning. Respect the 2026 phased Basic entitlement, applicable 2015 house-rent rules through their actual effective dates, and the 2027 full Basic date. Do not replace approved Basic with an independent percentage or input.
+
+TASK 3 — Retain existing green Configured Allowances/Additions and red Configured Deductions panels. Support columns: Component, Current Amount, Arrear, Total, Type, Source, Manual/Automatic/Disabled, Rule Base, Warning/Notes. Keep existing component entry UI and add only requested fields. Maintain each component's manually overridden values without changing the designation configuration. Include documented Reset to Automatic.
+
+TASK 4 — Clarify existing salary calculation versions: saving a Draft and Approval must not create a salary bill, arrear payment, bank advice, or GPF posting. After any component override changes, recalculate the latest version with server-authoritative values; old versions remain immutable and must not be silently reused.
+
+TASK 5 — Separate salary-month regular compensation from July–September 2026 arrear entitlement. Basic arrear can use scale-derived revised entitlement; verification of actual Special Benefit, House Rent, GPF deduction and historically paid Basic remains separate. Missing payment evidence is UNKNOWN, never verified zero. Do not multiply SUM_MONTHS results by 3 again. Avoid double-counting old increment if the prior paid basic already contains it. Do not run published arrear rule seeders or destructive updates automatically.
+
+TASK 6 — For a three-month constant arrear, allow a monthly-difference × 3 shortcut. If there was a mid-period change, compute July, August, September independently. Distinguish calculated entitlement from actual historical payment. BAU illustrative teacher 10% deduction is not an automatic KAU deduction without an applicable approved rule.
+
+TASK 7 — GPF: distinguish regular subscription, monthly manual override, revised-scale additional subscription, and ledger posting. Use the approved GPF rule when available, HALF UP rounding where applicable, and never silently default missing employee-specific evidence to a verified 10% contribution. No GPF ledger write during previews.
+
+TASK 8 — Single Salary Calculator save/recalculate using server-side validation, authorization and optimistic concurrency; preserve existing entry routes unless changes are required. Ensure financial arithmetic is consistent between frontend and backend, and basic/new grade percentages remain distinct. Show warnings instead of inventing values. Do not add mandatory employee-review or HR multi-stage approval gates; preserve duplicate-payment and transaction safeguards.
+
+TASK 9 — Implement full tests (PHP syntax, Laravel unit/feature, MySQL migrations with disposable isolated clone, fixed/percentage, grade/date matching, legacy/basic references, GPF rounding, overrides, increment hold, arrear reconciliation, saved snapshots, authorization, Single/Bulk parity). Run Vue/Vite build. If a test cannot run, explicitly state NOT RUN or SKIPPED. Review npm audit report without npm audit fix --force.
+
+TASK 10 — Deliver an actual patch-only ZIP of modified/new project-relative files, all new migrations, tests, SHA256 manifest, complete Bangla Windows local/staging instructions, reviewed Namecheap production commands after git pull origin main, and rollback. Do not execute seeders automatically. Do not claim production-ready without report/calculation/database staging acceptance.
+
+FINAL: Include a single complete code-block prompt for Step 05 — Pay Scale–Based Arrear Engine, to continue in the same ChatGPT Project.

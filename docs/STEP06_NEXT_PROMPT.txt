@@ -1,0 +1,50 @@
+Act as a senior Laravel 12, Vue 3, Inertia.js, MySQL payroll transaction engineer, financial auditor, and QA lead.
+
+PROJECT: Khulna Agricultural University Employee Management System (KAU EMS)
+LANGUAGE: Explain in Bangla; retain English identifiers, filenames, code and formulas.
+
+CURRENT STATUS — verify in newest attachments, never assume installed:
+Step 01: effective component rules table migration ran. Seeder preflight earlier had 1421 assignments, 0 APPROVED, 1421 PENDING; placeholders must not be silently published.
+Step 02: SalaryEffectiveComponentResolver integrated; 7 unit tests passed previously.
+Step 03: employee/month component overrides; 10 unit tests passed previously, DB-dependent feature tests skipped. Do NOT implement role-name based authorization; no active role system. Existing login middleware may remain. Never reintroduce authorizePayroll() blocking superadmin/payroll_hr.
+Step 04: SalaryStatementBreakdown with Current / Arrear / Total, regular GPF distinct from additional GPF; previously reported Windows tests and Vite passed; MySQL feature tests skipped.
+Step 05: SalaryPayScaleArrearEngine, five revised July–September templates, old 2015 stage increment reference vs paid July check, provisional UNKNOWN sources, signed House Rent, no auto GPF refund, shared preview/UI updates and audited rule-revision command. Step 05 PHP smoke 17 checks passed in artifact environment; Windows PHPUnit, MySQL integration and Vite tests still required. The five currently published rules need explicit dry-run/audited revision; no automatic rule DB changes.
+
+CRITICAL: Read latest attached app.zip, current SQL dump, Step 05 staging logs and reviewed financial evidence before modifying. Preserve working Laravel classes/routes/UI and all historical salary bills, fixation snapshots, arrear payments, GPF ledger and bank advice. Do not execute seeders or bulk posting automatically. The Gazette allows phased Basic entitlement from 2026-07-01; full phase begins 2027-07-01, with housing revised rates introduced 2028-01-01. Do not silently change October regular payroll policy.
+
+OBJECTIVE: IMPLEMENT COMPLETE STEP 06 — BULK SALARY CALCULATION & GENERATION.
+
+TASK 1 — SOURCE AUDIT
+Inspect SalaryBulkRunController, SalaryGenerateController, SalaryBillCompositionService, SalaryBillPostingService, SalaryCalculationService, SalaryEffectiveComponentResolver, SalaryEmployeeComponentOverrideService, SalaryStatementBreakdown, SalaryPayScaleArrearEngine, SalaryArrearRuleService, GPF posting, routes, migrations, Vue Bulk Generate Salary pages and tests. Compare latest source to prior Step 05 patch and the SQL data, not assumptions.
+
+TASK 2 — SHARED ENGINE
+Bulk and Single must use precisely the same authoritative calculation functions, same fixation, monthly overrides, published effective components and arrear source/version. No new competing Basic/allowance/GPF formulas. Compare per-employee full components as well as net amounts.
+
+TASK 3 — UI PRESERVATION
+Preserve existing Salary Generate page classes, IDs, Tailwind design, Vue layout and interaction patterns. Add only necessary bulk controls: salary month, filters, select current page/selected/all eligible, Calculate All, Recalculate Selected, View/Edit Employee, Generate Selected, export exception list, print/download single/bulk Salary Bills. No new compulsory approval/review workflow or role-name authorization gate.
+
+TASK 4 — PREVIEW FIRST
+Calculate all selected employees read-only in chunks (reuse existing resumable 25-employee batches). Display employee ID/name/grade/designation/Basic/allowances/deductions/arrear GPF/Net, status `AUTOMATIC`, `OVERRIDDEN`, `ESTIMATED`, `MISSING EVIDENCE`, errors and warnings with correct counts. Missing evidence is not verified zero. One employee's problem must not stop unrelated employees.
+
+TASK 5 — EMPLOYEE OVERRIDE
+Support Step 03 employee/month components and evidence-backed arrear final values. Editing one employee must not affect others or next month. Reset to Automatic and concurrent revision conflict. Recalculate that employee without invalidating unaffected rows unnecessarily.
+
+TASK 6 — FINANCIAL SAFETY WITHOUT WORKFLOW GATES
+Allow authorized-by-login administrator to calculate/save/edit/preview directly, no superadmin/payroll_hr role-name guard. Do not require multistage approval to use UI. But preserve strict idempotent SalaryGenerate posting, atomic MySQL transaction, duplicate employee/month salary bill protection, arrear period once-only, regular vs additional GPF isolation, confirmed bank account, reconciliation and bank-advice protection. Never pay UNKNOWN as zero or create bank advice from a preview.
+
+TASK 7 — ARREAR POLICY
+Keep regular salary vs arrear distinct. July–September 2026 is three months once (or monthwise when values differ). Scale entitlement vs actual paid reference documented. No SUM_MONTHS double multiplication, old increment double deduction, January 2028 housing rates in October 2026, automatic unverified teacher deduction, or auto GPF refund.
+
+TASK 8 — BULK GENERATION
+Generate only selected valid/calculable employees, with explicit final user action. Save immutable calculation source hashes and month/rule/override version references. Resume safely after interruption, skip already generated bills with a meaningful status, and show successes/failed cases. Do not rewrite old payroll. Bank advice and GPF posting are separate explicit operations.
+
+TASK 9 — REPORTS
+Current/Arrear/Total Salary Bill, PDF and Excel/CSV consistent with saved authoritative statement; preserve existing KAU report templates and font/layout. Detailed bulk exception report and net totals; no duplicate deductions.
+
+TASK 10 — QA
+Run actual PHP syntax, Laravel Unit/Feature, isolated staging MySQL tests (schema migration compatibility, transactions, rollback, duplicate bill/arrear/GPF, concurrent requests), Vue/Vite, single/bulk parity for representative grades, AD HOC, Increment Hold, Study Leave, promotion and missing payment. Test 1, 10, 15, 16 and all available employees; compare published rule versions and historical unchanged record counts. No false PASS claims.
+
+TASK 11 — PATCH
+Produce actual patch-only ZIP with correct project-relative paths, tests, SHA256, audit findings, QA log, safe Windows staging commands, Namecheap deployment after `git pull origin main`, backup and rollback, no seeders automatically and no production readiness claim before staging acceptance.
+
+FINAL REQUIREMENT: Implement ONLY Step 06, maintain code integrity, no redesign, no role-name authorization blockade. Include ONE complete code-block prompt for Step 07 — Salary Bills/Arrear Reports & PDF Consistency in the final answer and within patch docs.

@@ -1,0 +1,151 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\EmployeeInfo;
+use App\Models\User;
+use App\Services\ApprovedFixationResolver;
+use App\Services\SalaryComponentCatalog;
+use App\Services\SalaryComponentNormalizer;
+use App\Services\SalaryEmployeeComponentOverrideService as Overrides;
+use DomainException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
+
+/** Single-component, month-scoped change; never posts a bill or touches GPF ledger. */
+final class SalaryEmployeeComponentOverrideController extends Controller
+{
+    public function save(Request $request, User $user, Overrides $service)
+    {
+        $data = $request->validate([
+            'year'=>'required|integer|between:2020,2100',
+            'month'=>'required|integer|between:1,12',
+            'direction'=>'required|in:addition,deduction',
+            'component_name'=>'required|string|max:160',
+            'payroll_component_type_id'=>'nullable|integer|min:1|exists:payroll_component_types,id',
+            'custom'=>'required|boolean',
+            'mode'=>'required|in:manual,disabled,automatic',
+            'calc_type'=>'nullable|in:fixed,percentage',
+            'value'=>'nullable|numeric|min:0|max:1000000000',
+            'basis'=>'nullable|in:none,payable_basic,legacy_basic',
+            'legacy_basic_reference'=>'nullable|numeric|gt:0|max:1000000000',
+            'reason'=>'nullable|string|max:2000',
+            'evidence_reference'=>'nullable|string|max:500',
+            'expected_revision'=>'required|integer|min:0',
+        ]);
+        if (!Schema::hasTable('salary_component_employee_overrides')) {
+            return response()->json(['message'=>'Run Step 03 migration before saving overrides.'], 422);
+        }
+        try {
+            $year=(int) $data['year']; $month=(int) $data['month'];
+            $custom=(bool) $data['custom'];
+            $name=trim($data['component_name']);
+            if (Overrides::basic($name)) throw new DomainException('Basic Pay cannot be changed through component overrides.');
+            if ($custom && !empty($data['payroll_component_type_id'])) {
+                throw new DomainException('A custom component must not claim an existing component type ID.');
+            }
+            $typeId=$custom?null:($data['payroll_component_type_id'] ?? null);
+            $key=Overrides::key($typeId, $name, $custom);
+            $profile=EmployeeInfo::with(['payrollGroup.grade', 'payrollGroup.payrollGroupType'])
+                ->where('user_id', $user->id)->limit(2)->get();
+            if ($profile->count() !== 1) throw new DomainException('Exactly one salary profile is required.');
+            $employee=$profile->first();
+            $fixation=app(ApprovedFixationResolver::class)->forUser($user->id, $year, $month);
+            [$add,$ded]=app(SalaryComponentCatalog::class)->forEmployee(
+                $employee, SalaryComponentNormalizer::rows($employee->additionObjects),
+                SalaryComponentNormalizer::rows($employee->substractionObjects), $year,$month,$fixation);
+            $source=$data['direction']==='addition'?$add:$ded;
+            if ($custom) {
+                foreach ($source as $r) {
+                    if (strcasecmp(trim((string)($r['name']??'')), $name)===0) {
+                        throw new DomainException('Custom component has the same name as an existing salary component.');
+                    }
+                }
+            }
+            if (!$custom) {
+                $matches=array_values(array_filter($source, static function ($row) use ($key) {
+                    if (isset($row['manual_adjustment_id'])) return false;
+                    $id=(int) ($row['payroll_component_type_id'] ?? $row['payroll_component_type']['id'] ?? 0);
+                    return Overrides::key($id?:null, (string) ($row['name']??'')) === $key;
+                }));
+                if (count($matches)!==1) throw new DomainException('Component must match exactly one configured entry for this employee.');
+                if (Overrides::basic((string) ($matches[0]['name']??''))) throw new DomainException('Basic Pay cannot be overridden.');
+            }
+            $mode=$data['mode'];
+            $calcType=$mode==='manual'?($data['calc_type']??null):null;
+            $value=$mode==='manual'?($data['value']??null):null;
+            $basis=$mode==='manual' ? ($calcType==='fixed'?'none':($data['basis']??null)) : null;
+            $legacy=$mode==='manual' && $basis==='legacy_basic' ? ($data['legacy_basic_reference']??null) : null;
+            if ($mode==='manual') {
+                if (!in_array($calcType,['fixed','percentage'],true) || !is_numeric($value)
+                    || ($calcType==='percentage' && ((float) $value > 100
+                        || !in_array($basis,['payable_basic','legacy_basic'],true)))
+                    || ($basis==='legacy_basic' && (!is_numeric($legacy) || (float)$legacy<=0))) {
+                    throw ValidationException::withMessages(['value'=>'Select a valid Fixed/Percentage rule and calculation basis.']);
+                }
+            }
+            if ($custom && $mode==='disabled' && (int) $data['expected_revision']===0) {
+                throw new DomainException('A new custom component must have a manual value.');
+            }
+            // Preview of proposed resolution BEFORE any database write.
+            if ($mode !== 'automatic') {
+                $existingState = [
+                    'id'=>0,'component_key'=>$key,'payroll_component_type_id'=>$typeId,
+                    'component_title'=>$name,'direction'=>$data['direction'],'mode'=>$mode,
+                    'calc_type'=>$calcType,'value'=>$value,'basis'=>$basis,
+                    'legacy_basic_reference'=>$legacy,
+                    'reason'=>$data['reason']??null,'evidence_reference'=>$data['evidence_reference']??null,
+                ];
+                Overrides::apply($add,$ded,[$existingState]);
+            }
+            return DB::transaction(function () use ($request,$user,$year,$month,$key,$data,$typeId,$name,$mode,$calcType,$value,$basis,$legacy) {
+                User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $query=DB::table('salary_component_employee_overrides')
+                    ->where('user_id',$user->id)->where('salary_year',$year)->where('salary_month',$month)
+                    ->where('direction',$data['direction'])->where('component_key',$key);
+                $before=$query->lockForUpdate()->first();
+                $revision=(int)($before->revision??0);
+                if ($revision !== (int)$data['expected_revision']) {
+                    return response()->json(['message'=>'The override changed in another session. Reload and retry.'],409);
+                }
+                $after=null;
+                if ($mode==='automatic') {
+                    if ($before) $query->delete();
+                } else {
+                    $fields=[
+                        'user_id'=>$user->id,'salary_year'=>$year,'salary_month'=>$month,
+                        'direction'=>$data['direction'],'component_key'=>$key,
+                        'payroll_component_type_id'=>$typeId,'component_title'=>$name,
+                        'mode'=>$mode,'calc_type'=>$calcType,'value'=>$value,'basis'=>$basis,
+                        'legacy_basic_reference'=>$legacy, 'reason'=>$data['reason']??null,
+                        'evidence_reference'=>$data['evidence_reference']??null,
+                        'changed_by'=>$request->user()->id, 'revision'=>$revision+1,
+                        'updated_at'=>now(),
+                    ];
+                    if ($before) {
+                        $query->update($fields);
+                        $overrideId=$before->id;
+                    } else {
+                        $overrideId=DB::table('salary_component_employee_overrides')->insertGetId($fields+['created_at'=>now()]);
+                    }
+                    $after=(array)DB::table('salary_component_employee_overrides')->where('id',$overrideId)->first();
+                }
+                DB::table('salary_component_override_events')->insert([
+                    'override_id'=>$before->id??($overrideId??null),
+                    'user_id'=>$user->id,'salary_year'=>$year,'salary_month'=>$month,
+                    'direction'=>$data['direction'],'component_key'=>$key,
+                    'action'=>$mode==='automatic'?'reset':'save',
+                    'before_state'=>$before?json_encode($before,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):null,
+                    'after_state'=>$after?json_encode($after,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):null,
+                    'actor_id'=>$request->user()->id,'created_at'=>now(),
+                ]);
+                return response()->json(['message'=>'Employee/month override saved. Refresh to recalculate and save a new salary version.',
+                    'revision'=>(int)($after['revision']??0),'mode'=>$mode]);
+            });
+        } catch (DomainException $e) {
+            return response()->json(['message'=>$e->getMessage()],422);
+        }
+    }
+}

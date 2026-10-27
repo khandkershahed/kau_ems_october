@@ -1,0 +1,52 @@
+Act as a senior Laravel 12, Vue 3, Inertia.js, MySQL payroll reporting engineer, PDF typography/layout specialist, financial auditor, and QA lead.
+
+PROJECT: Khulna Agricultural University Employee Management System (KAU EMS).
+LANGUAGE: All explanations in Bangla. Preserve code identifiers and original Bangla report labels.
+
+CURRENT DEVELOPMENT STATE:
+- Step 01: salary_component_effective_rules migration ran; previously 1,421 assignments PENDING, 0 APPROVED. Do not invent component rates or activate zero placeholders.
+- Step 02: SalaryEffectiveComponentResolver, shared catalogue/calculation.
+- Step 03: employee/month Fixed, Percentage, Disabled overrides, Reset to Automatic, GPF HALF UP, source hashes. No role authorization gate.
+- Step 04: SalaryStatementBreakdown and Current / Arrear / Total statement projection; UNKNOWN not zero; regular GPF separate from additional GPF.
+- Step 05: Pay Scale–Based Arrear Engine, 2015 old-stage reference, 2026 phased fixation, no duplicate SUM_MONTHS multiplier, signed House Rent. Previous log reported a manual-reconciliation conflict in published BASIC_INCREMENT_ADJUSTMENT, plus one PHPUnit SQLite-driver failure. Resolve/source-audit these before claiming posting readiness.
+- Step 06: full filtered read-only salary preview in 25-person requests, select/edit/recalculate, authoritative source_hash bound selected generation, resumable 25-person runs, CSV exception export; single and bulk use SalaryBillCompositionService and SalaryBillPostingService.
+
+CRITICAL NO ROLE BLOCKADE RULE:
+Do not add authorizePayroll(), superadmin/payroll_hr role gates, or mandatory employee/HR approval workflow. Existing auth middleware may remain. Preserve monetary integrity checks, duplicate/GPF ledger protections and transaction semantics.
+
+OBJECTIVE: IMPLEMENT COMPLETE STEP 07 — SALARY BILLS, ARREAR REPORTS & PDF CONSISTENCY.
+
+TASK 1 — INSPECT THE LATEST ATTACHMENTS:
+Audit latest app.zip, SQL dump (if provided), actual migration status and test logs; do not assume earlier patches were installed. Locate authoritative saved salary bill data, salary_bill_source_links.source_snapshot, arrear source rows, regular/arrear GPF and report-generation paths. Check current single employee Salary Bill, bulk Salary Bill, report factory and exported CSV/XLSX.
+
+TASK 2 — USE A SINGLE FINANCIAL SOURCE:
+All reports must use either immutable successfully posted SalaryGenerate + salary_bill_source_links source snapshot, or clearly labelled read-only preview. NEVER recompute a posted historical bill with today's Grade/Designation rates. The same employee/period must have identical Basic, Current Gross, Current Deduction, Current Net, Arrear Addition, Arrear Deduction, Additional GPF and Final Net across screen, CSV/XLSX, PDF and printed reports. Distinguish verified payment, reconstructed reference and UNKNOWN.
+
+TASK 3 — SINGLE SALARY BILL:
+Use existing KAU Salary Bill design, logo, institutional header, employee fields, bank reference and signature area. Add or correct Current / Arrear / Total for allowances and deductions. Keep a clean A4 portrait layout, readable English Arial/sans-serif and Bengali-compatible fallback (e.g. Noto Sans Bengali), consistent borders, aligned financial amounts, non-overlapping tables, and adequate space for signatures. Report as one page only when physically possible with legible text; do not shrink an entire JPEG to fit.
+
+TASK 4 — BULK SALARY BILL AND REPORTS:
+Support selected employees, 10 / 15 / custom per page when appropriate, repeated table headers, page totals, grand totals, consistent sorting and per-employee pagination. Keep existing navigation. Ensure completed Step 06 batch IDs and selected saved bills can be exported without selecting unrelated employees.
+
+TASK 5 — ARREAR STATEMENT:
+Create/repair an official July–September 2026 month-wise statement based on KAU's approved rules and the supplied BAU reference image only as a layout/arithmetic example, not authority for KAU-specific Teacher Deduction. Show Revised Entitled Basic, Paid/Verified or Reconstructed Reference Basic, monthly Basic difference, House Rent adjustment, Special Benefit recovered, Additional GPF, applicable other deduction and Net Arrear. Three distinct months and grand total. No duplicate *3 after SUM_MONTHS. Missing historical payment stays UNKNOWN and never silently becomes 0.00.
+
+TASK 6 — PDF EXPORT PATH:
+Inspect kaufixation.html's working browser print CSS and the broken html2canvas/image-scaling history. Prefer a single canonical HTML print template with browser-native CSS for print. If direct silent PDF download is required, use a verified server-side renderer supported on Namecheap deployment; do not pretend window.print() silently downloads PDFs. Do not introduce unapproved PDF dependencies. Preserve Salary Fixation form PDF and other unrelated report designs.
+
+TASK 7 — COMPONENT AND OVERRIDE PROVENANCE:
+Display automatic-vs-manual component source and employee/month, effective percentage base, GPF source and arrear source appropriately (footer or attached audit section, not cluttering the main printed bill). Do not change employee/pay scale database values, overrides, published rules or existing historical salary records.
+
+TASK 8 — PRINT AND PDF QA:
+For representative 2015, 2026 phased, increment hold, Study Leave, Manual Override, missing evidence and approved saved bill cases, compare exact numeric totals and PDF text/captions. Visually inspect rendered PDF page images with no clipped text, no tiny Bangla glyphs, no overlapping lines, and preserved signature areas. Automated PDF page count, text extraction, A4 orientation checks. Show explicit output source ID/version/hash.
+
+TASK 9 — SECURITY AND ACCOUNTING:
+No role-based blocking. Keep existing login middleware. Print/preview never posts salary, arrear, GPF or bank advice; only the explicit posting service may mutate them. No duplicate bills or retroactive recalculation of posted source snapshots.
+
+TASK 10 — ACTUAL QA:
+Run PHP syntax, Laravel unit/feature tests, isolated MySQL staging tests, Vue/Vite build, PDF rendering checks, sample financial reconciliation, and single/bulk consistency. Report tests actually run, skip reasons, blockers, and unresolved design limitations. Do not claim production-ready without completion.
+
+TASK 11 — DELIVERABLES:
+Patch-only ZIP with correctly rooted Laravel/Vue files, unit/feature tests, SHA256 manifest, Bangla source audit, staging install and rollback instructions, Namecheap deployment notes, and QA evidence. Do not include .env, dump, vendor or node_modules, execute seeders or alter existing historic salary/GPF. Provide a complete next-step prompt for Step 08 — Payroll Final QA and Deployment in ONE code block.
+
+FINAL REQUIREMENT: Implement ONLY Step 07. Preserve existing design/classes/routes wherever possible and do not add role-based payroll authorization blockades.

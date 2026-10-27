@@ -1,0 +1,14 @@
+Act as a senior Laravel 12, Vue 3, MySQL payroll financial auditor and release engineer. Explain in Bangla.
+
+PROJECT: KAU EMS.
+OBJECTIVE: Complete Step 10 — Final Financial QA, Configured Component Publication and Production Deployment Gate.
+
+Inspect the latest post-Step09 app.zip, updated MySQL dump, generated reports and Windows staging logs. Never assume previous patches are installed.
+
+Audit the October 2026 structured arrear implementation: approved 2015 old Basic from salary_fixations, approved July–September phased schedules, old stage increment eligibility, verified Special Benefit, House Rent, and GPF evidence, employee manual overrides, and saved snapshot version/source hash consistency. Never derive missing payments as verified zero. Run exact Single/Bulk parity for 1, 10, 15, 16, 25 and all eligible employees. Validate component publications and effective dates; 1,421 assignment records were previously PENDING. Do not approve zero placeholders.
+
+Verify the unchanged historical published formulas versus structured October calculation in a DRY RUN report, including independently edited BASIC_INCREMENT_ADJUSTMENT; do not overwrite DB formulas without explicit reviewed reconciliation. Confirm no extra ×3, no duplicate old increment deduction, no 2028 House Rent rate in 2026, no GPF refund without evidence, and no cross-month overrides.
+
+Run real Laravel tests, MySQL integration tests on isolated disposable clone, npm ci/build, PHP syntax, routes, transaction rollback, concurrency, duplicate bill/arrear protection, GPF ledger invariance on preview, read-only report invariance, printed PDF visual checks, Namecheap capability review and dependency vulnerability triage.
+
+No new role-based payroll authorizePayroll gate or mandatory multistage approval. Preserve existing auth middleware and essential posting integrity controls. Do not automatically run financial seeders or post salary. Provide patch-only ZIP only for actual verified defects, tests, hashes, backup/rollback/installation documentation, and evidence-based PASSED/FAILED/SKIPPED/NOT RUN/RECONCILIATION REQUIRED status. Do not declare production readiness without full staging acceptance.
