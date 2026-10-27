@@ -371,7 +371,7 @@ function officialReportUrl(kind, format = 'html') {
     // Report only actual saved bills. The selection may contain old/provisional
     // records from a previous filter scope; never include estimated salaries.
     const records = selectedRecords.value.filter(r => [true, 1, "1"].includes(r.is_generated));
-    if (!records.length) throw new Error('No generated salary bills are selected for this month.');
+    // if (!records.length) throw new Error('No generated salary bills are selected for this month.');
     if (records.length > 500) throw new Error('At most 500 generated employees can be printed in one request.');
     const ids = records.map(r => Number(r.user_id));
     if (ids.some(id => !Number.isSafeInteger(id) || id < 1)) throw new Error('Invalid employee ID in generated selection.');
@@ -813,18 +813,18 @@ const handleDownloadPdf = () => {
     };
 
     if (store.reportType === 'Salary Summary') {
-        summaryStore.generatePdf({ 
-            records: selectedRecords.value, 
-            isPrint: false, 
+        summaryStore.generatePdf({
+            records: selectedRecords.value,
+            isPrint: false,
             headerConfig: customHeader,
             monthYearStr: formattedMonthYear.value,
         });
         return;
     }
 
-    store.generatePdf({ 
-        records: selectedRecords.value, 
-        isPrint: false, 
+    store.generatePdf({
+        records: selectedRecords.value,
+        isPrint: false,
         rowsPerPage: activeRowsPerPage.value,
         headerConfig: customHeader,
     });
@@ -842,18 +842,18 @@ const handlePrintPdf = () => {
     };
 
     if (store.reportType === 'Salary Summary') {
-        summaryStore.generatePdf({ 
-            records: selectedRecords.value, 
-            isPrint: true, 
+        summaryStore.generatePdf({
+            records: selectedRecords.value,
+            isPrint: true,
             headerConfig: customHeader,
             monthYearStr: formattedMonthYear.value,
         });
         return;
     }
 
-    store.generatePdf({ 
-        records: selectedRecords.value, 
-        isPrint: true, 
+    store.generatePdf({
+        records: selectedRecords.value,
+        isPrint: true,
         rowsPerPage: activeRowsPerPage.value,
         headerConfig: customHeader,
     });
@@ -865,7 +865,7 @@ const handlePrintPdf = () => {
 
     <AuthenticatedLayout>
         <div class="py-5 px-3 sm:px-6 lg:px-8 max-w-[1720px] mx-auto space-y-4">
-            
+
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-md shadow-sm border border-gray-100 dark:border-gray-700/60">
                 <div class="flex items-center gap-3">
@@ -896,20 +896,20 @@ const handlePrintPdf = () => {
 
             <!-- Two Horizontal Pane Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                
+
                 <!-- LEFT PANE: Filters & Employee Directory (5 cols on lg, 4 cols on xl) -->
                 <div class="lg:col-span-5 xl:col-span-4 space-y-4">
-                    
+
                     <!-- Card 1: Configuration & Filter Controls -->
                     <div class="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700/60 p-4 space-y-3.5">
-                        
+
                         <!-- Report Type Selector -->
                         <div>
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 uppercase tracking-wider">
                                 Choose report type
                             </label>
-                            <select 
-                                :value="store.reportType" 
+                            <select
+                                :value="store.reportType"
                                 @change="handleReportTypeChange($event.target.value)"
                                 class="w-full text-xs font-semibold rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-2 shadow-sm"
                             >
@@ -925,8 +925,8 @@ const handlePrintPdf = () => {
                                 <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Month
                                 </label>
-                                <select 
-                                    v-model.number="store.filters.monthId" 
+                                <select
+                                    v-model.number="store.filters.monthId"
                                     @change="applyFilters"
                                     class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1.5"
                                 >
@@ -939,8 +939,8 @@ const handlePrintPdf = () => {
                                 <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Year
                                 </label>
-                                <select 
-                                    v-model.number="store.filters.salaryGenerationYear" 
+                                <select
+                                    v-model.number="store.filters.salaryGenerationYear"
                                     @change="applyFilters"
                                     class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1.5"
                                 >
@@ -953,8 +953,8 @@ const handlePrintPdf = () => {
                                 <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">
                                     Profile Status
                                 </label>
-                                <select 
-                                    v-model="store.filters.isActive" 
+                                <select
+                                    v-model="store.filters.isActive"
                                     @change="applyFilters"
                                     class="w-full text-xs font-semibold rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1.5 shadow-xs"
                                 >
@@ -996,8 +996,8 @@ const handlePrintPdf = () => {
 
                         <!-- Advanced Filter Drawer Toggle -->
                         <div class="pt-1">
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 @click="showAdvancedFilters = !showAdvancedFilters"
                                 class="flex items-center justify-between w-full text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 py-1"
                             >
@@ -1010,8 +1010,8 @@ const handlePrintPdf = () => {
                                         {{ store.activeFilterCount }}
                                     </span>
                                 </span>
-                                <svg 
-                                    class="w-4 h-4 transition-transform duration-200" 
+                                <svg
+                                    class="w-4 h-4 transition-transform duration-200"
                                     :class="showAdvancedFilters ? 'rotate-180' : ''"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 >
@@ -1024,8 +1024,8 @@ const handlePrintPdf = () => {
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">Department / Office</label>
-                                        <select 
-                                            v-model="store.filters.department_office_id" 
+                                        <select
+                                            v-model="store.filters.department_office_id"
                                             @change="applyFilters"
                                             class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
                                         >
@@ -1035,8 +1035,8 @@ const handlePrintPdf = () => {
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">Employee Class</label>
-                                        <select 
-                                            v-model="store.filters.user_category_id" 
+                                        <select
+                                            v-model="store.filters.user_category_id"
                                             @change="applyFilters"
                                             class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
                                         >
@@ -1049,8 +1049,8 @@ const handlePrintPdf = () => {
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">Profile Status</label>
-                                        <select 
-                                            v-model="store.filters.isActive" 
+                                        <select
+                                            v-model="store.filters.isActive"
                                             @change="applyFilters"
                                             class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
                                         >
@@ -1061,7 +1061,7 @@ const handlePrintPdf = () => {
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">Bill Status</label>
-                                        <select 
+                                        <select
                                             v-model="store.filters.salaryGeneratedStatus"
                                             :disabled="store.reportType === 'Bank Advice'"
                                             @change="applyFilters"
@@ -1077,8 +1077,8 @@ const handlePrintPdf = () => {
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">Tax Filter</label>
-                                        <select 
-                                            v-model="store.filters.taxFilter" 
+                                        <select
+                                            v-model="store.filters.taxFilter"
                                             @change="applyFilters"
                                             class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
                                         >
@@ -1089,8 +1089,8 @@ const handlePrintPdf = () => {
                                     </div>
                                     <div>
                                         <label class="block text-[11px] font-medium text-gray-600 dark:text-gray-400 mb-1">GPF Filter</label>
-                                        <select 
-                                            v-model="store.filters.gpfFilter" 
+                                        <select
+                                            v-model="store.filters.gpfFilter"
                                             @change="applyFilters"
                                             class="w-full text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
                                         >
@@ -1102,9 +1102,9 @@ const handlePrintPdf = () => {
                                 </div>
 
                                 <div class="flex justify-end pt-1">
-                                    <button 
-                                        type="button" 
-                                        @click="resetFilters" 
+                                    <button
+                                        type="button"
+                                        @click="resetFilters"
                                         class="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-medium hover:underline transition-colors"
                                     >
                                         Reset Filters
@@ -1117,12 +1117,12 @@ const handlePrintPdf = () => {
 
                     <!-- Card 2: Employee Selection Directory -->
                     <div class="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
-                        
+
                         <!-- Directory Top Header -->
                         <div class="p-3 bg-slate-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700/60 flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     :checked="store.isAllFilteredSelected"
                                     @change="handleMasterCheckboxToggle"
                                     id="masterCheckbox"
@@ -1134,8 +1134,8 @@ const handlePrintPdf = () => {
                             </div>
 
                             <div class="flex items-center gap-1.5">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     @click="handleSelectAllFiltered"
                                     title="Select all matching employees across all pages"
                                     class="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs transition flex items-center gap-1"
@@ -1145,17 +1145,17 @@ const handlePrintPdf = () => {
                                     </svg>
                                     Select All ({{ store.reports.total }})
                                 </button>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     @click="handleSelectAllCurrent"
                                     title="Select only the records on current page"
                                     class="text-[11px] px-2 py-1 rounded-md bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Current Page
                                 </button>
-                                <button 
+                                <button
                                     v-if="store.selectedUserIds.length > 0"
-                                    type="button" 
+                                    type="button"
                                     @click="handleClearSelection"
                                     class="text-[11px] px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 font-medium transition-colors"
                                 >
@@ -1166,27 +1166,27 @@ const handlePrintPdf = () => {
 
                         <!-- Employee List -->
                         <div class="divide-y divide-gray-100 dark:divide-gray-700/50 max-h-[520px] overflow-y-auto">
-                            <div 
-                                v-if="store.reports.data.length === 0" 
+                            <div
+                                v-if="store.reports.data.length === 0"
                                 class="p-8 text-center text-xs text-gray-400 dark:text-gray-500"
                             >
                                 No employees found matching criteria.
                             </div>
 
-                            <div 
-                                v-for="user in store.reports.data" 
+                            <div
+                                v-for="user in store.reports.data"
                                 :key="user.user_id"
                                 @click="toggleSelectUser(user.user_id)"
                                 :class="[
-                                    isUserSelected(user.user_id) 
-                                        ? 'bg-emerald-50/50 dark:bg-emerald-950/30' 
+                                    isUserSelected(user.user_id)
+                                        ? 'bg-emerald-50/50 dark:bg-emerald-950/30'
                                         : 'hover:bg-slate-50/70 dark:hover:bg-gray-700/40'
                                 ]"
                                 class="p-2.5 flex items-center justify-between gap-2.5 cursor-pointer transition-colors"
                             >
                                 <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         :checked="isUserSelected(user.user_id)"
                                         @click.stop
                                         @change="toggleSelectUser(user.user_id)"
@@ -1213,15 +1213,15 @@ const handlePrintPdf = () => {
                                             <span class="truncate">{{ user.email }}</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 flex-wrap mt-1">
-                                            <span 
-                                                v-if="user.user_category && user.user_category !== 'N/A'" 
+                                            <span
+                                                v-if="user.user_category && user.user_category !== 'N/A'"
                                                 class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40"
                                                 title="Employee Class"
                                             >
                                                 {{ user.user_category }}
                                             </span>
-                                            <span 
-                                                v-if="user.religion && user.religion !== 'N/A'" 
+                                            <span
+                                                v-if="user.religion && user.religion !== 'N/A'"
                                                 class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40"
                                                 title="Religion"
                                             >
@@ -1235,14 +1235,14 @@ const handlePrintPdf = () => {
                                     <div class="text-xs font-bold text-gray-900 dark:text-white tabular-nums">
                                         Tk. {{ formatMoney(user.salary_total) }}
                                     </div>
-                                    <span 
-                                        v-if="user.is_generated" 
+                                    <span
+                                        v-if="user.is_generated"
                                         class="inline-block px-1.5 py-0.2 text-[9px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 rounded"
                                     >
                                         Generated
                                     </span>
-                                    <span 
-                                        v-else 
+                                    <span
+                                        v-else
                                         class="inline-block px-1.5 py-0.2 text-[9px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 rounded"
                                     >
                                         Provisional
@@ -1257,16 +1257,16 @@ const handlePrintPdf = () => {
                                 Page {{ store.reports.current_page }} of {{ store.reports.last_page }}
                             </span>
                             <div class="flex items-center gap-1">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     :disabled="store.reports.current_page <= 1"
                                     @click="store.fetchReportData(store.reports.current_page - 1)"
                                     class="px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-[11px] text-gray-700 dark:text-gray-200 disabled:opacity-40 hover:bg-white dark:hover:bg-gray-700 dark:bg-gray-700/50 transition-colors"
                                 >
                                     Prev
                                 </button>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     :disabled="store.reports.current_page >= store.reports.last_page"
                                     @click="store.fetchReportData(store.reports.current_page + 1)"
                                     class="px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-[11px] text-gray-700 dark:text-gray-200 disabled:opacity-40 hover:bg-white dark:hover:bg-gray-700 dark:bg-gray-700/50 transition-colors"
@@ -1282,10 +1282,10 @@ const handlePrintPdf = () => {
 
                 <!-- RIGHT PANE: A4 Sheet Paper Simulation & Live Preview -->
                 <div class="lg:col-span-7 xl:col-span-8 space-y-3">
-                    
+
                     <!-- Right Toolbar -->
                     <div class="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-100 dark:border-gray-700/60 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 sticky top-3 z-20">
-                        
+
                         <!-- Report Info & Page Navigator -->
                         <div class="flex items-center gap-3 flex-wrap">
                             <div>
@@ -1302,11 +1302,11 @@ const handlePrintPdf = () => {
                                 <label for="bankAdviceRowsPerPage" class="text-xs font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
                                     Rows / Page:
                                 </label>
-                                <input 
+                                <input
                                     id="bankAdviceRowsPerPage"
-                                    type="number" 
-                                    min="1" 
-                                    max="100" 
+                                    type="number"
+                                    min="1"
+                                    max="100"
                                     v-model.number="bankAdviceRowsPerPage"
                                     class="w-16 text-xs text-center py-1 px-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 font-semibold shadow-xs"
                                     title="Records per page for Bank Advice"
@@ -1315,8 +1315,8 @@ const handlePrintPdf = () => {
 
                             <!-- A4 Pagination Buttons (When in single page preview) -->
                             <div v-if="!isContinuousView && totalPreviewPages > 1" class="flex items-center gap-1.5 pl-3 border-l border-gray-200 dark:border-gray-700">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     :disabled="previewPage <= 1"
                                     @click="prevPreviewPage"
                                     class="p-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30"
@@ -1331,8 +1331,8 @@ const handlePrintPdf = () => {
                                     Page {{ previewPage }} of {{ totalPreviewPages }}
                                 </span>
 
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     :disabled="previewPage >= totalPreviewPages"
                                     @click="nextPreviewPage"
                                     class="p-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30"
@@ -1345,9 +1345,9 @@ const handlePrintPdf = () => {
                             </div>
 
                             <!-- Continuous view toggle if multi-page -->
-                            <button 
+                            <button
                                 v-if="totalPreviewPages > 1"
-                                type="button" 
+                                type="button"
                                 @click="isContinuousView = !isContinuousView"
                                 :class="isContinuousView ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-600'"
                                 class="text-[11px] font-medium px-2 py-1 rounded transition-colors"
@@ -1356,9 +1356,9 @@ const handlePrintPdf = () => {
                             </button>
 
                             <!-- Customize Header toggle button -->
-                            <button 
+                            <button
                                 v-if="isHeaderCustomizable"
-                                type="button" 
+                                type="button"
                                 @click="showHeaderCustomizer = !showHeaderCustomizer"
                                 :class="showHeaderCustomizer ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-gray-300 border-gray-300'"
                                 class="text-[11px] font-medium px-2.5 py-1 rounded border transition-colors flex items-center gap-1.5"
@@ -1374,8 +1374,8 @@ const handlePrintPdf = () => {
                         <!-- Action Buttons -->
                         <div class="flex items-center gap-2">
                             <!-- Download Excel -->
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 :disabled="selectedRecords.length === 0 || store.exportingExcel"
                                 @click="handleExportExcel"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium shadow-sm transition disabled:opacity-40"
@@ -1411,8 +1411,8 @@ const handlePrintPdf = () => {
                             </template>
 
                             <!-- Download PDF -->
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 :disabled="selectedRecords.length === 0 || store.generatingPdf"
                                 @click="handleDownloadPdf"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium shadow-sm transition disabled:opacity-40"
@@ -1424,8 +1424,8 @@ const handlePrintPdf = () => {
                             </button>
 
                             <!-- Print A4 -->
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 :disabled="selectedRecords.length === 0 || store.generatingPdf"
                                 @click="handlePrintPdf"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium shadow-sm transition disabled:opacity-40"
@@ -1440,8 +1440,8 @@ const handlePrintPdf = () => {
                     </div>
 
                     <!-- Header Customization Panel -->
-                    <div 
-                        v-if="isHeaderCustomizable && showHeaderCustomizer" 
+                    <div
+                        v-if="isHeaderCustomizable && showHeaderCustomizer"
                         class="bg-white dark:bg-gray-800 rounded-md shadow-sm border border-emerald-200/80 dark:border-emerald-800/60 p-3.5 sm:p-4 transition-all space-y-3"
                     >
                         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/60 pb-2.5">
@@ -1461,16 +1461,16 @@ const handlePrintPdf = () => {
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     @click="resetHeader"
                                     class="text-[11px] px-2.5 py-1 rounded bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-medium transition-colors"
                                     title="Reset header fields to default"
                                 >
                                     Reset Default
                                 </button>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     @click="showHeaderCustomizer = !showHeaderCustomizer"
                                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
                                     title="Collapse header settings"
@@ -1484,13 +1484,13 @@ const handlePrintPdf = () => {
 
                         <!-- Inputs Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 text-xs">
-                            
+
                             <!-- 1. Organization Title (4 cols) -->
                             <div class="lg:col-span-4 space-y-1">
                                 <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300">
                                     Title (Institution / Office)
                                 </label>
-                                <select 
+                                <select
                                     @change="bankAdviceConfig.title = $event.target.value"
                                     class="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 mb-1 shadow-xs"
                                 >
@@ -1499,9 +1499,9 @@ const handlePrintPdf = () => {
                                         {{ t }}
                                     </option>
                                 </select>
-                                <input 
-                                    type="text" 
-                                    v-model="bankAdviceConfig.title" 
+                                <input
+                                    type="text"
+                                    v-model="bankAdviceConfig.title"
                                     placeholder="Or type custom title..."
                                     class="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 shadow-xs font-semibold"
                                 />
@@ -1512,7 +1512,7 @@ const handlePrintPdf = () => {
                                 <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300">
                                     Office / Campus Address
                                 </label>
-                                <select 
+                                <select
                                     @change="bankAdviceConfig.address = $event.target.value"
                                     class="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 mb-1 shadow-xs"
                                 >
@@ -1521,9 +1521,9 @@ const handlePrintPdf = () => {
                                         {{ a }}
                                     </option>
                                 </select>
-                                <input 
-                                    type="text" 
-                                    v-model="bankAdviceConfig.address" 
+                                <input
+                                    type="text"
+                                    v-model="bankAdviceConfig.address"
                                     placeholder="Or type custom address..."
                                     class="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 shadow-xs"
                                 />
@@ -1534,7 +1534,7 @@ const handlePrintPdf = () => {
                                 <label class="block text-[11px] font-bold text-gray-700 dark:text-gray-300">
                                     Report Subtitle
                                 </label>
-                                <select 
+                                <select
                                     @change="bankAdviceConfig.subtitle = $event.target.value"
                                     class="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 mb-1 shadow-xs"
                                 >
@@ -1543,9 +1543,9 @@ const handlePrintPdf = () => {
                                         {{ s }}
                                     </option>
                                 </select>
-                                <input 
-                                    type="text" 
-                                    v-model="bankAdviceConfig.subtitle" 
+                                <input
+                                    type="text"
+                                    v-model="bankAdviceConfig.subtitle"
                                     :placeholder="effectiveHeaderSubtitle"
                                     class="w-full text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 shadow-xs"
                                 />
@@ -1559,7 +1559,7 @@ const handlePrintPdf = () => {
                                         Advice Year
                                     </label>
                                     <div class="flex items-center gap-2">
-                                        <select 
+                                        <select
                                             v-model.number="bankAdviceConfig.year"
                                             class="w-1/2 text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 shadow-xs font-semibold"
                                         >
@@ -1567,10 +1567,10 @@ const handlePrintPdf = () => {
                                                 {{ y }}
                                             </option>
                                         </select>
-                                        <input 
-                                            type="number" 
+                                        <input
+                                            type="number"
                                             v-model.number="bankAdviceConfig.year"
-                                            placeholder="Year" 
+                                            placeholder="Year"
                                             class="w-1/2 text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 shadow-xs font-semibold"
                                         />
                                     </div>
@@ -1582,29 +1582,29 @@ const handlePrintPdf = () => {
                                         Report Date
                                     </label>
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <input 
-                                            type="text" 
-                                            v-model="bankAdviceConfig.date" 
+                                        <input
+                                            type="text"
+                                            v-model="bankAdviceConfig.date"
                                             placeholder="e.g. 18 Sep 2026"
                                             class="flex-1 min-w-[140px] text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-emerald-500 focus:ring-emerald-500 py-1 shadow-xs"
                                         />
                                         <div class="flex items-center gap-1">
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 @click="setDatePreset('today')"
                                                 class="px-2 py-1 text-[10px] font-medium rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 dark:text-emerald-300 transition-colors"
                                             >
                                                 Today
                                             </button>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 @click="setDatePreset('first')"
                                                 class="px-2 py-1 text-[10px] font-medium rounded bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-700 dark:text-slate-300 transition-colors"
                                             >
                                                 1st of Month
                                             </button>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 @click="setDatePreset('last')"
                                                 class="px-2 py-1 text-[10px] font-medium rounded bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-700 dark:text-slate-300 transition-colors"
                                             >
@@ -1620,10 +1620,10 @@ const handlePrintPdf = () => {
 
                     <!-- A4 Sheet Stage Canvas -->
                     <div class="bg-slate-200/80 dark:bg-slate-900/90 rounded-md p-4 sm:p-6 lg:p-8 min-h-[800px] overflow-x-auto flex flex-col items-center border border-slate-300/60 dark:border-gray-800">
-                        
+
                         <!-- Graceful Error / Empty State when 0 records selected -->
-                        <div 
-                            v-if="selectedRecords.length === 0" 
+                        <div
+                            v-if="selectedRecords.length === 0"
                             class="my-auto max-w-md w-full bg-white dark:bg-gray-800 rounded-md p-8 text-center shadow-lg border border-slate-200 dark:border-gray-700 space-y-3"
                         >
                             <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
@@ -1638,15 +1638,15 @@ const handlePrintPdf = () => {
                                 Please select one or more employees from the directory on the left pane to render the <strong>{{ store.reportType }}</strong> on an authentic A4 sheet.
                             </p>
                             <div class="pt-2 flex flex-wrap items-center justify-center gap-2">
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     @click="handleSelectAllFiltered"
                                     class="px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow transition"
                                 >
                                     Select All ({{ store.reports.total }}) Records
                                 </button>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     @click="handleSelectAllCurrent"
                                     class="px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-700 dark:text-slate-200 text-xs font-medium transition"
                                 >
@@ -1656,13 +1656,13 @@ const handlePrintPdf = () => {
                         </div>
 
                         <!-- Continuous Multi-Page View -->
-                        <div 
-                            v-else-if="isContinuousView" 
+                        <div
+                            v-else-if="isContinuousView"
                             class="space-y-8 w-full flex flex-col items-center"
                         >
-                            <div 
-                                v-for="p in continuousPages" 
-                                :key="p.pageNumber" 
+                            <div
+                                v-for="p in continuousPages"
+                                :key="p.pageNumber"
                                 class="w-full relative" :style="(isFixationReport && !isSingleFixation) || (isOfficialSalaryReport && store.reportType === 'Arrear & Deduction Statement') ? {maxWidth: '297mm',overflowX: 'auto'} : {maxWidth:'210mm'}"
                             >
                                 <div class="absolute -top-5 left-2 text-[10px] font-bold text-slate-500 tracking-wider uppercase">
@@ -1675,8 +1675,8 @@ const handlePrintPdf = () => {
                         </div>
 
                         <!-- Single Page Preview -->
-                        <div 
-                            v-else 
+                        <div
+                            v-else
                             class="w-full" :style="(isFixationReport && !isSingleFixation) || (isOfficialSalaryReport && store.reportType === 'Arrear & Deduction Statement') ? {maxWidth: '297mm', overflowX:'auto'} : {maxWidth:'210mm'}"
                         >
                             <div v-if="isSingleFixation" class="bg-white shadow-sm">
