@@ -392,6 +392,9 @@
                             @endif
                         </strong>
                         <p>Salary period: {{ sprintf('%02d', $month) }}/{{ $year }}</p>
+                        @if (in_array('DRAFT_REGULAR_ONLY_PREVIEW', array_column($pageRows, 'source'), true))
+                            <p style="font-weight:bold;color:#b45309">DRAFT - NOT GENERATED (provisional preview rows are marked; no posted bills were substituted)</p>
+                        @endif
                     </div>
                     <div></div>
                 </header>

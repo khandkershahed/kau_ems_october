@@ -41,6 +41,7 @@ $checks = [
     'bulk_title' => str_contains($body, 'Horizontal Salary Bill'),
     'landscape' => str_contains($body, 'landscape'),
     'no_redirect_marker' => !str_contains($body, 'Redirecting'),
+    'page_draft_marker' => str_contains($body, 'DRAFT - NOT GENERATED'),
 ];
 echo 'checks='.json_encode($checks).PHP_EOL;
 foreach ($checks as $k => $v) if (!$v) { fwrite(STDERR, "FAILED: $k\n"); exit(1); }

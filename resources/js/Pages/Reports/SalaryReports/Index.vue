@@ -368,8 +368,8 @@ const formattedMonthYear = computed(() => {
 const officialRowsPerPage = ref(25);
 const isOfficialSalaryReport = computed(() => ['Salary Bill', 'Arrear & Deduction Statement'].includes(store.reportType));
 function officialReportUrl(kind, format = 'html') {
-    // Report only actual saved bills. The selection may contain old/provisional
-    // records from a previous filter scope; never include estimated salaries.
+    // mode=preview: every selected employee appears; ungenerated employees render
+    // server-side as DRAFT_REGULAR_ONLY_PREVIEW rows. Official exports stay saved-bill only.
     // mode=preview: every selected employee is eligible. Ungenerated employees
     // render as DRAFT_REGULAR_ONLY_PREVIEW rows on the server — never fabricated bills.
     const records = selectedRecords.value;
