@@ -298,8 +298,9 @@ export const useSalaryReportStore = defineStore('salaryReport', {
 
         setReportType(type) {
             this.reportType = type;
-            this.filters.salaryGeneratedStatus = (type === 'Bank Advice' || type === 'Bonus Bank Advice'
-                || type === 'Bonus Bill' || type === 'Bonus report') ? 'generated' : 'all';
+            this.filters.salaryGeneratedStatus = (['Bank Advice', 'Bonus Bank Advice',
+                'Bonus Bill', 'Bonus report', 'Salary Bill', 'Arrear & Deduction Statement']
+                .includes(type)) ? 'generated' : 'all';
             // A previous month's/type's selection must never leak into Bank Advice.
             this.selectedUserIds = [];
             this.recordsCache = {};

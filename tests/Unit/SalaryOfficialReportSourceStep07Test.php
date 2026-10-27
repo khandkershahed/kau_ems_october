@@ -15,6 +15,14 @@ final class SalaryOfficialReportSourceStep07Test extends TestCase
             ->invoke(null, $items, $direction);
     }
 
+    public function test_only_true_basic_pay_titles_are_basic_components(): void
+    {
+        $titles = ['Basic Pay', 'Basic Arrear', 'Basic Difference / Old Increment', 'Basic Salary'];
+        $matches = array_values(array_filter($titles, static fn ($title) =>
+            preg_match('/^basic(?:\s+pay|\s+salary|\s+wage)?$/i', trim($title)) === 1));
+        $this->assertSame(['Basic Pay', 'Basic Salary'], $matches);
+    }
+
     public function test_fixed_posted_allowance_preserves_exact_saved_amount(): void
     {
         $lines = $this->entries([['name'=>'Basic Pay','calcType'=>'fixed','amount'=>43170]]);

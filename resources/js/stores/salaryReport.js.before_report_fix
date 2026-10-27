@@ -1,0 +1,1543 @@
+import { defineStore } from 'pinia';
+import axios from 'axios';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { useSalarySummaryStore } from '@/stores/salarySummary';
+
+// Month names helper
+const MONTH_NAMES = [
+    '', 'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Helper to convert number to words in Taka
+function numberToWordsTaka(amount) {
+    const num = Math.floor(Math.abs(Number(amount) || 0));
+    if (num === 0) return 'Zero Taka only';
+
+    const a = [
+        '', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+        'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+    ];
+    const b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+    function inWords(n) {
+        if (n < 20) return a[n];
+        const digit = n % 10;
+        return b[Math.floor(n / 10)] + (digit ? ' ' + a[digit] : '');
+    }
+
+    let words = '';
+    const crore = Math.floor(num / 10000000);
+    const lakh = Math.floor((num % 10000000) / 100000);
+    const thousand = Math.floor((num % 100000) / 1000);
+    const hundred = Math.floor((num % 1000) / 100);
+    const rest = num % 100;
+
+    if (crore > 0) words += inWords(crore) + ' crore ';
+    if (lakh > 0) words += inWords(lakh) + ' lakh ';
+    if (thousand > 0) words += inWords(thousand) + ' thousand ';
+    if (hundred > 0) words += inWords(hundred) + ' hundred ';
+    if (rest > 0) words += inWords(rest) + ' ';
+
+    return (words.trim().charAt(0).toUpperCase() + words.trim().slice(1)) + ' Taka only.';
+}
+
+// Helper to fetch image as base64 for jsPDF
+async function getBase64ImageFromUrl(url) {
+    try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn('Could not load logo for PDF:', e);
+        return null;
+    }
+}
+
+export const useSalaryReportStore = defineStore('salaryReport', {
+    state: () => {
+        const currentDate = new Date();
+        return {
+            reportType: 'Bank Advice',
+            reports: {
+                data: [],
+                current_page: 1,
+                last_page: 1,
+                total: 0,
+                per_page: 15,
+            },
+            summary: {
+                total_records: 0,
+                total_allowance: 0,
+                total_deduction: 0,
+                total_net: 0,
+                total_tax: 0,
+                total_gpf: 0,
+            },
+            loading: false,
+            exportingExcel: false,
+            generatingPdf: false,
+            selectedBill: null,
+            viewBillModalOpen: false,
+            filters: {
+                monthId: currentDate.getMonth() + 1,
+                salaryGenerationYear: currentDate.getFullYear(),
+                salaryGeneratedStatus: 'generated',
+                department_office_id: '',
+                user_category_id: '',
+                pay_scale_id: '',
+                grade_id: '',
+                payroll_group_type_id: '',
+                taxFilter: 'all',
+                gpfFilter: 'all',
+                bankAccountFilter: 'all',
+                phoneFilter: 'all',
+                isActive: 'true',
+                jobStatus: '',
+                gender: '',
+                search: '',
+                employeeCode: '',
+                fixationUserIds: '',
+            },
+            sort: {
+                field: 'id',
+                direction: 'asc',
+            },
+            selectedUserIds: [],
+            allFilteredRecords: [],
+            recordsCache: {},
+        };
+    },
+
+    getters: {
+        selectedRecords: (state) => {
+            if (!state.selectedUserIds || state.selectedUserIds.length === 0) {
+                return [];
+            }
+            const idSet = new Set(state.selectedUserIds.map(String));
+
+            // If we have allFilteredRecords loaded, filter from it
+            if (state.allFilteredRecords && state.allFilteredRecords.length > 0) {
+                return state.allFilteredRecords.filter(r => idSet.has(String(r.user_id)));
+            }
+
+            // Otherwise, construct from recordsCache or current page data
+            const list = [];
+            state.selectedUserIds.forEach(id => {
+                const item = state.recordsCache[id]
+                    || (state.reports.data || []).find(r => String(r.user_id) === String(id));
+                if (item) {
+                    list.push(item);
+                }
+            });
+            return list;
+        },
+
+        isAllFilteredSelected: (state) => {
+            if (state.reports.total === 0) return false;
+            return state.selectedUserIds.length >= state.reports.total;
+        },
+
+        isAllCurrentSelected: (state) => {
+            const pageData = state.reports.data || [];
+            if (pageData.length === 0) return false;
+            const idSet = new Set(state.selectedUserIds.map(String));
+            return pageData.every(r => idSet.has(String(r.user_id)));
+        },
+        activeFilterCount: (state) => {
+            let count = 0;
+            const f = state.filters;
+            if (f.search) count++;
+            if (f.employeeCode) count++;
+            if (f.department_office_id) count++;
+            if (f.user_category_id) count++;
+            if (f.pay_scale_id) count++;
+            if (f.grade_id) count++;
+            if (f.payroll_group_type_id) count++;
+            if (f.salaryGeneratedStatus !== 'all') count++;
+            if (f.taxFilter !== 'all') count++;
+            if (f.gpfFilter !== 'all') count++;
+            if (f.bankAccountFilter !== 'all') count++;
+            if (f.phoneFilter !== 'all') count++;
+            if (f.isActive !== '' && f.isActive !== 'true') count++;
+            if (f.jobStatus) count++;
+            if (f.gender) count++;
+            return count;
+        },
+
+        formattedMonthYear: (state) => {
+            const m = MONTH_NAMES[state.filters.monthId] || 'All Months';
+            return `${m}-${state.filters.salaryGenerationYear}`;
+        },
+    },
+
+    actions: {
+        async fetchReportData(page = 1) {
+            this.loading = true;
+            try {
+                const params = {
+                    page,
+                    reportType: this.reportType,
+                    sortField: this.sort.field,
+                    sortDirection: this.sort.direction,
+                };
+
+                Object.keys(this.filters).forEach((key) => {
+                    const val = this.filters[key];
+                    if (val !== '' && val !== null && val !== undefined) {
+                        params[key] = val;
+                    }
+                });
+
+                const response = await axios.get(route('reports.salary-reports.index'), {
+                    params,
+                    headers: { Accept: 'application/json' },
+                });
+
+                const records = response.data.data || [];
+                this.reports = {
+                    data: records,
+                    current_page: response.data.current_page || 1,
+                    last_page: response.data.last_page || 1,
+                    total: response.data.total || 0,
+                    per_page: response.data.per_page || 15,
+                };
+
+                records.forEach(r => {
+                    this.recordsCache[r.user_id] = r;
+                });
+
+                if (response.data.summary) {
+                    this.summary = response.data.summary;
+                }
+            } catch (error) {
+                console.error('Failed to fetch salary report data:', error);
+                this.reports = {
+                    data: [],
+                    current_page: 1,
+                    last_page: 1,
+                    total: 0,
+                    per_page: 15,
+                };
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async fetchAllRecords() {
+            try {
+                const params = {
+                    all: true,
+                    reportType: this.reportType,
+                    sortField: this.sort.field,
+                    sortDirection: this.sort.direction,
+                };
+
+                Object.keys(this.filters).forEach((key) => {
+                    const val = this.filters[key];
+                    if (val !== '' && val !== null && val !== undefined) {
+                        params[key] = val;
+                    }
+                });
+
+                const response = await axios.get(route('reports.salary-reports.index'), {
+                    params,
+                    headers: { Accept: 'application/json' },
+                });
+
+                const records = response.data.data || [];
+                this.allFilteredRecords = records;
+                records.forEach(r => {
+                    this.recordsCache[r.user_id] = r;
+                });
+                return records;
+            } catch (e) {
+                console.error('Failed to fetch all report records:', e);
+                return this.reports.data;
+            }
+        },
+
+        setFilters(newFilters) {
+            this.filters = { ...this.filters, ...newFilters };
+            this.allFilteredRecords = [];
+            return this.fetchReportData(1);
+        },
+
+        resetFilters() {
+            const currentDate = new Date();
+            this.filters = {
+                monthId: currentDate.getMonth() + 1,
+                salaryGenerationYear: currentDate.getFullYear(),
+                salaryGeneratedStatus: this.reportType === 'Bank Advice' ? 'generated' : 'all',
+                department_office_id: '',
+                user_category_id: '',
+                pay_scale_id: '',
+                grade_id: '',
+                payroll_group_type_id: '',
+                taxFilter: 'all',
+                gpfFilter: 'all',
+                bankAccountFilter: 'all',
+                phoneFilter: 'all',
+                isActive: 'true',
+                jobStatus: '',
+                gender: '',
+                search: '',
+                employeeCode: '',
+                fixationUserIds: '',
+            };
+            this.allFilteredRecords = [];
+            return this.fetchReportData(1);
+        },
+
+        setReportType(type) {
+            this.reportType = type;
+            this.filters.salaryGeneratedStatus = (type === 'Bank Advice' || type === 'Bonus Bank Advice'
+                || type === 'Bonus Bill' || type === 'Bonus report') ? 'generated' : 'all';
+            // A previous month's/type's selection must never leak into Bank Advice.
+            this.selectedUserIds = [];
+            this.recordsCache = {};
+            this.allFilteredRecords = [];
+            return this.fetchReportData(1);
+        },
+
+        toggleSelectUser(userId) {
+            const strId = String(userId);
+            const idx = this.selectedUserIds.findIndex(id => String(id) === strId);
+            if (idx >= 0) {
+                this.selectedUserIds.splice(idx, 1);
+            } else {
+                this.selectedUserIds.push(userId);
+            }
+        },
+
+        selectAllCurrent() {
+            const pageData = this.reports.data || [];
+            const currentIds = pageData.map(r => r.user_id);
+            const idSet = new Set(this.selectedUserIds.map(String));
+
+            // If all current are selected, unselect them
+            const allSelected = currentIds.length > 0 && currentIds.every(id => idSet.has(String(id)));
+            if (allSelected) {
+                this.selectedUserIds = this.selectedUserIds.filter(id => !currentIds.some(cid => String(cid) === String(id)));
+            } else {
+                // Add any missing ones
+                currentIds.forEach(id => {
+                    if (!idSet.has(String(id))) {
+                        this.selectedUserIds.push(id);
+                    }
+                });
+            }
+        },
+
+        clearSelection() {
+            this.selectedUserIds = [];
+        },
+
+        async selectAllFiltered() {
+            this.loading = true;
+            try {
+                const all = await this.fetchAllRecords();
+                this.selectedUserIds = all.map(r => r.user_id);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        openBillModal(bill) {
+            this.selectedBill = bill;
+            this.viewBillModalOpen = true;
+        },
+
+        closeBillModal() {
+            this.selectedBill = null;
+            this.viewBillModalOpen = false;
+        },
+
+        /**
+         * Download report data as styled Excel spreadsheet (.xlsx).
+         * Can accept a custom subset of records (e.g. selected employees) and custom header config.
+         */
+        async exportToExcel(customRecords = null, headerConfig = null) {
+            this.exportingExcel = true;
+            try {
+                const records = (customRecords && customRecords.length > 0)
+                    ? customRecords
+                    : await this.fetchAllRecords();
+                const monthYearStr = this.formattedMonthYear;
+
+                if (this.reportType === 'Salary Summary') {
+                    const summaryStore = useSalarySummaryStore();
+                    return await summaryStore.exportToExcel(records, headerConfig, monthYearStr);
+                }
+
+                const title = headerConfig?.title || 'Khulna Agricultural University';
+                const address = headerConfig?.address || 'Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000';
+                let subtitle = headerConfig?.subtitle;
+                if (!subtitle) {
+                    subtitle = `${this.reportType} - For the month of ${monthYearStr}`;
+                }
+
+                const headerRows = [
+                    [title],
+                    [address],
+                    [subtitle],
+                ];
+                if (headerConfig?.date) {
+                    headerRows.push([`Date: ${headerConfig.date}`]);
+                }
+                headerRows.push([]); // blank line
+
+                let dataTable = [];
+                let totalRow = [];
+
+                if (this.reportType === 'Bank Advice' || this.reportType === 'Bonus Bank Advice') {
+                    dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Bank A/C No', 'Bank Address', 'Amount (Taka)']);
+                    let sum = 0;
+                    records.forEach((r, idx) => {
+                        const amt = Number(r.salary_total) || 0;
+                        sum += amt;
+                        dataTable.push([
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            r.bank_account_no,
+                            r.bank_address,
+                            amt,
+                        ]);
+                    });
+                    totalRow = ['', '', '', '', '', '', 'Sub Total', sum];
+                } else if (this.reportType === 'Earn Deduction') {
+                    dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Basic Pay', 'Total Allowance', 'Tax Deduction', 'GPF Deduction', 'Total Deduction', 'Net Payable']);
+                    let sumBasic = 0, sumAllow = 0, sumTax = 0, sumGpf = 0, sumDeduct = 0, sumNet = 0;
+                    records.forEach((r, idx) => {
+                        const b = Number(r.basic_pay) || 0;
+                        const a = Number(r.total_allowance) || 0;
+                        const t = Number(r.tax_deduction) || 0;
+                        const g = Number(r.gpf_deduction) || 0;
+                        const d = Number(r.total_deduction) || 0;
+                        const n = Number(r.salary_total) || 0;
+                        sumBasic += b; sumAllow += a; sumTax += t; sumGpf += g; sumDeduct += d; sumNet += n;
+                        dataTable.push([
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            b,
+                            a,
+                            t,
+                            g,
+                            d,
+                            n,
+                        ]);
+                    });
+                    totalRow = ['', '', '', '', 'Total', sumBasic, sumAllow, sumTax, sumGpf, sumDeduct, sumNet];
+                } else if (this.reportType.startsWith('GPF')) {
+                    dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Basic Pay', 'GPF Subscription', 'Total Deduction', 'Net Salary']);
+                    let sumBasic = 0, sumGpf = 0, sumDeduct = 0, sumNet = 0;
+                    records.forEach((r, idx) => {
+                        const b = Number(r.basic_pay) || 0;
+                        const g = Number(r.gpf_deduction) || 0;
+                        const d = Number(r.total_deduction) || 0;
+                        const n = Number(r.salary_total) || 0;
+                        sumBasic += b; sumGpf += g; sumDeduct += d; sumNet += n;
+                        dataTable.push([
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            b,
+                            g,
+                            d,
+                            n,
+                        ]);
+                    });
+                    totalRow = ['', '', '', '', 'Total', sumBasic, sumGpf, sumDeduct, sumNet];
+                } else if (
+                    this.reportType === 'Bonus report' ||
+                    this.reportType === 'Bonus Bill' ||
+                    this.reportType === 'Bonus Report' ||
+                    this.reportType === 'Bonus repot'
+                ) {
+                    dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Class', 'Religion', 'Email', 'Bonus Name', 'Bank A/C No', 'Basic Pay', 'Bonus Allowance', 'Bonus Deduction', 'Net Bonus']);
+                    let sumBasic = 0, sumAllow = 0, sumDeduct = 0, sumNet = 0;
+                    records.forEach((r, idx) => {
+                        const b = Number(r.basic_pay) || 0;
+                        const a = Number(r.total_allowance) || 0;
+                        const d = Number(r.total_deduction) || 0;
+                        const n = Number(r.net_bonus !== undefined ? r.net_bonus : r.salary_total) || 0;
+                        sumBasic += b; sumAllow += a; sumDeduct += d; sumNet += n;
+                        dataTable.push([
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            r.user_category || '',
+                            r.religion || '',
+                            r.email || '',
+                            r.bonus_title || 'Festival Bonus',
+                            r.bank_account_no,
+                            b,
+                            a,
+                            d,
+                            n,
+                        ]);
+                    });
+                    totalRow = ['', '', '', '', '', '', '', '', 'Total', sumBasic, sumAllow, sumDeduct, sumNet];
+                } else {
+                    dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Class', 'Religion', 'Email', 'Grade', 'Bank A/C No', 'Basic Pay', 'Allowance', 'Deduction', 'Net Salary']);
+                    let sumAllow = 0, sumDeduct = 0, sumNet = 0;
+                    records.forEach((r, idx) => {
+                        sumAllow += Number(r.total_allowance) || 0;
+                        sumDeduct += Number(r.total_deduction) || 0;
+                        sumNet += Number(r.salary_total) || 0;
+                        dataTable.push([
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            r.user_category,
+                            r.religion || '',
+                            r.email || '',
+                            r.grade,
+                            r.bank_account_no,
+                            r.basic_pay,
+                            r.total_allowance,
+                            r.total_deduction,
+                            r.salary_total,
+                        ]);
+                    });
+                    totalRow = ['', '', '', '', '', '', '', '', '', '', 'Total', sumAllow, sumDeduct, sumNet];
+                }
+
+                dataTable.push(totalRow);
+
+                const fullSheetData = [...headerRows, ...dataTable];
+                const worksheet = XLSX.utils.aoa_to_sheet(fullSheetData);
+
+                // Auto-fit column widths
+                const maxColWidths = [];
+                fullSheetData.forEach(row => {
+                    row.forEach((cell, colIdx) => {
+                        const cellLen = String(cell ?? '').length;
+                        maxColWidths[colIdx] = Math.max(maxColWidths[colIdx] || 10, cellLen + 2);
+                    });
+                });
+                worksheet['!cols'] = maxColWidths.map(w => ({ wch: Math.min(w, 40) }));
+
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Salary Report');
+
+                const fileName = `KAU_${this.reportType.replace(/\s+/g, '_')}_${monthYearStr}.xlsx`;
+                XLSX.writeFile(workbook, fileName);
+            } catch (err) {
+                console.error('Failed to export Excel:', err);
+            } finally {
+                this.exportingExcel = false;
+            }
+        },
+
+        /**
+         * Generate A4 printable PDF using jsPDF and autoTable.
+         * Accepts custom records (e.g. selected employees), rowsPerPage, and headerConfig.
+         * For 'Salary Bill', renders each employee on a distinct A4 sheet page.
+         * Sequence of the pages is automatically displayed in the footer: 'Page X of Y'.
+         */
+        async generatePdf({ records: customRecords = null, isPrint = false, rowsPerPage: customRowsPerPage = 15, headerConfig = null } = {}) {
+            this.generatingPdf = true;
+            try {
+                const records = (customRecords && customRecords.length > 0)
+                    ? customRecords
+                    : await this.fetchAllRecords();
+                const monthYearStr = this.formattedMonthYear;
+
+                if (this.reportType === 'Salary Summary') {
+                    const summaryStore = useSalarySummaryStore();
+                    return await summaryStore.generatePdf({ records, isPrint, headerConfig, monthYearStr });
+                }
+
+                if (records.length === 0) {
+                    console.warn('No records to generate PDF.');
+                    return;
+                }
+
+                // If Bank Advice or Bonus Bank Advice: dedicated Portrait multi-page A4 format matching preview
+                if (this.reportType === 'Bank Advice' || this.reportType === 'Bonus Bank Advice') {
+                    const isBonusBankAdvice = (this.reportType === 'Bonus Bank Advice');
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4',
+                    });
+
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const logoBase64 = await getBase64ImageFromUrl('/logo.png');
+
+                    const rowsPerPage = (customRowsPerPage && customRowsPerPage > 0) ? customRowsPerPage : 15;
+                    const totalRecords = records.length;
+                    const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
+                    const grandSum = records.reduce((sum, r) => sum + (Number(r.salary_total) || 0), 0);
+
+                    const titleText = headerConfig?.title || 'Khulna Agricultural University';
+                    const addressText = headerConfig?.address || 'Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000';
+                    const subtitleDefault = isBonusBankAdvice
+                        ? `Bonus Bank Advice of Teachers, Officers and Staff for the month of ${monthYearStr}`
+                        : `Bank Advice of Teachers, Officers and Staff for the month of ${monthYearStr}`;
+                    const subtitleText = headerConfig?.subtitle || subtitleDefault;
+                    const dateText = headerConfig?.date || (new Date()).toLocaleDateString('en-US');
+
+                    for (let p = 0; p < totalPages; p++) {
+                        if (p > 0) {
+                            doc.addPage('a4', 'portrait');
+                        }
+
+                        const pageRecords = records.slice(p * rowsPerPage, (p + 1) * rowsPerPage);
+                        const pageSum = pageRecords.reduce((sum, r) => sum + (Number(r.salary_total) || 0), 0);
+                        const isLastPage = (p === totalPages - 1);
+
+                        // Header
+                        if (logoBase64) {
+                            try {
+                                doc.addImage(logoBase64, 'PNG', 14, 8, 14, 14);
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(13);
+                        doc.setTextColor(20, 24, 33);
+                        doc.text(titleText, pageWidth / 2, 13, { align: 'center' });
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(8);
+                        doc.setTextColor(70, 70, 70);
+                        doc.text(addressText, pageWidth / 2, 17, { align: 'center' });
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(15, 23, 42);
+                        doc.text(subtitleText, pageWidth / 2, 22, { align: 'center' });
+
+                        // Table Rows
+                        const head = [['SL #', 'ID #', 'Name', 'Designation', 'Bank A/C No', 'Amount (Taka)']];
+                        const body = pageRecords.map((r, idx) => {
+                            const amt = Number(r.salary_total) || 0;
+                            const bankAcc = (r.bank_account_no && r.bank_account_no !== 'N/A') ? r.bank_account_no : 'Pending Account';
+                            return [
+                                p * rowsPerPage + idx + 1,
+                                r.employee_code || '',
+                                r.name || '',
+                                r.designation || '',
+                                bankAcc,
+                                amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                            ];
+                        });
+
+                        // Table Footer: total for this particular page
+                        const foot = [
+                            [
+                                { 
+                                    content: 'Total', 
+                                    colSpan: 5, 
+                                    styles: { halign: 'right', fontStyle: 'bold' } 
+                                },
+                                { 
+                                    content: pageSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 
+                                    styles: { halign: 'right', fontStyle: 'bold' } 
+                                }
+                            ]
+                        ];
+
+                        autoTable(doc, {
+                            head,
+                            body,
+                            foot,
+                            startY: 26,
+                            margin: { left: 14, right: 14, bottom: 42 },
+                            tableWidth: pageWidth - 28,
+                            theme: 'grid',
+                            styles: {
+                                fontSize: 8,
+                                cellPadding: 1.8,
+                                lineColor: [148, 163, 184],
+                                lineWidth: 0.2,
+                                textColor: [30, 41, 59],
+                            },
+                            headStyles: {
+                                fillColor: [241, 245, 249],
+                                textColor: [15, 23, 42],
+                                fontStyle: 'bold',
+                            },
+                            footStyles: {
+                                fillColor: [248, 250, 252],
+                                textColor: [15, 23, 42],
+                                fontStyle: 'bold',
+                            },
+                            columnStyles: {
+                                0: { halign: 'center', cellWidth: 12 },
+                                1: { halign: 'center', cellWidth: 16 },
+                                2: { halign: 'left', cellWidth: 44 },
+                                3: { halign: 'left', cellWidth: 44 },
+                                4: { halign: 'center', cellWidth: 36 },
+                                5: { halign: 'right', cellWidth: 30, fontStyle: 'bold' },
+                            },
+                        });
+
+                        const tableFinalY = doc.lastAutoTable.finalY || 160;
+
+                        // In Word statement: calculated based on records on that particular page
+                        const wordsAmount = pageSum;
+                        const wordLabel = 'In Word: ';
+                        const wordsText = numberToWordsTaka(wordsAmount);
+
+                        const boxY = tableFinalY + 4;
+                        const boxHeight = 8.5;
+                        doc.setFillColor(248, 250, 252);
+                        doc.setDrawColor(203, 213, 225);
+                        doc.rect(14, boxY, pageWidth - 28, boxHeight, 'FD');
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(30, 41, 59);
+                        const labelWidth = doc.getTextWidth(wordLabel);
+                        doc.text(wordLabel, 16, boxY + 5.5);
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(51, 65, 85);
+                        doc.text(wordsText, 16 + labelWidth + 2.5, boxY + 5.5);
+
+                        // Signatures Block
+                        const sigY = pageHeight - 25;
+                        const colWidth = (pageWidth - 28) / 4;
+                        const sigs = ['Prepared By', 'Checked By', 'Comptroller of Accounts', 'Vice-Chancellor / Registrar'];
+                        sigs.forEach((title, i) => {
+                            const x = 14 + i * colWidth;
+                            doc.setDrawColor(148, 163, 184);
+                            doc.line(x + 4, sigY, x + colWidth - 4, sigY);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(7.5);
+                            doc.setTextColor(71, 85, 105);
+                            doc.text(title, x + colWidth / 2, sigY + 4, { align: 'center' });
+                        });
+
+                        // Sheet Page Footer
+                        const footerY = pageHeight - 8;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(148, 163, 184);
+                        doc.text(`Generated by: System Administrator • ${dateText}`, 14, footerY);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(100, 116, 139);
+                        doc.text(`Page ${p + 1} of ${totalPages}`, pageWidth - 14, footerY, { align: 'right' });
+                    }
+
+                    if (isPrint) {
+                        doc.autoPrint();
+                        const blobUrl = doc.output('bloburl');
+                        window.open(blobUrl, '_blank');
+                    } else {
+                        const filePrefix = isBonusBankAdvice ? 'KAU_Bonus_Bank_Advice' : 'KAU_Bank_Advice';
+                        doc.save(`${filePrefix}_${monthYearStr}.pdf`);
+                    }
+                    return;
+                }
+
+                // If Salary Bill or Bonus report/bill: render each employee on their own A4 sheet
+                if (
+                    this.reportType === 'Salary Bill' ||
+                    this.reportType === 'Bonus Bill' ||
+                    this.reportType === 'Bonus report' ||
+                    this.reportType === 'Bonus Report' ||
+                    this.reportType === 'Bonus repot'
+                ) {
+                    const isBonus = (
+                        this.reportType === 'Bonus Bill' ||
+                        this.reportType === 'Bonus report' ||
+                        this.reportType === 'Bonus Report' ||
+                        this.reportType === 'Bonus repot'
+                    );
+                    const doc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4',
+                    });
+
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const logoBase64 = await getBase64ImageFromUrl('/logo.png');
+                    const totalBills = records.length;
+
+                    for (let idx = 0; idx < totalBills; idx++) {
+                        if (idx > 0) {
+                            doc.addPage('a4', 'portrait');
+                        }
+                        const bill = records[idx];
+
+                        // Header with Logo and University Details
+                        if (logoBase64) {
+                            try {
+                                doc.addImage(logoBase64, 'PNG', 14, 8, 14, 14);
+                            } catch (e) {
+                                // ignore
+                            }
+                        }
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(13);
+                        doc.setTextColor(20, 24, 33);
+                        doc.text(headerConfig?.title || 'Khulna Agricultural University', pageWidth / 2, 13, { align: 'center' });
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(8);
+                        doc.setTextColor(70, 70, 70);
+                        doc.text(headerConfig?.address || 'Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000', pageWidth / 2, 17, { align: 'center' });
+
+                        // Badge (e.g. BONUS FOR DURGA PUJA 2026 REPORT or SALARY BILL)
+                        const bonusTitle = bill.bonus_title || 'Festival Bonus';
+                        const badgeText = isBonus ? `${bonusTitle.toUpperCase()} REPORT` : 'SALARY BILL';
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(9);
+                        const badgeTextW = doc.getTextWidth(badgeText);
+                        const badgePadX = 4;
+                        const badgeH = 5.8;
+                        const badgeW = badgeTextW + badgePadX * 2;
+                        const badgeX = (pageWidth - badgeW) / 2;
+                        const badgeY = 19.5;
+
+                        doc.setFillColor(248, 250, 252);
+                        doc.setDrawColor(30, 41, 59);
+                        doc.setLineWidth(0.3);
+                        doc.rect(badgeX, badgeY, badgeW, badgeH, 'FD');
+
+                        doc.setTextColor(15, 23, 42);
+                        doc.text(badgeText, pageWidth / 2, badgeY + 4.1, { align: 'center' });
+
+                        // Subtitle
+                        let subtitleY = badgeY + badgeH + 1;
+                        const defaultSubtitle = isBonus
+                            ? `Bonus Bill Statement for the month of ${monthYearStr}`
+                            : `Salary Bill for the month of ${monthYearStr}`;
+                        const subtitleText = (headerConfig?.subtitle && headerConfig.subtitle.trim()) ? headerConfig.subtitle.trim() : defaultSubtitle;
+
+                        if (subtitleText) {
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(7.5);
+                            doc.setTextColor(51, 65, 85);
+                            doc.text(subtitleText, pageWidth / 2, subtitleY + 3.2, { align: 'center' });
+                            subtitleY += 4.5;
+                        }
+
+                        // Employee Particulars Block
+                        const leftItems = [
+                            { label: 'Name', value: bill.name || 'N/A', isBold: true },
+                            { label: 'Designation', value: bill.designation || 'N/A' },
+                            { label: 'Department', value: bill.department || 'N/A' },
+                            { label: 'Pay Scale', value: `${bill.grade || bill.pay_scale || ''} (${Number(bill.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })})` },
+                        ];
+                        if (bill.user_category && bill.user_category !== 'N/A') {
+                            leftItems.push({ label: 'Class', value: bill.user_category });
+                        }
+                        if (bill.religion && bill.religion !== 'N/A') {
+                            leftItems.push({ label: 'Religion', value: bill.religion });
+                        }
+
+                        const rightItems = [
+                            { label: 'Service ID', value: String(bill.employee_code || 'N/A') },
+                        ];
+                        if (bill.email) {
+                            rightItems.push({ label: 'Email', value: bill.email });
+                        }
+                        rightItems.push({
+                            label: isBonus ? 'Basic Pay' : 'Basic',
+                            value: Number(bill.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })
+                        });
+                        if (isBonus) {
+                            rightItems.push({ label: 'Bonus Name', value: bonusTitle, isEmerald: true });
+                        } else {
+                            rightItems.push({ label: 'Increment Date', value: bill.joining_date || 'N/A' });
+                        }
+                        rightItems.push({
+                            label: isBonus ? 'Month / Year' : 'Month',
+                            value: monthYearStr
+                        });
+                        if (isBonus && bill.bonus_generation_date) {
+                            rightItems.push({ label: 'Bill Date', value: bill.bonus_generation_date });
+                        }
+
+                        const boxX = 14;
+                        const boxW = pageWidth - 28;
+                        const boxY = subtitleY + 1.5;
+                        const lineHeight = 4.2;
+                        const numLines = Math.max(leftItems.length, rightItems.length);
+                        const boxH = numLines * lineHeight + 4;
+
+                        doc.setFillColor(248, 250, 252);
+                        doc.setDrawColor(203, 213, 225);
+                        doc.setLineWidth(0.2);
+                        doc.rect(boxX, boxY, boxW, boxH, 'FD');
+
+                        const textStartY = boxY + 3.8;
+                        const leftLabelX = boxX + 3;
+                        const leftValX = leftLabelX + 22;
+                        const rightLabelX = boxX + boxW / 2 + 3;
+                        const rightValX = rightLabelX + 24;
+
+                        leftItems.forEach((item, lIdx) => {
+                            const curY = textStartY + lIdx * lineHeight;
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(7.5);
+                            doc.setTextColor(30, 41, 59);
+                            doc.text(item.label, leftLabelX, curY);
+
+                            doc.setFont('helvetica', item.isBold ? 'bold' : 'normal');
+                            doc.setTextColor(15, 23, 42);
+                            const maxValW = (boxW / 2) - 27;
+                            const splitVal = doc.splitTextToSize(`: ${item.value}`, maxValW);
+                            doc.text(splitVal[0], leftValX, curY);
+                        });
+
+                        rightItems.forEach((item, rIdx) => {
+                            const curY = textStartY + rIdx * lineHeight;
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(7.5);
+                            doc.setTextColor(30, 41, 59);
+                            doc.text(item.label, rightLabelX, curY);
+
+                            if (item.isEmerald) {
+                                doc.setFont('helvetica', 'bold');
+                                doc.setTextColor(6, 95, 70);
+                            } else {
+                                doc.setFont('helvetica', 'normal');
+                                doc.setTextColor(15, 23, 42);
+                            }
+                            const maxValW = (boxW / 2) - 29;
+                            const splitVal = doc.splitTextToSize(`: ${item.value}`, maxValW);
+                            doc.text(splitVal[0], rightValX, curY);
+                        });
+
+                        // Allowances Table
+                        const allowTableStartY = boxY + boxH + 3.5;
+                        const allowanceRows = (bill.allowance_items || []).map((item, aIdx) => {
+                            const amt = Number(item.calculated_amount !== undefined ? item.calculated_amount : (item.amount || 0));
+                            return [
+                                aIdx + 1,
+                                item.name || item.component_name || item.display_name || item.payroll_component_type?.name || (isBonus ? bonusTitle : 'Allowance'),
+                                amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                                '0.00',
+                                amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            ];
+                        });
+
+                        if (allowanceRows.length === 0) {
+                            const b = isBonus ? Number(bill.total_allowance || 0) : Number(bill.basic_pay || 0);
+                            const name = isBonus ? bonusTitle : 'Basic Pay';
+                            allowanceRows.push([1, name, b.toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', b.toLocaleString('en-US', { minimumFractionDigits: 2 })]);
+                        }
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text(isBonus ? 'BONUS ALLOWANCES' : 'ALLOWANCES', 14, allowTableStartY + 2);
+
+                        autoTable(doc, {
+                            head: [['SL.No', 'Particulars', 'Current', 'Arrear', 'Total']],
+                            body: allowanceRows,
+                            foot: [['', isBonus ? 'Gross Bonus' : 'Gross Salary', (bill.total_allowance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', (bill.total_allowance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]],
+                            startY: allowTableStartY + 3.5,
+                            margin: { left: 14, right: 14 },
+                            theme: 'grid',
+                            styles: { fontSize: 7.5, cellPadding: 1.8, lineColor: [203, 213, 225], lineWidth: 0.2, textColor: [30, 41, 59] },
+                            headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+                            footStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+                            columnStyles: {
+                                0: { halign: 'center', cellWidth: 14 },
+                                1: { halign: 'left' },
+                                2: { halign: 'right', cellWidth: 28 },
+                                3: { halign: 'right', cellWidth: 22 },
+                                4: { halign: 'right', cellWidth: 28 },
+                            },
+                        });
+
+                        const allowFinalY = doc.lastAutoTable.finalY || 100;
+
+                        // Deductions Table
+                        const deductionRows = (bill.deduction_items || []).map((item, dIdx) => {
+                            const amt = Number(item.calculated_amount !== undefined ? item.calculated_amount : (item.amount || 0));
+                            return [
+                                dIdx + 1,
+                                item.name || item.component_name || item.display_name || item.payroll_component_type?.name || 'Deduction',
+                                amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                                '0.00',
+                                amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            ];
+                        });
+
+                        if (deductionRows.length === 0 && Number(bill.total_deduction || 0) > 0) {
+                            deductionRows.push([1, 'General Deduction', Number(bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', Number(bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]);
+                        }
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text('DEDUCTIONS', 14, allowFinalY + 5);
+
+                        autoTable(doc, {
+                            head: [['Sl.No', 'Particulars', 'Current', 'Arrear', 'Total']],
+                            body: deductionRows.length > 0 ? deductionRows : [['-', 'No deductions recorded', '0.00', '0.00', '0.00']],
+                            foot: [['', 'Total Deductions', Number(bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', Number(bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]],
+                            startY: allowFinalY + 6.5,
+                            margin: { left: 14, right: 14 },
+                            theme: 'grid',
+                            styles: { fontSize: 7.5, cellPadding: 1.8, lineColor: [203, 213, 225], lineWidth: 0.2, textColor: [30, 41, 59] },
+                            headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
+                            footStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+                            columnStyles: {
+                                0: { halign: 'center', cellWidth: 14 },
+                                1: { halign: 'left' },
+                                2: { halign: 'right', cellWidth: 28 },
+                                3: { halign: 'right', cellWidth: 22 },
+                                4: { halign: 'right', cellWidth: 28 },
+                            },
+                        });
+
+                        const deductFinalY = doc.lastAutoTable.finalY || 160;
+
+                        // Net Payable Summary Box & In Word
+                        const netAmount = Number(bill.net_bonus !== undefined ? bill.net_bonus : (bill.salary_total || 0));
+                        const netLabel = isBonus ? 'Net Bonus Payable:' : 'Net Payable:';
+                        const netValStr = netAmount.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        const labelW = doc.getTextWidth(netLabel);
+                        doc.setFontSize(9);
+                        const valW = doc.getTextWidth(netValStr);
+                        const netBoxW = labelW + valW + 12;
+                        const netBoxX = pageWidth - 14 - netBoxW;
+                        const netBoxY = deductFinalY + 3.5;
+                        const netBoxH = 7.5;
+
+                        doc.setFillColor(241, 245, 249);
+                        doc.setDrawColor(148, 163, 184);
+                        doc.setLineWidth(0.2);
+                        doc.rect(netBoxX, netBoxY, netBoxW, netBoxH, 'FD');
+
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text(netLabel, netBoxX + 3.5, netBoxY + 5);
+
+                        doc.setFontSize(9);
+                        doc.setTextColor(15, 23, 42);
+                        doc.text(netValStr, netBoxX + 3.5 + labelW + 5, netBoxY + 5);
+
+                        // In word
+                        const words = numberToWordsTaka(netAmount);
+                        const inWordY = netBoxY + netBoxH + 4;
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text('In word: ', 14, inWordY);
+                        const wordLabelW = doc.getTextWidth('In word: ');
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(51, 65, 85);
+                        doc.text(words, 14 + wordLabelW + 1, inWordY);
+
+                        // Footer signatures & Bank details
+                        const sigY = pageHeight - 34;
+
+                        // Divider line
+                        doc.setDrawColor(203, 213, 225);
+                        doc.setLineWidth(0.2);
+                        doc.line(14, sigY - 4, pageWidth - 14, sigY - 4);
+
+                        // Left: Bank Account
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text('Bank Account:', 14, sigY + 2);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(15, 23, 42);
+                        doc.text(bill.bank_account_no || 'N/A', 14, sigY + 6.5);
+                        if (bill.bank_address) {
+                            doc.setFontSize(7);
+                            doc.setTextColor(100, 116, 139);
+                            doc.text(bill.bank_address, 14, sigY + 10.5);
+                        }
+
+                        // Center: STAMP dashed box
+                        const stampW = 22;
+                        const stampH = 14;
+                        const stampX = (pageWidth - stampW) / 2;
+                        const stampY = sigY;
+                        doc.setDrawColor(148, 163, 184);
+                        doc.setLineDashPattern([1.5, 1.5], 0);
+                        doc.rect(stampX, stampY, stampW, stampH, 'S');
+                        doc.setLineDashPattern([], 0);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(148, 163, 184);
+                        doc.text('STAMP', stampX + stampW / 2, stampY + stampH / 2 + 1.5, { align: 'center' });
+
+                        // Right: Signature of Employee
+                        const sigLineW = 44;
+                        const sigLineX = pageWidth - 14 - sigLineW;
+                        const sigLineY = sigY + stampH - 2;
+                        doc.setDrawColor(148, 163, 184);
+                        doc.line(sigLineX, sigLineY, sigLineX + sigLineW, sigLineY);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(30, 41, 59);
+                        doc.text('Signature of Employee', sigLineX + sigLineW / 2, sigLineY + 4, { align: 'center' });
+
+                        // Sheet Page Footer
+                        const footerY = pageHeight - 8;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(148, 163, 184);
+                        const dateText = headerConfig?.date || (new Date()).toLocaleDateString('en-US');
+                        doc.text(`Generated by: System Administrator • ${dateText}`, 14, footerY);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(100, 116, 139);
+                        doc.text(`Page ${idx + 1} of ${totalBills}`, pageWidth - 14, footerY, { align: 'right' });
+                    }
+
+                    if (isPrint) {
+                        doc.autoPrint();
+                        const blobUrl = doc.output('bloburl');
+                        window.open(blobUrl, '_blank');
+                    } else {
+                        const filePrefix = isBonus ? 'KAU_Bonus_Bill' : 'KAU_Salary_Bills';
+                        doc.save(`${filePrefix}_${monthYearStr}.pdf`);
+                    }
+                    return;
+                }
+
+                // Tabular reports: Bank Advice, Salary Summary, Earn Deduction, GPF
+                const isLandscape = true;
+                const doc = new jsPDF({
+                    orientation: isLandscape ? 'landscape' : 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                });
+
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const logoBase64 = await getBase64ImageFromUrl('/logo.png');
+
+                // Header renderer
+                const renderHeader = () => {
+                    if (logoBase64) {
+                        try {
+                            doc.addImage(logoBase64, 'PNG', 14, 10, 16, 16);
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.setTextColor(20, 24, 33);
+                    doc.text('Khulna Agricultural University', pageWidth / 2, 14, { align: 'center' });
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(80, 80, 80);
+                    doc.text('Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000', pageWidth / 2, 19, { align: 'center' });
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10.5);
+                    doc.setTextColor(15, 23, 42);
+                    const subtitle = this.reportType === 'Bank Advice'
+                        ? `Bank Advice of Teachers, Officers and Staff for the month of ${monthYearStr}`
+                        : `${this.reportType} - Month of ${monthYearStr}`;
+                    doc.text(subtitle, pageWidth / 2, 25, { align: 'center' });
+                };
+
+                // Build Table Columns & Rows
+                let head = [];
+                let body = [];
+                let foot = [];
+
+                if (this.reportType === 'Earn Deduction') {
+                    head = [['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Basic Pay', 'Allowance', 'Tax', 'GPF', 'Total Deduct', 'Net Payable']];
+                    let sumBasic = 0, sumAllow = 0, sumTax = 0, sumGpf = 0, sumDeduct = 0, sumNet = 0;
+                    body = records.map((r, idx) => {
+                        const b = Number(r.basic_pay) || 0;
+                        const allow = Number(r.total_allowance) || 0;
+                        const tax = Number(r.tax_deduction) || 0;
+                        const gpf = Number(r.gpf_deduction) || 0;
+                        const deduct = Number(r.total_deduction) || 0;
+                        const net = Number(r.salary_total) || 0;
+                        sumBasic += b; sumAllow += allow; sumTax += tax; sumGpf += gpf; sumDeduct += deduct; sumNet += net;
+                        return [
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            b.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            allow.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            tax.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            gpf.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            deduct.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            net.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        ];
+                    });
+                    foot = [['', '', '', '', 'Total',
+                        sumBasic.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumAllow.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumTax.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumGpf.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumDeduct.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumNet.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    ]];
+                } else if (this.reportType.startsWith('GPF')) {
+                    head = [['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Basic Pay', 'GPF Subscription', 'Total Deduction', 'Net Salary']];
+                    let sumBasic = 0, sumGpf = 0, sumDeduct = 0, sumNet = 0;
+                    body = records.map((r, idx) => {
+                        const b = Number(r.basic_pay) || 0;
+                        const g = Number(r.gpf_deduction) || 0;
+                        const d = Number(r.total_deduction) || 0;
+                        const n = Number(r.salary_total) || 0;
+                        sumBasic += b; sumGpf += g; sumDeduct += d; sumNet += n;
+                        return [
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            b.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            g.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            d.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            n.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        ];
+                    });
+                    foot = [['', '', '', '', 'Total',
+                        sumBasic.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumGpf.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumDeduct.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumNet.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    ]];
+                } else {
+                    head = [['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Grade', 'Bank A/C No', 'Gross Allowance', 'Total Deduction', 'Net Salary']];
+                    let sumAllow = 0, sumDeduct = 0, sumNet = 0;
+                    body = records.map((r, idx) => {
+                        const allow = Number(r.total_allowance) || 0;
+                        const deduct = Number(r.total_deduction) || 0;
+                        const net = Number(r.salary_total) || 0;
+                        sumAllow += allow; sumDeduct += deduct; sumNet += net;
+                        return [
+                            idx + 1,
+                            r.employee_code,
+                            r.name,
+                            r.designation,
+                            r.department,
+                            r.grade,
+                            r.bank_account_no,
+                            allow.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            deduct.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                            net.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        ];
+                    });
+                    foot = [['', '', '', '', '', '', 'Total',
+                        sumAllow.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumDeduct.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        sumNet.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    ]];
+                }
+
+                renderHeader();
+
+                autoTable(doc, {
+                    head,
+                    body,
+                    foot,
+                    startY: 32,
+                    margin: { top: 32, bottom: 18, left: 12, right: 12 },
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2,
+                        textColor: [30, 41, 59],
+                        lineColor: [203, 213, 225],
+                        lineWidth: 0.2,
+                    },
+                    headStyles: {
+                        fillColor: [241, 245, 249],
+                        textColor: [15, 23, 42],
+                        fontStyle: 'bold',
+                        lineWidth: 0.3,
+                        lineColor: [148, 163, 184],
+                    },
+                    footStyles: {
+                        fillColor: [248, 250, 252],
+                        textColor: [15, 23, 42],
+                        fontStyle: 'bold',
+                        lineWidth: 0.3,
+                        lineColor: [148, 163, 184],
+                    },
+                    columnStyles: {
+                        0: { halign: 'center', cellWidth: 12 },
+                        1: { halign: 'center', cellWidth: 18 },
+                        [head[0].length - 1]: { halign: 'right', fontStyle: 'bold' },
+                    },
+                    didDrawPage: (data) => {
+                        if (data.pageNumber > 1) {
+                            renderHeader();
+                        }
+                    },
+                });
+
+                // Sequence of pages on multi-page reports: "Page X of Y"
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 116, 139);
+
+                    // Left print timestamp
+                    const nowStr = new Date().toLocaleString();
+                    doc.text(`Printed: ${nowStr}`, 12, pageHeight - 8);
+
+                    // Center Institution
+                    doc.text('Khulna Agricultural University', pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+                    // Right Sequence of the pages
+                    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 12, pageHeight - 8, { align: 'right' });
+                }
+
+                if (isPrint) {
+                    doc.autoPrint();
+                    const blobUrl = doc.output('bloburl');
+                    window.open(blobUrl, '_blank');
+                } else {
+                    doc.save(`KAU_${this.reportType.replace(/\s+/g, '_')}_${monthYearStr}.pdf`);
+                }
+            } catch (err) {
+                console.error('Failed to generate PDF:', err);
+            } finally {
+                this.generatingPdf = false;
+            }
+        },
+
+        /**
+         * Generate individual Salary Bill A4 PDF matching Image 3.
+         */
+        async generateIndividualSalaryBillPdf(bill, { isPrint = false } = {}) {
+            try {
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                });
+
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const logoBase64 = await getBase64ImageFromUrl('/logo.png');
+
+                // Header
+                if (logoBase64) {
+                    try {
+                        doc.addImage(logoBase64, 'PNG', 14, 10, 16, 16);
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(13);
+                doc.setTextColor(20, 24, 33);
+                doc.text('Khulna Agricultural University', pageWidth / 2, 14, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(70, 70, 70);
+                doc.text('Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000', pageWidth / 2, 18, { align: 'center' });
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(15, 23, 42);
+                doc.text('Salary Bill', pageWidth / 2, 23, { align: 'center' });
+
+                // Employee Particulars Block (Matching Image 3)
+                const monthYearStr = this.formattedMonthYear;
+                doc.setFontSize(8.5);
+
+                // Left info
+                doc.setFont('helvetica', 'bold');
+                doc.text('Name : ', 14, 30);
+                doc.setFont('helvetica', 'normal');
+                doc.text(bill.name || 'N/A', 28, 30);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Designation : ', 14, 34);
+                doc.setFont('helvetica', 'normal');
+                doc.text(bill.designation || 'N/A', 36, 34);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Department : ', 14, 38);
+                doc.setFont('helvetica', 'normal');
+                doc.text(bill.department || 'N/A', 36, 38);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Pay Scale : ', 14, 42);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`${bill.grade || ''} (${Number(bill.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })})`, 33, 42);
+
+                // Right info
+                doc.setFont('helvetica', 'bold');
+                doc.text('Service ID : ', pageWidth - 65, 30);
+                doc.setFont('helvetica', 'normal');
+                doc.text(String(bill.employee_code || 'N/A'), pageWidth - 42, 30);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Basic : ', pageWidth - 65, 34);
+                doc.setFont('helvetica', 'normal');
+                doc.text(Number(bill.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), pageWidth - 42, 34);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Increment Date : ', pageWidth - 65, 38);
+                doc.setFont('helvetica', 'normal');
+                doc.text(bill.joining_date || 'N/A', pageWidth - 38, 38);
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Month : ', pageWidth - 65, 42);
+                doc.setFont('helvetica', 'normal');
+                doc.text(monthYearStr, pageWidth - 42, 42);
+
+                // Allowances Table
+                const allowanceRows = (bill.allowance_items || []).map((item, idx) => {
+                    const amt = Number(item.amount || 0);
+                    return [
+                        idx + 1,
+                        item.name || item.payroll_component_type?.name || 'Allowance',
+                        amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        '0.00',
+                        amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    ];
+                });
+
+                if (allowanceRows.length === 0) {
+                    allowanceRows.push([1, 'Basic Pay', Number(bill.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', Number(bill.basic_pay || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]);
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.text('Allowances', 14, 48);
+
+                autoTable(doc, {
+                    head: [['SL.No', 'Particulars', 'Current', 'Arrear', 'Total']],
+                    body: allowanceRows,
+                    foot: [['', 'Gross Salary', (bill.total_allowance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', (bill.total_allowance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]],
+                    startY: 50,
+                    margin: { left: 14, right: 14 },
+                    theme: 'grid',
+                    styles: { fontSize: 7.5, cellPadding: 1.8, lineColor: [203, 213, 225], lineWidth: 0.2 },
+                    headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+                    footStyles: { fillColor: [255, 255, 255], textColor: [15, 23, 42], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { halign: 'center', cellWidth: 14 },
+                        1: { halign: 'left' },
+                        2: { halign: 'right', cellWidth: 28 },
+                        3: { halign: 'right', cellWidth: 22 },
+                        4: { halign: 'right', cellWidth: 28 },
+                    },
+                });
+
+                const allowFinalY = doc.lastAutoTable.finalY || 100;
+
+                // Deductions Table
+                const deductionRows = (bill.deduction_items || []).map((item, idx) => {
+                    const amt = Number(item.amount || 0);
+                    return [
+                        idx + 1,
+                        item.name || item.payroll_component_type?.name || 'Deduction',
+                        amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                        '0.00',
+                        amt.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+                    ];
+                });
+
+                if (deductionRows.length === 0 && bill.total_deduction > 0) {
+                    deductionRows.push([1, 'General Deduction', (bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', (bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]);
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.text('Deductions', 14, allowFinalY + 5);
+
+                autoTable(doc, {
+                    head: [['Sl.No', 'Particulars', 'Current', 'Arrear', 'Total']],
+                    body: deductionRows.length > 0 ? deductionRows : [['1', 'No deductions recorded', '0.00', '0.00', '0.00']],
+                    foot: [['', 'Total Deductions', (bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), '0.00', (bill.total_deduction || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })]],
+                    startY: allowFinalY + 7,
+                    margin: { left: 14, right: 14 },
+                    theme: 'grid',
+                    styles: { fontSize: 7.5, cellPadding: 1.8, lineColor: [203, 213, 225], lineWidth: 0.2 },
+                    headStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+                    footStyles: { fillColor: [255, 255, 255], textColor: [15, 23, 42], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { halign: 'center', cellWidth: 14 },
+                        1: { halign: 'left' },
+                        2: { halign: 'right', cellWidth: 28 },
+                        3: { halign: 'right', cellWidth: 22 },
+                        4: { halign: 'right', cellWidth: 28 },
+                    },
+                });
+
+                const deductFinalY = doc.lastAutoTable.finalY || 160;
+
+                // Net Payable & In Word
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.text('Net Payable : ', pageWidth - 60, deductFinalY + 6);
+                doc.text((bill.salary_total || 0).toLocaleString('en-US', { minimumFractionDigits: 2 }), pageWidth - 14, deductFinalY + 6, { align: 'right' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                const words = numberToWordsTaka(bill.salary_total || 0);
+                doc.text(`In word: ${words}`, 14, deductFinalY + 12);
+
+                // Footer signatures & Bank details
+                doc.setFontSize(8);
+                doc.text(`Bank A/C: ${bill.bank_account_no || 'N/A'}`, 14, deductFinalY + 30);
+                doc.text('STAMP', pageWidth / 2 - 10, deductFinalY + 30);
+                doc.text('Signature of Employee', pageWidth - 50, deductFinalY + 30);
+
+                // Page sequence on bottom right
+                doc.setFontSize(8);
+                doc.setTextColor(120);
+                doc.text('Page 1 of 1', pageWidth - 14, pageHeight - 8, { align: 'right' });
+
+                if (isPrint) {
+                    doc.autoPrint();
+                    const blobUrl = doc.output('bloburl');
+                    window.open(blobUrl, '_blank');
+                } else {
+                    doc.save(`KAU_Salary_Bill_${bill.employee_code}_${monthYearStr}.pdf`);
+                }
+            } catch (err) {
+                console.error('Failed to generate salary bill PDF:', err);
+            }
+        },
+    },
+});

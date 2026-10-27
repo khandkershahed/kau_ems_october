@@ -368,12 +368,13 @@ const formattedMonthYear = computed(() => {
 const officialRowsPerPage = ref(25);
 const isOfficialSalaryReport = computed(() => ['Salary Bill', 'Arrear & Deduction Statement'].includes(store.reportType));
 function officialReportUrl(kind, format = 'html') {
-    const records = selectedRecords.value;
-    if (!records.length) throw new Error('Select at least one generated employee.');
-    if (records.length > 500) throw new Error('At most 500 employees can be printed in one request.');
-    const incomplete = records.filter(r => !r.is_generated || !Number.isInteger(Number(r.user_id)) || Number(r.user_id) < 1);
-    if (incomplete.length) throw new Error('Only employees with a saved bill for the selected month can be printed. Remove employees without bills.');
+    // Report only actual saved bills. The selection may contain old/provisional
+    // records from a previous filter scope; never include estimated salaries.
+    const records = selectedRecords.value.filter(r => [true, 1, "1"].includes(r.is_generated));
+    if (!records.length) throw new Error('No generated salary bills are selected for this month.');
+    if (records.length > 500) throw new Error('At most 500 generated employees can be printed in one request.');
     const ids = records.map(r => Number(r.user_id));
+    if (ids.some(id => !Number.isSafeInteger(id) || id < 1)) throw new Error('Invalid employee ID in generated selection.');
     if (new Set(ids).size !== ids.length) throw new Error('Duplicate employee selection.');
     const rows = Number(officialRowsPerPage.value);
     if (!Number.isInteger(rows) || rows < 1 || rows > 25) throw new Error('Rows per page must be 1–25.');
@@ -386,6 +387,8 @@ function officialReportUrl(kind, format = 'html') {
 }
 function openOfficialReport(kind, asPdf = false) {
     try {
+        const skipped = selectedRecords.value.filter(r => !([true, 1, "1"].includes(r.is_generated))).length;
+        if (skipped > 0 && !confirm(`${skipped} selected employee(s) have no saved salary bill for this period. Exclude them and open the report for the generated employees only?`)) return;
         const url = officialReportUrl(kind, asPdf && props.officialPdfReady ? 'pdf' : 'html');
         const tab = window.open(url, '_blank');
         if (tab) tab.opener = null;

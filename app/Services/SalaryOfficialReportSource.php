@@ -130,7 +130,7 @@ final class SalaryOfficialReportSource
 
         $basic = null;
         foreach ($allowances as $line) {
-            if (preg_match('/\bbasic\b/i', $line['title'])) {
+            if (preg_match('/^basic(?:\s+pay|\s+salary|\s+wage)?$/i', trim($line['title']))) {
                 if ($basic !== null) throw new DomainException('Duplicate saved Basic Pay component.');
                 $basic = $line['current'];
             }
