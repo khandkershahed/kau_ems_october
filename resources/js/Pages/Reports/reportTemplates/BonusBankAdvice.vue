@@ -49,15 +49,15 @@ const totalInWords = computed(() => {
 <template>
     <!-- A4 Paper Container -->
     <div class="a4-sheet bg-white text-slate-900 text-[10.5px] leading-tight font-sans mx-auto p-8 sm:p-10 shadow-lg border border-slate-200 relative min-h-[297mm] flex flex-col justify-between select-text print:p-6 print:shadow-none print:border-0">
-        
+
         <!-- Top Section -->
         <div>
             <!-- Header with Logo and University Details -->
             <div class="relative flex items-center justify-center pb-4 border-b border-slate-300">
                 <div class="absolute left-0 top-0">
-                    <img 
-                        :src="organizationLogo" 
-                        alt="University Logo" 
+                    <img
+                        :src="organizationLogo"
+                        alt="University Logo"
                         class="h-14 w-14 object-contain"
                         @error="(e) => e.target.style.display = 'none'"
                     />
@@ -98,8 +98,8 @@ const totalInWords = computed(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr 
-                            v-for="(row, idx) in records" 
+                        <tr
+                            v-for="(row, idx) in records"
                             :key="row.user_id || idx"
                             class="border-b border-slate-300 hover:bg-slate-50/50"
                         >
@@ -145,7 +145,7 @@ const totalInWords = computed(() => {
 
         <!-- Bottom Signatures & Page numbering -->
         <div>
-            <div class="mt-12 pt-6 border-t border-slate-300 grid grid-cols-4 gap-4 text-center text-[10px] text-slate-700">
+            <!-- <div class="mt-12 pt-6 border-t border-slate-300 grid grid-cols-4 gap-4 text-center text-[10px] text-slate-700">
                 <div>
                     <div class="h-10"></div>
                     <div class="border-t border-slate-400 pt-1 font-semibold">Prepared By</div>
@@ -162,7 +162,7 @@ const totalInWords = computed(() => {
                     <div class="h-10"></div>
                     <div class="border-t border-slate-400 pt-1 font-semibold">Vice-Chancellor / Registrar</div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Sheet Page Footer -->
             <div class="mt-6 pt-3 border-t border-slate-200 flex items-center justify-between text-[9px] text-slate-400">
