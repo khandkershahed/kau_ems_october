@@ -56,7 +56,7 @@ final class SalaryEmployeeComponentOverrideService
                 if ($found) throw new DomainException('Disabled override component was re-added to the salary snapshot: '.$o['component_title']);
                 continue;
             }
-            // if (count($found)!==1) throw new DomainException('Monthly component override was omitted or duplicated: '.$o['component_title']);
+            if (count($found)!==1) throw new DomainException('Monthly component override was omitted or duplicated: '.$o['component_title']);
             $r=$found[0];
             if (strtolower((string)($r['calcType']??'')) !== $o['calc_type']
                 || abs((float)($r['amount']??-1)-(float)$o['value'])>.009
