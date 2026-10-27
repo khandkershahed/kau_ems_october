@@ -503,8 +503,8 @@
                                 @endphp
                                 <tr style="height:6mm; text-align: center;">
                                     <td>{{ $pageIndex * $perPage + $i + 1 }}</td>
-                                    <td>{{ $r['employee_code'] }}</td>
-                                    <td class="person">{{ $r['name'] }}</td>
+                                    <td>{{ $r['employee_code'] }}@if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW') <span style="font-weight:bold">DRAFT</span>@endif</td>
+                                    <td class="person">{{ $r['name'] }}@if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW') <span style="font-weight:bold">(DRAFT)</span>@endif</td>
                                     <td class="person">{{ $r['designation'] }}</td>
                                     @foreach ($columns as $key)
                                         <td class="num" style="text-align: center;">{{ $num($vals[$key]) }}</td>

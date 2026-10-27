@@ -370,8 +370,10 @@ const isOfficialSalaryReport = computed(() => ['Salary Bill', 'Arrear & Deductio
 function officialReportUrl(kind, format = 'html') {
     // Report only actual saved bills. The selection may contain old/provisional
     // records from a previous filter scope; never include estimated salaries.
-    const records = selectedRecords.value.filter(r => [true, 1, "1"].includes(r.is_generated));
-    // if (!records.length) throw new Error('No generated salary bills are selected for this month.');
+    // mode=preview: every selected employee is eligible. Ungenerated employees
+    // render as DRAFT_REGULAR_ONLY_PREVIEW rows on the server — never fabricated bills.
+    const records = selectedRecords.value;
+    if (!records.length) throw new Error('Select at least one employee for the report.');
     if (records.length > 500) throw new Error('At most 500 generated employees can be printed in one request.');
     const ids = records.map(r => Number(r.user_id));
     if (ids.some(id => !Number.isSafeInteger(id) || id < 1)) throw new Error('Invalid employee ID in generated selection.');
@@ -381,14 +383,13 @@ function officialReportUrl(kind, format = 'html') {
     const params = new URLSearchParams({
         ids: ids.join(','), year: String(store.filters.salaryGenerationYear),
         month: String(store.filters.monthId), kind,
-        per_page: String(rows), format,
+        per_page: String(rows), format, mode: 'preview',
     });
     return route('reports.salary-official.index') + '?' + params.toString();
 }
 function openOfficialReport(kind, asPdf = false) {
     try {
-        const skipped = selectedRecords.value.filter(r => !([true, 1, "1"].includes(r.is_generated))).length;
-        if (skipped > 0 && !confirm(`${skipped} selected employee(s) have no saved salary bill for this period. Exclude them and open the report for the generated employees only?`)) return;
+        // No silent exclusion: ungenerated employees are included as draft preview rows.
         const url = officialReportUrl(kind, asPdf && props.officialPdfReady ? 'pdf' : 'html');
         const tab = window.open(url, '_blank');
         if (tab) tab.opener = null;
@@ -398,13 +399,13 @@ function openOfficialReport(kind, asPdf = false) {
     }
 }
 function officialPreviewUrlFor(record) {
-    if (!isOfficialSalaryReport.value || !record?.is_generated || !record?.user_id) return null;
+    if (!isOfficialSalaryReport.value || !record?.user_id) return null;
     const kind = store.reportType === 'Arrear & Deduction Statement' ? 'arrear' : 'bill';
     return route('reports.salary-official.index') + '?' + new URLSearchParams({
         ids: String(record.user_id),
         year: String(store.filters.salaryGenerationYear),
         month: String(store.filters.monthId),
-        kind, format: 'html', embed: '1',
+        kind, format: 'html', embed: '1', mode: 'preview',
     }).toString();
 }
 const officialPreviewUrl = computed(() => officialPreviewUrlFor(currentPageData.value[0]));

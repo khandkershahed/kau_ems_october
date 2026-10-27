@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\SalaryGenerate;
+use App\Services\SalaryBillCompositionService;
 use App\Services\SalaryOfficialReportSource;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Process\Process;
 
@@ -18,7 +20,9 @@ final class SalaryOfficialReportController extends Controller
 {
     public function index(Request $request, SalaryOfficialReportSource $source)
     {
-        $validated = $request->validate([
+        // Explicit 422 abort instead of validate(): a GET validation redirect
+        // would silently bounce the Report Factory tab back with no error shown.
+        $validator = Validator::make($request->all(), [
             'ids' => ['required', 'string', 'max:5000'],
             'year' => ['required', 'integer', 'between:2020,2100'],
             'month' => ['required', 'integer', 'between:1,12'],
@@ -26,7 +30,13 @@ final class SalaryOfficialReportController extends Controller
             'per_page' => ['nullable', 'integer', 'between:1,25'],
             'format' => ['nullable', 'in:html,pdf,json,csv'],
             'embed' => ['nullable', 'in:0,1'],
+            'mode' => ['nullable', 'in:preview'],
         ]);
+        if ($validator->fails()) {
+            abort(422, 'Salary report request rejected: '.$validator->errors()->first()
+                .' — no report was generated and no data was changed.');
+        }
+        $validated = $validator->validated();
         $raw = array_map('trim', explode(',', $validated['ids']));
         if (!$raw || count($raw) > 500 || count($raw) !== count(array_unique($raw))) {
             abort(422, 'Select 1 to 500 distinct employees.');
@@ -44,21 +54,30 @@ final class SalaryOfficialReportController extends Controller
             ->whereIn('user_id', $ids)
             ->where('salaryGenerationYear', (int) $validated['year'])
             ->where('monthId', (int) $validated['month'])->get()->groupBy('user_id');
+        $draftPreview = ($validated['mode'] ?? null) === 'preview';
         $rows = [];
         foreach ($ids as $id) {
             $group = $bills->get($id);
-            if (!$group || $group->count() !== 1) {
-                return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
+            if ($group && $group->count() === 1) {
+                try {
+                    $rows[] = $source->fromPostedBill($group->first());
+                    continue;
+                } catch (DomainException $exception) {
+                    Log::warning('Official payroll report source inconsistency', [
+                        'employee_id' => $id, 'year' => $validated['year'],
+                        'month' => $validated['month'], 'reason' => $exception->getMessage(),
+                    ]);
+                    return $this->reportError('Employee '.$id.' saved bill cannot be reconciled: '.$exception->getMessage());
+                }
             }
-            try {
-                $rows[] = $source->fromPostedBill($group->first());
-            } catch (DomainException $exception) {
-                Log::warning('Official payroll report source inconsistency', [
-                    'employee_id' => $id, 'year' => $validated['year'],
-                    'month' => $validated['month'], 'reason' => $exception->getMessage(),
-                ]);
-                return $this->reportError('Employee '.$id.' saved bill cannot be reconciled: '.$exception->getMessage());
+            // mode=preview: ungenerated employees stay eligible as clearly marked
+            // read-only draft rows. Saved-bill reconciliation is preserved for
+            // posted bills and for non-preview mode.
+            if ($draftPreview) {
+                $rows[] = $this->draftRow($id, (int) $validated['year'], (int) $validated['month']);
+                continue;
             }
+            return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
         }
         $kind = $validated['kind'];
         $perPage = (int) ($validated['per_page'] ?? 15);
@@ -118,6 +137,63 @@ final class SalaryOfficialReportController extends Controller
             .'<p>No financial records were modified. Correct this saved bill or adjust the selection, then retry.</p>'
             .'<button onclick="history.back()">Go Back</button></body></html>', 422,
             ['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'no-store, private']);
+    }
+
+    /** Read-only draft row for an employee without a posted bill this month.
+     * Regular amounts come from the read-only regular-only preview service;
+     * arrear amounts stay null (never estimated). Never writes.
+     */
+    private function draftRow(int $userId, int $year, int $month): array
+    {
+        $service = app(SalaryBillCompositionService::class);
+        try {
+            $draft = $service->composeRegularOnly($userId, $year, $month);
+        } catch (DomainException $e) {
+            $draft = ['status' => 'BLOCKED', 'blocking_reasons' => [$e->getMessage()],
+                'employee_code' => null, 'name' => null, 'regular' => null,
+                'regular_gross' => null, 'regular_deductions' => null, 'regular_net' => null,
+                'arrear_blocking_reasons' => [$e->getMessage()], 'calculation_source_hash' => null];
+        }
+        $base = [
+            'id' => null, 'user_id' => $userId, 'employee_code' => $draft['employee_code'] ?? null,
+            'name' => $draft['name'] ?? null, 'designation' => '—', 'department' => '—',
+            'department_is_current' => true, 'grade' => '—', 'pay_scale' => '—',
+            'bank_account_no' => '—', 'bank_address' => '—', 'year' => $year, 'month' => $month,
+            'basic' => null,
+            'allowances' => [], 'deductions' => [], 'arrear_rows' => [],
+            'current_gross' => null, 'current_deductions' => null, 'current_net' => null,
+            'arrear_payable' => null, 'arrear_deductions' => null, 'net_arrear' => null,
+            'gross' => null, 'total_deductions' => null, 'net' => null,
+            'source' => 'DRAFT_REGULAR_ONLY_PREVIEW', 'source_hash' => null,
+            'details_complete' => false, 'remarks' => '',
+        ];
+        if (($draft['status'] ?? 'BLOCKED') !== 'READY') {
+            $base['remarks'] = 'DRAFT unavailable: '.implode('; ', $draft['blocking_reasons'] ?? ['unknown']);
+            return $base;
+        }
+        $component = static fn (array $r, string $direction): array => [
+            'title' => (string) ($r['name'] ?? ''), 'direction' => $direction,
+            'current' => is_numeric($r['calculated_amount'] ?? null) ? round((float) $r['calculated_amount'], 2) : null,
+            'arrear' => 0.0,
+            'total' => is_numeric($r['calculated_amount'] ?? null) ? round((float) $r['calculated_amount'], 2) : null,
+            'code' => null, 'months' => [],
+            'evidence' => $r['manual_evidence_reference'] ?? null,
+            'unverified' => !is_numeric($r['calculated_amount'] ?? null),
+        ];
+        foreach (($draft['regular']['allowances'] ?? []) as $r) $base['allowances'][] = $component($r, 'allowance');
+        foreach (($draft['regular']['deductions'] ?? []) as $r) $base['deductions'][] = $component($r, 'deduction');
+        $base['basic'] = $draft['regular']['basic'] ?? null;
+        $base['current_gross'] = $draft['regular_gross'];
+        $base['current_deductions'] = $draft['regular_deductions'];
+        $base['current_net'] = $draft['regular_net'];
+        $base['gross'] = $draft['regular_gross'];
+        $base['total_deductions'] = $draft['regular_deductions'];
+        $base['net'] = $draft['regular_net'];
+        $base['source_hash'] = $draft['calculation_source_hash'] ?? null;
+        $base['details_complete'] = true;
+        $base['remarks'] = 'DRAFT regular-only preview (no posted bill). Arrear unverified: '
+            .(implode('; ', $draft['arrear_blocking_reasons'] ?? []) ?: 'no arrear rules returned amounts.');
+        return $base;
     }
 
     private function embeddedLogo(): ?string
