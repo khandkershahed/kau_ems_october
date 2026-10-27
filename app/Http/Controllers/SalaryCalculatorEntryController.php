@@ -427,8 +427,12 @@ final class SalaryCalculatorEntryController extends Controller
             if ($gpfInput === null && !collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))) {
                 $gpfInput = ['type'=>'disabled','amount'=>0];
             }
-            SalaryEmployeeComponentOverrideService::assertSnapshotMatches(
-                $adds, $ded, app(SalaryEmployeeComponentOverrideService::class)->rows($user->id,$year,$month));
+            // Drafts may deliberately omit an obsolete monthly override component.
+            // Retain the strict snapshot check for approved calculations and posting.
+            if ($input['status'] === 'approved') {
+                SalaryEmployeeComponentOverrideService::assertSnapshotMatches(
+                    $adds, $ded, app(SalaryEmployeeComponentOverrideService::class)->rows($user->id,$year,$month));
+            }
             foreach (app(SalaryEmployeeComponentOverrideService::class)->rows($user->id,$year,$month) as $row) {
                 if ($row['direction']==='deduction' && SalaryCalculationService::isGpf(['name'=>$row['component_title']])) {
                     if ($row['mode']==='manual' && $gpfInput!==null && $gpfInput['type']!=='disabled') {
