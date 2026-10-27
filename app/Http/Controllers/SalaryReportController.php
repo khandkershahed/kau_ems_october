@@ -608,7 +608,10 @@ class SalaryReportController extends Controller
                 $basicPay = null;
                 foreach ($allowances as $item) {
                     $name = strtolower((string) ($item['name'] ?? $item['payroll_component_type']['name'] ?? ''));
-                    if (preg_match('/\bbasic\b/i', $name)) {
+                    // Canonical Basic Pay identity: matches "basic" but never an
+                    // arrear/difference/increment component (Step 3B-FIX).
+                    if (preg_match('/\bbasic\b/i', $name)
+                        && !preg_match('/\barrear\b|\bdifference\b|\bold increment\b/i', $name)) {
                         $raw = $item['calculated_amount'] ?? (strtolower((string)($item['calcType'] ?? 'fixed')) === 'percentage'
                             ? null : ($item['amount'] ?? null));
                         if (is_numeric($raw)) $basicPay = (float) $raw;
