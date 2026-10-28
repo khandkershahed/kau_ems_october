@@ -102,6 +102,7 @@ class SalaryReportController extends Controller
         return Inertia::render('Reports/SalaryReports/Index', [
             'reportTypes' => [
                 'Bank Advice',
+                'Provisional Bank Advice',
                 'Salary Bill',
                 'Salary Fixation Report',
                 'Arrear & Deduction Statement',
@@ -173,7 +174,10 @@ class SalaryReportController extends Controller
             // Bank Advice is a payment instruction, never a payroll estimate.
             // Only employees with a saved bill for the EXACT requested month/year
             // may appear, regardless of the client's 'all' filter.
-            if ($reportType === 'Bank Advice') {
+            if ($reportType === 'Provisional Bank Advice') {
+                $query->whereIn('users.id', \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
+                    ->select('user_id')->where('salary_year', $year)->where('salary_month', $monthId));
+            } elseif ($reportType === 'Bank Advice') {
                 $query->whereHas('salaryGenerates', function ($q) use ($monthId, $year) {
                     $q->where('monthId', $monthId)->where('salaryGenerationYear', $year);
                 });
@@ -578,6 +582,16 @@ class SalaryReportController extends Controller
             if ($reportType === 'Bank Advice' && $user->salaryGenerates->count() !== 1) {
                 abort(422, 'Bank Advice requires exactly one saved bill for employee '.$user->id.' in '.$year.'-'.$monthId.'.');
             }
+            $provisionalVersion = null;
+            $provisionalResult = null;
+            $provisionalArrear = null;
+            if ($reportType === 'Provisional Bank Advice') {
+                $provisionalVersion = \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
+                    ->where('user_id', $user->id)->where('salary_year', $year)->where('salary_month', $monthId)
+                    ->orderByDesc('version')->orderByDesc('id')->first();
+                $provisionalResult = json_decode((string) ($provisionalVersion->calculated_result ?? ''), true);
+                $provisionalArrear = json_decode((string) ($provisionalVersion->arrear_snapshot ?? ''), true);
+            }
             $salaryRecord = $user->salaryGenerates->first();
             $isGenerated = !is_null($salaryRecord);
             if ($isGenerated) {
@@ -683,6 +697,29 @@ class SalaryReportController extends Controller
 
             if (!$isGenerated && $basicPay == 0 && $employeeInfo?->payrollGroup?->grade) {
                 $basicPay = (float) ($employeeInfo->payrollGroup->grade->min ?? 0);
+            }
+
+            // Provisional advice must use SAVED calculations, never employee profile estimates.
+            // A missing/unknown net arrear is excluded from the payment schedule.
+            if ($reportType === 'Provisional Bank Advice') {
+                $regularNet = $provisionalResult['net_salary'] ?? null;
+                $arrearNet = $provisionalArrear['net_arrear'] ?? null;
+                if (!empty($provisionalArrear['unknown_lines']) || !is_numeric($regularNet) || !is_numeric($arrearNet)
+                    || !is_finite((float) $regularNet) || !is_finite((float) $arrearNet)) {
+                    return null;
+                }
+                if (!$bankAccountNo || in_array(strtoupper(trim((string) $bankAccountNo)), ['N/A', 'STAMP', 'PENDING ACCOUNT'], true)) {
+                    return null;
+                }
+                $salaryTotal = round((float) $regularNet + (float) $arrearNet, 2);
+                if ($salaryTotal < 0 || !is_finite($salaryTotal)) {
+                    return null;
+                }
+                $totalDeduction = (float) ($provisionalResult['total_deduction'] ?? 0)
+                    + (float) ($provisionalArrear['known_deduction'] ?? 0);
+                $totalAllowance = $salaryTotal + $totalDeduction;
+                $basicPay = (float) ($provisionalResult['basic'] ?? 0);
+                $gpfDeduction = (float) ($provisionalResult['gpf_deduction'] ?? 0);
             }
 
             // Arrear components are embedded in the posted salary bill. Keep the
@@ -814,11 +851,14 @@ class SalaryReportController extends Controller
                 'gpf_net_deposit' => $gpfNet,
                 'gpf_is_settled' => (bool) ($gpfRecord?->isSettled ?? false),
                 'salary_total' => $salaryTotal,
+                'provisional' => $reportType === 'Provisional Bank Advice',
+                'calculation_version_id' => $provisionalVersion->id ?? null,
+                'calculation_status' => $provisionalVersion->status ?? null,
                 'salary_generation_date' => $salaryRecord?->salaryGenerationDate?->format('Y-m-d'),
                 'allowance_items' => $allowances,
                 'deduction_items' => $deductions,
             ];
-        });
+        })->filter(fn ($row) => $row !== null)->values();
     }
 
     /**

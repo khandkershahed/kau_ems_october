@@ -114,6 +114,7 @@ const handleSearchImmediate = async () => {
 
 // Handle report type change
 const handleReportTypeChange = async (type) => {
+    if (type === 'Provisional Bank Advice') store.filters.salaryGeneratedStatus = 'all';
     if (type !== 'Salary Fixation Report') store.filters.fixationUserIds = '';
     if (type === 'Bonus report' || type === 'Bonus repot' || type === 'Bonus Bank Advice' || type === 'Bonus Bill') {
         store.filters.salaryGeneratedStatus = 'generated';
@@ -186,7 +187,7 @@ const activeRowsPerPage = computed(() => {
         const value = Number(fixationRowsPerPage.value);
         return Number.isInteger(value) && value >= 1 && value <= 15 ? value : 15;
     }
-    if (store.reportType === 'Bank Advice' || store.reportType === 'Bonus Bank Advice') {
+    if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(store.reportType)) {
         const val = parseInt(bankAdviceRowsPerPage.value, 10);
         return (val && val > 0) ? val : 15;
     }
@@ -862,6 +863,7 @@ const handlePrintPdf = () => {
 </script>
 
 <template>
+  <div v-if="store.reportType === 'Provisional Bank Advice'" class="mx-4 mt-3 rounded-md border border-amber-400 bg-amber-50 p-2 text-center font-bold text-amber-900">PROVISIONAL — NOT FOR BANK PAYMENT. Saved calculator snapshots only; no salary bill or bank transfer has been generated.</div>
     <Head title="Report Factory" />
 
     <AuthenticatedLayout>
@@ -1299,7 +1301,7 @@ const handlePrintPdf = () => {
                             </div>
 
                             <!-- Bank Advice / Bonus Bank Advice Rows per Page Selector -->
-                            <div v-if="store.reportType === 'Bank Advice' || store.reportType === 'Bonus Bank Advice'" class="flex items-center gap-1.5 pl-3 border-l border-gray-200 dark:border-gray-700">
+                            <div v-if="['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(store.reportType)" class="flex items-center gap-1.5 pl-3 border-l border-gray-200 dark:border-gray-700">
                                 <label for="bankAdviceRowsPerPage" class="text-xs font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
                                     Rows / Page:
                                 </label>

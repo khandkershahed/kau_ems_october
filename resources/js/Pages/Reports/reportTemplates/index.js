@@ -35,6 +35,7 @@ export function getReportTemplate(reportType) {
             return SalaryBill;
         case 'Salary Fixation Report':
             return FixationStatement;
+        case 'Provisional Bank Advice':
         case 'Bank Advice':
             return BankAdvice;
         case 'Salary Summary':

@@ -398,7 +398,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 let dataTable = [];
                 let totalRow = [];
 
-                if (this.reportType === 'Bank Advice' || this.reportType === 'Bonus Bank Advice') {
+                if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(this.reportType)) {
                     dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Bank A/C No', 'Bank Address', 'Amount (Taka)']);
                     let sum = 0;
                     records.forEach((r, idx) => {
@@ -575,7 +575,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 }
 
                 // If Bank Advice or Bonus Bank Advice: dedicated Portrait multi-page A4 format matching preview
-                if (this.reportType === 'Bank Advice' || this.reportType === 'Bonus Bank Advice') {
+                if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(this.reportType)) {
                     const isBonusBankAdvice = (this.reportType === 'Bonus Bank Advice');
                     const doc = new jsPDF({
                         orientation: 'portrait',
@@ -597,7 +597,8 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                     const subtitleDefault = isBonusBankAdvice
                         ? `Bonus Bank Advice of Teachers, Officers and Staff for the month of ${monthYearStr}`
                         : `Bank Advice of Teachers, Officers and Staff for the month of ${monthYearStr}`;
-                    const subtitleText = headerConfig?.subtitle || subtitleDefault;
+                    const provisionalAdvice = this.reportType === 'Provisional Bank Advice';
+                    const subtitleText = provisionalAdvice ? `PROVISIONAL - NOT FOR BANK PAYMENT | ${headerConfig?.subtitle || subtitleDefault}` : (headerConfig?.subtitle || subtitleDefault);
                     const dateText = headerConfig?.date || (new Date()).toLocaleDateString('en-US');
 
                     for (let p = 0; p < totalPages; p++) {
@@ -632,6 +633,13 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         doc.setFontSize(9.5);
                         doc.setTextColor(15, 23, 42);
                         doc.text(subtitleText, pageWidth / 2, 22, { align: 'center' });
+
+                        if (provisionalAdvice) {
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(9);
+                            doc.setTextColor(160, 45, 30);
+                            doc.text('SAVED CALCULATOR PREVIEW - NO SALARY BILL POSTED', pageWidth / 2, 27, { align: 'center' });
+                        }
 
                         // Table Rows
                         const head = [['SL #', 'ID #', 'Name', 'Designation', 'Bank A/C No', 'Amount (Taka)']];
@@ -752,7 +760,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         const blobUrl = doc.output('bloburl');
                         window.open(blobUrl, '_blank');
                     } else {
-                        const filePrefix = isBonusBankAdvice ? 'KAU_Bonus_Bank_Advice' : 'KAU_Bank_Advice';
+                        const filePrefix = provisionalAdvice ? 'KAU_PROVISIONAL_NOT_FOR_PAYMENT' : (isBonusBankAdvice ? 'KAU_Bonus_Bank_Advice' : 'KAU_Bank_Advice');
                         doc.save(`${filePrefix}_${monthYearStr}.pdf`);
                     }
                     return;
