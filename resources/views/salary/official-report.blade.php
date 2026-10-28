@@ -488,12 +488,15 @@
                                         $r['current_deductions'] === null || $gpf === null || $tax === null
                                             ? null
                                             : $r['current_deductions'] - $gpf - $tax;
+                                    // Unsaved regular-only previews have no verified arrear statement.
+                                    // Do not turn unknown arrears into numeric zero.
+                                    $arrearDefault = ($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW' ? null : 0.0;
                                     $arrearValues = [
-                                        'basic_arrear_gross' => 0.0,
-                                        'basic_increment_adjustment' => 0.0,
-                                        'special_benefit_recovery' => 0.0,
-                                        'house_rent_recovery' => 0.0,
-                                        'additional_gpf' => 0.0,
+                                        'basic_arrear_gross' => $arrearDefault,
+                                        'basic_increment_adjustment' => $arrearDefault,
+                                        'special_benefit_recovery' => $arrearDefault,
+                                        'house_rent_recovery' => $arrearDefault,
+                                        'additional_gpf' => $arrearDefault,
                                     ];
                                     foreach (($r['arrear_rows'] ?? []) as $arrearItem) {
                                         $code = strtolower((string) ($arrearItem['code'] ?? ''));

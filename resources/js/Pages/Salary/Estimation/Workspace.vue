@@ -2,6 +2,7 @@
 
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 const props = defineProps({ rows:Object, counts:Object, runs:Array, year:Number, month:Number });
 const selected=ref([]), busy=ref(false), notice=ref(''), reason=ref(''), search=ref('');
 const activeTab=ref(new URLSearchParams(window.location.search).get('status')==='CALCULATED'?'CALCULATED':'WORK_BLOCKED');

@@ -192,7 +192,9 @@ final class SalaryOfficialReportSource
             'user_id' => (int) $bill->user_id,
             'employee_code' => (string) $bill->employeeCode,
             'name' => $name,
-            'designation' => (string) $bill->designation,
+            'designation' => in_array(strtoupper(trim((string) $bill->designation)), ['', 'NOT RECORDED', 'N/A', '—'], true)
+                ? (string) ($user?->employeeInfo?->payrollGroup?->payrollGroupType?->group_name ?: 'NOT RECORDED')
+                : (string) $bill->designation,
             'department' => $department ?: 'Current department unavailable',
             'department_is_current' => true,
             'grade' => (string) $bill->grade,

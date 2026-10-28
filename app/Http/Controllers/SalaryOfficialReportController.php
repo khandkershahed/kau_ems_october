@@ -211,14 +211,14 @@ final class SalaryOfficialReportController extends Controller
      */
     private function savedCalculatorRow(int $userId, int $year, int $month): array
     {
-        $profile = EmployeeInfo::query()->with(['payrollGroup.grade', 'departmentOffice'])
+        $profile = EmployeeInfo::query()->with(['payrollGroup.grade', 'payrollGroup.payrollGroupType', 'departmentOffice'])
             ->where('user_id', $userId)->orderBy('id')->first();
         $employee = User::query()->find($userId);
         $code = $profile?->employeeCode ?: null;
         $name = $employee?->name ?: null;
         $grade = $profile?->payrollGroup?->grade?->grade_name ?: 'NOT RECORDED';
         $department = $profile?->departmentOffice?->name ?? 'NOT RECORDED';
-        $designation = 'NOT RECORDED';
+        $designation = $profile?->payrollGroup?->payrollGroupType?->group_name ?: 'NOT RECORDED';
 
         $base = [
             'id' => null, 'user_id' => $userId,
@@ -330,9 +330,11 @@ final class SalaryOfficialReportController extends Controller
                 'regular_gross' => null, 'regular_deductions' => null, 'regular_net' => null,
                 'arrear_blocking_reasons' => [$e->getMessage()], 'calculation_source_hash' => null];
         }
+        $identity = EmployeeInfo::query()->with('payrollGroup.payrollGroupType')->where('user_id', $userId)->orderBy('id')->first();
+        $identityName = User::query()->whereKey($userId)->value('name');
         $base = [
-            'id' => null, 'user_id' => $userId, 'employee_code' => $draft['employee_code'] ?? null,
-            'name' => $draft['name'] ?? null, 'designation' => '—', 'department' => '—',
+            'id' => null, 'user_id' => $userId, 'employee_code' => $draft['employee_code'] ?? $identity?->employeeCode ?? ('USER-'.$userId),
+            'name' => $draft['name'] ?? $identityName ?? 'NAME NOT RECORDED', 'designation' => $draft['designation'] ?? $identity?->payrollGroup?->payrollGroupType?->group_name ?? '—', 'department' => '—',
             'department_is_current' => true, 'grade' => '—', 'pay_scale' => '—',
             'bank_account_no' => '—', 'bank_address' => '—', 'year' => $year, 'month' => $month,
             'basic' => null,
