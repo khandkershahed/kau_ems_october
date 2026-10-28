@@ -697,7 +697,7 @@
                                         </td>
                                         @foreach (['2026-07', '2026-08', '2026-09'] as $period)
                                             <td class="breakdown-month">
-                                                @if (is_array($item['month_amounts']) &&
+                                                @if (is_array($item['month_amounts'] ?? null) &&
                                                         array_key_exists($period, $item['month_amounts']) &&
                                                         is_numeric($item['month_amounts'][$period]))
                                                     {{ number_format((float) $item['month_amounts'][$period], 2) }}
