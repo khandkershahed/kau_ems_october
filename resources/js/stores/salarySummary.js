@@ -366,7 +366,7 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 sheetData.push([]); // blank line
 
                 // 4. Signatures
-                sheetData.push(['Prepared By', 'Checked By', 'Comptroller of Accounts', 'Vice-Chancellor / Registrar']);
+                // sheetData.push(['Prepared By', 'Checked By', 'Comptroller of Accounts', 'Vice-Chancellor / Registrar']);
 
                 const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
 
@@ -503,10 +503,10 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                     head: [['SL.No', 'Particulars', 'Current', 'Arrear', 'Total']],
                     body: allowRows,
                     foot: [[
-                        '', 
-                        'Gross Salary / Total Allowances', 
-                        totals.grossAllowance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 
-                        '0.00', 
+                        '',
+                        'Gross Salary / Total Allowances',
+                        totals.grossAllowance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                        '0.00',
                         totals.grossAllowance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     ]],
                     startY: gridY + gridH + 7,
@@ -527,7 +527,7 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 const allowFinalY = doc.lastAutoTable.finalY || 100;
 
                 // 4. Deductions Table
-                const deductRows = totals.deductionRows.length > 0 
+                const deductRows = totals.deductionRows.length > 0
                     ? totals.deductionRows.map((r) => [
                         r.sl,
                         r.particulars,
@@ -546,10 +546,10 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                     head: [['Sl.No', 'Particulars', 'Current', 'Arrear', 'Total']],
                     body: deductRows,
                     foot: [[
-                        '', 
-                        'Total Deductions', 
-                        totals.totalDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 
-                        '0.00', 
+                        '',
+                        'Total Deductions',
+                        totals.totalDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                        '0.00',
                         totals.totalDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     ]],
                     startY: allowFinalY + 7,
@@ -614,16 +614,16 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 // 7. University Signatures Block
                 const sigY = pageHeight - 24;
                 const colWidth = (pageWidth - 28) / 4;
-                const sigs = ['Prepared By', 'Checked By', 'Comptroller of Accounts', 'Vice-Chancellor / Registrar'];
-                sigs.forEach((title, i) => {
-                    const x = 14 + i * colWidth;
-                    doc.setDrawColor(148, 163, 184);
-                    doc.line(x + 4, sigY, x + colWidth - 4, sigY);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(7.5);
-                    doc.setTextColor(71, 85, 105);
-                    doc.text(title, x + colWidth / 2, sigY + 4, { align: 'center' });
-                });
+                // const sigs = ['Prepared By', 'Checked By', 'Comptroller of Accounts', 'Vice-Chancellor / Registrar'];
+                // sigs.forEach((title, i) => {
+                //     const x = 14 + i * colWidth;
+                //     doc.setDrawColor(148, 163, 184);
+                //     doc.line(x + 4, sigY, x + colWidth - 4, sigY);
+                //     doc.setFont('helvetica', 'bold');
+                //     doc.setFontSize(7.5);
+                //     doc.setTextColor(71, 85, 105);
+                //     doc.text(title, x + colWidth / 2, sigY + 4, { align: 'center' });
+                // });
 
                 // 8. Footer
                 const footerY = pageHeight - 8;

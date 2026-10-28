@@ -35,14 +35,26 @@ const displayDate = computed(() => props.customDate || props.date);
 // Records on this page
 const records = computed(() => props.data || []);
 
-// Total sum of amount for this particular page
-const pageTotal = computed(() => {
-    return records.value.reduce((sum, r) => sum + (Number(r.salary_total) || 0), 0);
+// The final total belongs to the complete selected report, never to an individual page.
+// Sum integer paisa to avoid floating-point accumulation in monetary totals.
+const isLastPage = computed(() => props.pageNumber === props.totalPages);
+const grandTotalPaisa = computed(() => {
+    const rows = props.allData.length ? props.allData : records.value;
+    let total = 0;
+    for (const row of rows) {
+        const raw = row.salary_total;
+        if (raw === null || raw === undefined || raw === '' || !Number.isFinite(Number(raw))) return null;
+        total += Math.round(Number(raw) * 100);
+    }
+    return rows.length ? total : null;
 });
-
-// Amount in words strictly for this particular page
+const grandTotal = computed(() => grandTotalPaisa.value === null ? null : grandTotalPaisa.value / 100);
 const totalInWords = computed(() => {
-    return numberToWordsTaka(pageTotal.value);
+    if (grandTotalPaisa.value === null) return 'Not available — one or more salary amounts are missing.';
+    const taka = Math.floor(Math.abs(grandTotalPaisa.value) / 100);
+    const paisa = Math.abs(grandTotalPaisa.value) % 100;
+    const words = numberToWordsTaka(taka);
+    return paisa ? words.replace(/ Taka only\.$/, ` Taka and ${paisa} Paisa only.`) : words;
 });
 </script>
 
@@ -131,21 +143,20 @@ const totalInWords = computed(() => {
                             </td>
                         </tr>
                     </tbody>
-                    <tfoot>
-                        <!-- Total for this particular page -->
+                    <tfoot v-if="isLastPage">
                         <tr class="bg-slate-100 font-bold border-t-2 border-slate-500 text-slate-900">
                             <td colspan="5" class="border border-slate-400 px-3 py-1.5 text-right uppercase tracking-wider text-[10px]">
-                                Total
+                                Grand Total
                             </td>
                             <td class="border border-slate-400 px-2 py-1.5 text-right tabular-nums text-[11px] font-bold">
-                                {{ formatMoney(pageTotal) }}
+                                {{ grandTotal === null ? 'NOT VERIFIED' : formatMoney(grandTotal) }}
                             </td>
                         </tr>
                     </tfoot>
                 </table>
 
                 <!-- In Word statement -->
-                <div class="mt-3 p-2 bg-slate-50 border border-slate-300 rounded text-[10px] text-slate-800">
+                <div v-if="isLastPage" class="mt-3 p-2 bg-slate-50 border border-slate-300 rounded text-[10px] text-slate-800">
                     <span class="font-bold">In Word:</span> {{ totalInWords }}
                 </div>
             </div>

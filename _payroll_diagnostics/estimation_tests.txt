@@ -1,9 +1,0 @@
-﻿
-   PASS  Tests\Feature\SalaryEstimationPatch05Test
-  Γ£ô estimation endpoints are registered                                                                          0.22s  
-  Γ£ô guests cannot start salary estimation                                                                        0.06s  
-  Γ£ô guests cannot read salary roster                                                                             0.02s  
-
-  Tests:    3 passed (6 assertions)
-  Duration: 0.52s
-

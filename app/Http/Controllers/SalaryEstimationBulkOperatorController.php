@@ -20,6 +20,8 @@ final class SalaryEstimationBulkOperatorController extends Controller
             'cursor'=>'nullable|integer|min:0', 'batch_size'=>'nullable|integer|between:1,25',
             'reason'=>'required|string|min:3|max:2000',
             'action'=>'required|in:approved,draft',
+            'user_ids'=>'sometimes|array|min:1|max:25',
+            'user_ids.*'=>'required|integer|min:1|distinct',
         ]);
         if (!Schema::hasTable('salary_calculation_versions') || !Schema::hasTable('salary_monthly_workflows')) {
             return response()->json(['message'=>'Payroll workflow migrations are required.'],409);
@@ -33,6 +35,7 @@ final class SalaryEstimationBulkOperatorController extends Controller
                 $j->on('w.user_id','=','p.user_id')->where('w.salary_year','=',2026)->where('w.salary_month','=',10);
             })
             ->where('p.user_id','>',$cursor)
+            ->when(isset($d['user_ids']), fn($q) => $q->whereIn('p.user_id', $d['user_ids']))
             ->where(function($q){$q->whereNull('w.id')->orWhereIn('w.workflow_status',['BLOCKED','CALCULATED']);})
             ->select('p.user_id','p.code','p.profiles','w.workflow_status','w.revision','w.active_calculation_version_id')
             ->orderBy('p.user_id')->limit($size)->get();
@@ -79,7 +82,9 @@ final class SalaryEstimationBulkOperatorController extends Controller
         }
         $remaining=DB::query()->fromSub($profiles,'p')->leftJoin('salary_monthly_workflows as w',function($j){
             $j->on('w.user_id','=','p.user_id')->where('w.salary_year','=',2026)->where('w.salary_month','=',10);
-        })->where('p.user_id','>',$cursor)->where(function($q){$q->whereNull('w.id')->orWhereIn('w.workflow_status',['BLOCKED','CALCULATED']);})->exists();
+        })->where('p.user_id','>',$cursor)
+            ->when(isset($d['user_ids']), fn($q) => $q->whereIn('p.user_id', $d['user_ids']))
+            ->where(function($q){$q->whereNull('w.id')->orWhereIn('w.workflow_status',['BLOCKED','CALCULATED']);})->exists();
         return response()->json(['cursor'=>$cursor,'examined'=>count($results),'has_more'=>$remaining,
             'succeeded'=>count(array_filter($results,fn($r)=>$r['ok'])),
             'failed'=>count(array_filter($results,fn($r)=>!$r['ok'])),'results'=>$results]);

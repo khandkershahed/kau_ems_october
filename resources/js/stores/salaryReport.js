@@ -515,6 +515,19 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 }
 
                 if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(this.reportType)) {
+                    // Never total missing salary amounts as zero in a bank document.
+                    if (records.some(row => row.salary_total === null || row.salary_total === undefined
+                        || row.salary_total === '' || !Number.isFinite(Number(row.salary_total)))) {
+                        window.alert('Bank Advice cannot be downloaded: one or more selected salary amounts are not verified.');
+                        return;
+                    }
+                    const grandTotalPaisa = records.reduce((sum, row) => sum + Math.round(Number(row.salary_total) * 100), 0);
+                    const grandTotal = grandTotalPaisa / 100;
+                    const taka = Math.floor(Math.abs(grandTotalPaisa) / 100);
+                    const paisa = Math.abs(grandTotalPaisa) % 100;
+                    const grandTotalWords = paisa
+                        ? numberToWordsTaka(taka).replace(/ Taka only\.?$/, ` Taka and ${paisa} Paisa only.`)
+                        : numberToWordsTaka(taka);
                     const isBonusBankAdvice = (this.reportType === 'Bonus Bank Advice');
                     const doc = new jsPDF({
                         orientation: 'portrait',
@@ -541,7 +554,6 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         }
 
                         const pageRecords = records.slice(p * rowsPerPage, (p + 1) * rowsPerPage);
-                        const pageSum = pageRecords.reduce((sum, r) => sum + (Number(r.salary_total) || 0), 0);
 
                         let currentY = 14;
 
@@ -610,24 +622,18 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                             ];
                         });
 
-                        const foot = [
-                            [
-                                {
-                                    content: 'TOTAL',
-                                    colSpan: 5,
-                                    styles: { halign: 'right', fontStyle: 'bold' }
-                                },
-                                {
-                                    content: pageSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                                    styles: { halign: 'right', fontStyle: 'bold' }
-                                }
-                            ]
-                        ];
+                        // Grand Total appears only after the final employee of the complete report.
+                        const foot = p === totalPages - 1 ? [[
+                            { content: 'GRAND TOTAL', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+                            { content: grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                                styles: { halign: 'right', fontStyle: 'bold' } },
+                        ]] : [];
 
                         autoTable(doc, {
                             head,
                             body,
                             foot,
+                            showFoot: 'lastPage',
                             startY: currentY + 12,
                             margin: { left: 14, right: 14, bottom: 42 },
                             tableWidth: pageWidth - 28,
@@ -662,22 +668,22 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         const tableFinalY = doc.lastAutoTable.finalY || 160;
 
                         // 4. In Word Box mimicking Vue logic
-                        const wordsText = numberToWordsTaka(pageSum);
-                        const boxY = tableFinalY + 4;
+                        if (p === totalPages - 1) {
+                            const boxY = tableFinalY + 4;
+                            doc.setFillColor(248, 250, 252); // slate-50
+                            doc.setDrawColor(203, 213, 225); // slate-300
+                            doc.rect(14, boxY, pageWidth - 28, 8, 'FD');
 
-                        doc.setFillColor(248, 250, 252); // slate-50
-                        doc.setDrawColor(203, 213, 225); // slate-300
-                        doc.rect(14, boxY, pageWidth - 28, 8, 'FD');
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(8);
+                            doc.setTextColor(30, 41, 59);
+                            const wordLabel = 'In Word:';
+                            doc.text(wordLabel, 16, boxY + 5);
 
-                        doc.setFont('helvetica', 'bold');
-                        doc.setFontSize(8);
-                        doc.setTextColor(30, 41, 59);
-                        const wordLabel = 'In Word:';
-                        doc.text(wordLabel, 16, boxY + 5);
-
-                        const labelWidth = doc.getTextWidth(wordLabel);
-                        doc.setFont('helvetica', 'normal');
-                        doc.text(wordsText, 16 + labelWidth + 2, boxY + 5);
+                            const labelWidth = doc.getTextWidth(wordLabel);
+                            doc.setFont('helvetica', 'normal');
+                            doc.text(grandTotalWords, 16 + labelWidth + 2, boxY + 5);
+                        }
 
                         // Signatures block skipped matching Vue Template
 
