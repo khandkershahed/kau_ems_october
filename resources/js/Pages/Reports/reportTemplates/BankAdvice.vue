@@ -28,7 +28,7 @@ const displayTitle = computed(() => props.customTitle || props.organizationName)
 const displayAddress = computed(() => props.customAddress || props.organizationAddress);
 const displaySubtitle = computed(() => {
     if (props.customSubtitle) return props.customSubtitle;
-    return `${props.reportType === 'Provisional Bank Advice' ? 'PROVISIONAL — ' : ''}Bank Advice of Teachers, Officers and Staff for the month of ${props.monthYear || 'Current Month'}`;
+    return `Bank Advice of Teachers, Officers and Staff for the month of ${props.monthYear || 'Current Month'}`;
 });
 const displayDate = computed(() => props.customDate || props.date);
 
@@ -48,10 +48,11 @@ const totalInWords = computed(() => {
 
 <template>
     <!-- A4 Paper Container -->
-    <div class="a4-sheet bg-white text-slate-900 text-[10.5px] leading-tight font-sans mx-auto p-8 sm:p-10 shadow-lg border border-slate-200 relative min-h-[297mm] flex flex-col justify-between select-text print:p-6 print:shadow-none print:border-0">
+    <div class="a4-sheet kau-bank-advice-sheet bg-white text-slate-900 text-[10.5px] leading-tight font-sans mx-auto p-8 sm:p-10 shadow-lg border border-slate-200 relative min-h-[297mm] select-text print:p-6 print:shadow-none print:border-0">
 
-        <!-- Top Section -->
-        <div>
+        <!-- Top Section: keep banner, heading and table in normal document flow.
+             A banner outside the header previously overlapped the title/table in PDF exports. -->
+        <div class="kau-bank-advice-content">
             <!-- Header with Logo and University Details -->
             <div class="relative flex items-center justify-center pb-4 border-b border-slate-300">
                 <div class="absolute left-0 top-0">
@@ -69,11 +70,17 @@ const totalInWords = computed(() => {
                     <p class="text-[10px] text-slate-600 mt-0.5">
                         {{ displayAddress }}
                     </p>
-                    <!-- <div class="mt-1 font-semibold text-[11px] text-slate-800">
+                    <div class="mt-1 font-semibold text-[11px] text-slate-800">
                         {{ displaySubtitle }}
-                    </div> -->
+                    </div>
                 </div>
             </div>
+
+            <!-- <div v-if="reportType === 'Provisional Bank Advice'"
+                 class="kau-bank-provisional-notice mt-3 mb-3 border border-amber-600 bg-amber-50 px-3 py-2 text-center font-bold text-amber-900">
+                <div>PROVISIONAL — NOT FOR BANK PAYMENT</div>
+                <div class="font-normal">Saved calculator snapshots only. No salary bill has been posted.</div>
+            </div> -->
 
             <!-- Graceful empty error notice -->
             <div v-if="records.length === 0" class="my-16 p-8 text-center border-2 border-dashed border-slate-300 rounded-md bg-slate-50">
@@ -85,7 +92,7 @@ const totalInWords = computed(() => {
             </div>
 
             <!-- Tabular Schedule -->
-            <div v-else class="mt-4 overflow-x-auto">
+            <div v-else class="kau-bank-advice-table mt-4">
                 <table class="w-full border-collapse border border-slate-400 text-[10px]">
                     <thead>
                         <tr class="bg-slate-100 text-slate-900 font-bold border-b border-slate-400">
@@ -145,7 +152,7 @@ const totalInWords = computed(() => {
         </div>
 
         <!-- Bottom Signatures & Page numbering -->
-        <div>
+        <div class="kau-bank-advice-footer">
             <!-- <div class="mt-12 pt-6 border-t border-slate-300 grid grid-cols-4 gap-4 text-center text-[10px] text-slate-700">
                 <div>
                     <div class="h-10"></div>
@@ -182,14 +189,30 @@ const totalInWords = computed(() => {
 </template>
 
 <style scoped>
+/* PDF rendering (html2canvas) must see normal document flow; no flex compression
+   or absolute-positioned notice. The PDF generator captures each A4 sheet. */
+.kau-bank-advice-sheet { display: block !important; box-sizing: border-box; height: auto !important; }
+.kau-bank-advice-content { display: block; width: 100%; }
+.kau-bank-advice-table { width: 100%; overflow: visible; }
+.kau-bank-advice-table table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.kau-bank-advice-table th, .kau-bank-advice-table td { overflow-wrap: anywhere; vertical-align: middle; }
+.kau-bank-provisional-notice { position: static !important; clear: both; line-height: 1.5; }
+.kau-bank-advice-footer { margin-top: 32px; }
 @media print {
-    .a4-sheet {
-        box-shadow: none !important;
-        border: none !important;
-        width: 100% !important;
-        min-height: 100vh !important;
-        margin: 0 !important;
+    .kau-bank-advice-sheet {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        width: 190mm !important;
+        min-height: 277mm !important;
+        margin: 0 auto !important;
         padding: 10mm !important;
+        break-after: page;
+        page-break-after: always;
+        box-shadow: none !important;
+        border: 0 !important;
     }
+    .kau-bank-advice-table thead { display: table-header-group; }
+    .kau-bank-advice-table tr { break-inside: avoid; page-break-inside: avoid; }
 }
 </style>

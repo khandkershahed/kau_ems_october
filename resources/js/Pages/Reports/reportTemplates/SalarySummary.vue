@@ -56,7 +56,7 @@ const totals = computed(() => {
 <template>
     <!-- A4 Paper Container matching Salary Bill layout -->
     <div class="a4-sheet bg-white text-slate-900 text-[11px] leading-tight font-sans mx-auto p-8 sm:p-10 shadow-lg border border-slate-200 relative min-h-[297mm] flex flex-col justify-between select-text print:p-6 print:shadow-none print:border-0">
-        
+
         <div v-if="unresolvedCount || missingSnapshotCount" class="rounded border border-amber-400 bg-amber-50 px-3 py-2 text-amber-900 text-[10px] mb-2">
           Incomplete financial evidence: {{ unresolvedCount }} unresolved arrear snapshot(s), {{ missingSnapshotCount }} employee(s) without saved calculator snapshot. The displayed sum is provisional, not an authorized bank payment total.
         </div>
@@ -65,9 +65,9 @@ const totals = computed(() => {
             <!-- Header with Logo and University Details -->
             <div class="relative flex items-center justify-center pb-4 border-b border-slate-300">
                 <div class="absolute left-0 top-0">
-                    <img 
-                        :src="organizationLogo" 
-                        alt="University Logo" 
+                    <img
+                        :src="organizationLogo"
+                        alt="University Logo"
                         class="h-14 w-14 object-contain"
                         @error="(e) => e.target.style.display = 'none'"
                     />
@@ -235,7 +235,7 @@ const totals = computed(() => {
                 </div>
 
                 <!-- Bottom University Signatures Box -->
-                <div class="mt-10 pt-4 border-t border-slate-300 grid grid-cols-4 gap-4 text-center text-[10px] text-slate-700">
+                <!-- <div class="mt-10 pt-4 border-t border-slate-300 grid grid-cols-4 gap-4 text-center text-[10px] text-slate-700">
                     <div>
                         <div class="h-10"></div>
                         <div class="border-t border-slate-400 pt-1 font-semibold">Prepared By</div>
@@ -252,7 +252,7 @@ const totals = computed(() => {
                         <div class="h-10"></div>
                         <div class="border-t border-slate-400 pt-1 font-semibold">Vice-Chancellor / Registrar</div>
                     </div>
-                </div>
+                </div> -->
             </template>
         </div>
 
