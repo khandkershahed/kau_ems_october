@@ -77,7 +77,13 @@ final class SalaryOfficialReportController extends Controller
             // read-only draft rows. Saved-bill reconciliation is preserved for
             // posted bills and for non-preview mode.
             if ($draftPreview) {
-                $rows[] = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
+                $savedRow = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
+                // Unsaved employees need the legacy read-only regular estimate,
+                // rather than misleading zero rows. Saved snapshots always win.
+                // This never creates a salary bill or modifies financial records.
+                $rows[] = ($savedRow['source'] ?? '') === 'NOT_SAVED'
+                    ? $this->draftRow($id, (int) $validated['year'], (int) $validated['month'])
+                    : $savedRow;
                 continue;
             }
             return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');

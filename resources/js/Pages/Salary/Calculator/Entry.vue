@@ -1149,11 +1149,11 @@ const saveComponentOverride = async () => {
                             >
                                 <input v-model="r.title" type="text" maxlength="160"
                                     class="w-full rounded-lg border-slate-300 text-sm" placeholder="Arrear component title" />
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-2">
                                     <input v-model.number="r.final_amount" type="number" min="0" step="0.01"
-                                        aria-label="Arrear amount" class="flex-1 min-w-0 rounded-lg border-slate-300 text-sm text-right"
+                                        aria-label="Arrear amount" class="w-36 min-w-32 shrink-0 rounded-lg border-slate-300 text-sm text-right"
                                         placeholder="Amount (BDT)" />
-                                    <div v-if="overridden(r)" class="w-full grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div v-if="overridden(r)" class="flex-1 min-w-56 grid grid-cols-1 md:grid-cols-2 gap-2">
                                         <input v-model="r.reason" type="text" maxlength="2000" class="rounded-lg border-slate-300 text-sm"
                                             aria-label="Arrear manual override reason" placeholder="Arrear override reason" />
                                         <input v-model="r.evidence_reference" type="text" maxlength="500" class="rounded-lg border-slate-300 text-sm"
