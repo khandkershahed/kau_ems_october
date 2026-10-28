@@ -3,8 +3,9 @@
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-const props = defineProps({ rows:Object, counts:Object, runs:Array, year:Number, month:Number });
+const props = defineProps({ rows:Object, counts:Object, runs:Array, year:Number, month:Number, filterOptions:Object });
 const selected=ref([]), busy=ref(false), notice=ref(''), reason=ref(''), search=ref('');
+const filters=ref({department_id:new URLSearchParams(window.location.search).get('department_id')||'',category_id:new URLSearchParams(window.location.search).get('category_id')||'',payroll_group_id:new URLSearchParams(window.location.search).get('payroll_group_id')||'',per_page:new URLSearchParams(window.location.search).get('per_page')||'25'});
 const activeTab=ref(new URLSearchParams(window.location.search).get('status')==='CALCULATED'?'CALCULATED':'WORK_BLOCKED');
 const pendingCodes=['1003','10046','10108','20029','20033','20038','20049','20057','20082','20083','30081','30098','30133','30254','40033','40140','40158','40274'];
 const total=computed(()=>Number(props.counts?.WORK_BLOCKED||0)+Number(props.counts?.CALCULATED||0)+Number(props.counts?.READY_FOR_GENERATION||0)+Number(props.counts?.GENERATED||0));
@@ -21,8 +22,10 @@ async function post(url,payload){
  return data;
 }
 function refresh(){router.reload({only:['rows','counts','runs'],preserveScroll:true});}
-function applyFilter(s='WORK_BLOCKED'){activeTab.value=s;selected.value=[];router.get('/dashboard/salary/estimation',{year:props.year,month:props.month,status:s},{preserveState:true,replace:true});}
-function findEmployees(){selected.value=[];router.get('/dashboard/salary/estimation',{year:props.year,month:props.month,status:activeTab.value,search:search.value},{preserveState:true,replace:true});}
+function filterParams(status=activeTab.value){return {year:props.year,month:props.month,status,search:search.value,...filters.value};}
+function applyFilter(s='WORK_BLOCKED'){activeTab.value=s;selected.value=[];router.get('/dashboard/salary/estimation',filterParams(s),{preserveState:true,replace:true});}
+function findEmployees(){selected.value=[];router.get('/dashboard/salary/estimation',filterParams(),{preserveState:true,replace:true});}
+function resetFilters(){search.value='';filters.value={department_id:'',category_id:'',payroll_group_id:'',per_page:'25'};findEmployees();}
 function selectVisible(){selected.value=pageRows.value.filter(canSelect).map(r=>r.user_id);}
 async function initialize(onlySelected=false){
  busy.value=true;notice.value='';
@@ -160,6 +163,14 @@ async function calculateAll(){
       </div>
       <div class="space-y-3 p-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-end gap-2 rounded-lg border bg-slate-50 p-3 text-sm">
+            <label class="space-y-1"><span class="block text-xs text-slate-600">Department / Office</span><select v-model="filters.department_id" class="rounded border px-2 py-2"><option value="">All Departments</option><option v-for="o in (filterOptions?.departments||[])" :key="o.id" :value="String(o.id)">{{o.name}}</option></select></label>
+            <label class="space-y-1"><span class="block text-xs text-slate-600">Staff Category</span><select v-model="filters.category_id" class="rounded border px-2 py-2"><option value="">All Categories</option><option v-for="o in (filterOptions?.categories||[])" :key="o.id" :value="String(o.id)">{{o.name}}</option></select></label>
+            <label class="space-y-1"><span class="block text-xs text-slate-600">Payroll Group</span><select v-model="filters.payroll_group_id" class="rounded border px-2 py-2"><option value="">All Payroll Groups</option><option v-for="o in (filterOptions?.payroll_groups||[])" :key="o.id" :value="String(o.id)">{{o.group_name}}</option></select></label>
+            <label class="space-y-1"><span class="block text-xs text-slate-600">Rows / Page</span><select v-model="filters.per_page" class="rounded border px-2 py-2"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select></label>
+            <button @click="findEmployees" class="rounded bg-indigo-600 px-3 py-2 text-white">Apply Filters</button>
+            <button @click="resetFilters" class="rounded border bg-white px-3 py-2">Reset</button>
+          </div>
           <div class="flex gap-2"><input v-model="search" @keyup.enter="findEmployees" placeholder="Name / employee code" class="w-52 rounded-lg border px-3 py-2 text-sm"/><button @click="findEmployees" class="rounded-lg border px-3 py-2 text-sm">Search</button></div>
           <span class="text-sm text-slate-500">{{selected.length}} selected on current page</span>
         </div>

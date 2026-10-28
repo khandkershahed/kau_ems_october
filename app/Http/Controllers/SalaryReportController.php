@@ -576,6 +576,69 @@ class SalaryReportController extends Controller
                 ];
             }
 
+            // October review reports must use persisted monthly calculator amounts,
+            // not the employee profile's unrelated designation defaults.
+            if ($reportType === 'Salary Summary' && !$user->salaryGenerates->count()) {
+                $snapshot = \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
+                    ->where('user_id', $user->id)->where('salary_year', $year)
+                    ->where('salary_month', $monthId)->orderByDesc('version')->orderByDesc('id')->first();
+                if ($snapshot) {
+                    $result = json_decode((string) $snapshot->calculated_result, true) ?: [];
+                    $arrear = json_decode((string) $snapshot->arrear_snapshot, true) ?: [];
+                    $adds = is_array($result['allowances'] ?? null) ? $result['allowances'] : [];
+                    $deds = is_array($result['deductions'] ?? null) ? $result['deductions'] : [];
+                    $allowances = [];
+                    $deductions = [];
+                    foreach ($adds as $a) {
+                        $allowances[] = ['name' => (string)($a['name'] ?? 'Allowance'),
+                            'amount' => (float)($a['calculated_amount'] ?? 0),
+                            'calculated_amount' => (float)($a['calculated_amount'] ?? 0)];
+                    }
+                    foreach ($deds as $d) {
+                        $deductions[] = ['name' => (string)($d['name'] ?? 'Deduction'),
+                            'amount' => (float)($d['calculated_amount'] ?? 0),
+                            'calculated_amount' => (float)($d['calculated_amount'] ?? 0)];
+                    }
+                    $unknownArrear = !empty($arrear['unknown_lines']) || !is_numeric($arrear['net_arrear'] ?? null);
+                    foreach (($arrear['rows'] ?? []) as $r) {
+                        if (!is_array($r)) continue;
+                        $value = $r['final_amount'] ?? null;
+                        if (!is_numeric($value)) { $unknownArrear = true; continue; }
+                        $code = (string)($r['code'] ?? '');
+                        $title = trim((string)($r['title'] ?? $r['name'] ?? $code));
+                        $titles = [
+                            'BASIC_ARREAR_GROSS' => 'Bokeya Prapyo / Basic Arrear',
+                            'BASIC_INCREMENT_ADJUSTMENT' => 'Basic Difference / Old Increment',
+                            'SPECIAL_BENEFIT_RECOVERY' => 'Special Benefit Recovery',
+                            'HOUSE_RENT_RECOVERY' => 'House Rent Difference',
+                            'ADDITIONAL_GPF' => 'Additional Provident Fund',
+                        ];
+                        $title = $titles[$code] ?? ($title ?: 'Arrear component');
+                        $item = ['name'=>$title, 'amount'=>(float)$value,
+                            'calculated_amount'=>(float)$value,'arrear_phase5'=>true,
+                            'arrear_code'=>$code];
+                        if (($r['direction'] ?? '') === 'payable') $allowances[] = $item;
+                        else $deductions[] = $item;
+                    }
+                    $regularGross = (float)($result['total_allowance'] ?? 0);
+                    $regularDed = (float)($result['total_deduction'] ?? 0);
+                    return [
+                        'sl'=>$index+1,'user_id'=>$user->id,
+                        'employee_code'=>$employeeInfo?->employeeCode ?? (string)(10000+$user->id),
+                        'name'=>$user->name,'designation'=>$designation,'department'=>$dept,
+                        'bank_account_no'=>$bankAccountNo,'bank_address'=>$bankAddress,
+                        'month_id'=>$monthId,'year'=>$year,'is_generated'=>false,
+                        'bill_status'=>'not generated','basic_pay'=>(float)($result['basic'] ?? 0),
+                        'total_allowance'=>$regularGross + (float)($arrear['known_payable'] ?? 0),
+                        'total_deduction'=>$regularDed + (float)($arrear['known_deduction'] ?? 0),
+                        'salary_total'=>$unknownArrear ? null : round($regularGross-$regularDed+(float)$arrear['net_arrear'],2),
+                        'allowance_items'=>$allowances,'deduction_items'=>$deductions,
+                        'arrear_unresolved'=>$unknownArrear,'calculation_version_id'=>$snapshot->id,
+                        'calculation_status'=>$snapshot->status,
+                    ];
+                }
+            }
+
             // Regular Salary Report transformation
             // A Bank Advice line must correspond to exactly one frozen bill.
             // Never show estimated/profile salary for an ungenerated employee.

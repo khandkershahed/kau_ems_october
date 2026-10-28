@@ -30,6 +30,10 @@ final class SalaryEstimationWorkspaceController extends Controller
             'month' => 'nullable|integer|between:1,12',
             'status' => 'nullable|in:NOT_INITIALIZED,BLOCKED,CALCULATED,READY_FOR_GENERATION,GENERATED,WORK_BLOCKED',
             'search' => 'nullable|string|max:100',
+            'department_id' => 'nullable|integer|min:1',
+            'category_id' => 'nullable|integer|min:1',
+            'payroll_group_id' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|in:25,50,100,200',
         ]);
         $year = (int) ($data['year'] ?? 2026);
         $month = (int) ($data['month'] ?? 10);
@@ -48,6 +52,32 @@ final class SalaryEstimationWorkspaceController extends Controller
                     ->where('w.salary_month', '=', $month);
             });
 
+        if (!empty($data['department_id'])) {
+            $base->whereExists(function ($q) use ($data) {
+                $q->selectRaw('1')->from('employee_infos as ef')
+                    ->whereColumn('ef.user_id', 'ep.user_id')
+                    ->where('ef.department_office_id', $data['department_id']);
+            });
+        }
+        if (!empty($data['payroll_group_id'])) {
+            $base->whereExists(function ($q) use ($data) {
+                $q->selectRaw('1')->from('employee_infos as ef')
+                    ->whereColumn('ef.user_id', 'ep.user_id')
+                    ->where('ef.payroll_group_id', $data['payroll_group_id']);
+            });
+        }
+        if (!empty($data['category_id'])) {
+            $base->whereExists(function ($q) use ($data) {
+                $q->selectRaw('1')->from('user_user_categories as uc')
+                    ->whereColumn('uc.user_id', 'ep.user_id')
+                    ->where('uc.user_category_id', $data['category_id']);
+            });
+        }
+        $filterOptions = [
+            'departments' => DB::table('department_offices')->orderBy('name')->get(['id','name']),
+            'payroll_groups' => DB::table('payroll_groups as pg')->join('payroll_group_types as pgt', 'pgt.id', '=', 'pg.payroll_group_type_id')->orderBy('pgt.group_name')->get(['pg.id', 'pgt.group_name']),
+            'categories' => DB::table('user_categories')->orderBy('name')->get(['id','name']),
+        ];
         $allCounts = (clone $base)->selectRaw("COALESCE(w.workflow_status, 'NOT_INITIALIZED') as status, COUNT(*) as total")
             ->groupByRaw("COALESCE(w.workflow_status, 'NOT_INITIALIZED')")
             ->pluck('total', 'status');
@@ -73,14 +103,14 @@ final class SalaryEstimationWorkspaceController extends Controller
                 ->where('v.salary_year', $year)->where('v.salary_month', $month)
                 ->where('v.status', 'approved')->orderByDesc('v.version')->limit(1)])
             ->orderBy('ep.employee_code')->orderBy('ep.user_id')
-            ->paginate(25)->withQueryString();
+            ->paginate((int)($data['per_page'] ?? 25))->withQueryString();
         $counts = $allCounts->toArray();
         // Master Plan 5.2: only two editing worklists, with uninitialized employees included in blocked attention.
         $counts['WORK_BLOCKED'] = (int) ($counts['BLOCKED'] ?? 0) + (int) ($counts['NOT_INITIALIZED'] ?? 0);
         $runs = Schema::hasTable('salary_estimation_runs')
             ? DB::table('salary_estimation_runs')->where('salary_year', $year)->where('salary_month', $month)
                 ->orderByDesc('id')->limit(8)->get() : [];
-        return Inertia::render('Salary/Estimation/Workspace', compact('rows', 'counts', 'runs', 'year', 'month'));
+        return Inertia::render('Salary/Estimation/Workspace', compact('rows', 'counts', 'runs', 'year', 'month', 'filterOptions'));
     }
 
     public function start(Request $request, SalaryWorkflowRosterService $roster): JsonResponse

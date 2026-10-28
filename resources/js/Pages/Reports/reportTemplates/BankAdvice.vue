@@ -50,7 +50,6 @@ const totalInWords = computed(() => {
     <!-- A4 Paper Container -->
     <div class="a4-sheet bg-white text-slate-900 text-[10.5px] leading-tight font-sans mx-auto p-8 sm:p-10 shadow-lg border border-slate-200 relative min-h-[297mm] flex flex-col justify-between select-text print:p-6 print:shadow-none print:border-0">
 
-        <div v-if="reportType === 'Provisional Bank Advice'" class="mb-3 border-2 border-amber-600 p-2 text-center font-bold text-amber-900">PROVISIONAL — NOT FOR BANK PAYMENT<br/>Saved calculator snapshots only. No salary bill has been posted.</div>
         <!-- Top Section -->
         <div>
             <!-- Header with Logo and University Details -->

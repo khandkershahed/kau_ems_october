@@ -45,6 +45,9 @@ const records = computed(() => {
 });
 
 // Component breakdown calculations from the store
+const unresolvedCount = computed(() => records.value.filter(r => r.arrear_unresolved).length);
+const missingSnapshotCount = computed(() => records.value.filter(r => !r.is_generated && !r.calculation_version_id).length);
+
 const totals = computed(() => {
     return summaryStore.calculateComponentTotals(records.value);
 });
@@ -54,6 +57,9 @@ const totals = computed(() => {
     <!-- A4 Paper Container matching Salary Bill layout -->
     <div class="a4-sheet bg-white text-slate-900 text-[11px] leading-tight font-sans mx-auto p-8 sm:p-10 shadow-lg border border-slate-200 relative min-h-[297mm] flex flex-col justify-between select-text print:p-6 print:shadow-none print:border-0">
         
+        <div v-if="unresolvedCount || missingSnapshotCount" class="rounded border border-amber-400 bg-amber-50 px-3 py-2 text-amber-900 text-[10px] mb-2">
+          Incomplete financial evidence: {{ unresolvedCount }} unresolved arrear snapshot(s), {{ missingSnapshotCount }} employee(s) without saved calculator snapshot. The displayed sum is provisional, not an authorized bank payment total.
+        </div>
         <!-- Top Section -->
         <div>
             <!-- Header with Logo and University Details -->
