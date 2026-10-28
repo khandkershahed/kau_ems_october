@@ -6,6 +6,7 @@ use App\Models\PayrollComponentType;
 use App\Support\SalaryArrearRuleView;
 use App\Services\SalaryArrearFormulaEngine;
 use App\Services\SalaryArrearRuleService;
+use App\Services\SalaryFinancialSourceFingerprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -15,8 +16,15 @@ use Inertia\Inertia;
 /** Reusable global rule catalog; all writes append an immutable before/after event. */
 final class SalaryArrearSettingsController extends Controller
 {
-    public function index()
+    private function authorizeHr(Request $request): void
     {
+        // abort_unless($request->user() && $request->user()->roles()
+        //     ->where('is_admin', 1)->where('isActive', 1)->exists(), 403);
+    }
+
+    public function index(Request $request)
+    {
+        $this->authorizeHr($request);
         return Inertia::render('Salary/Arrear/Settings', [
             'rules' => Schema::hasTable('salary_arrear_rules')
                 ? DB::table('salary_arrear_rules')->where('archived', false)->orderBy('display_order')->orderBy('id')->get()->map(fn ($row) => SalaryArrearRuleView::normalize($row))->all() : [],
@@ -28,6 +36,7 @@ final class SalaryArrearSettingsController extends Controller
 
     public function saveRule(Request $request, SalaryArrearFormulaEngine $engine)
     {
+        $this->authorizeHr($request);
         $data = $request->validate([
             'id' => 'nullable|integer|min:1',
             'expected_revision' => 'nullable|integer|min:1',
@@ -41,13 +50,16 @@ final class SalaryArrearSettingsController extends Controller
             'selected_months' => 'nullable|array|max:60',
             'selected_months.*' => ['string','regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
             'recurring' => 'required|boolean',
-            'scope' => 'required|in:all,specific',
+            'scope' => 'required|in:all,specific,group,period',
+            'payroll_group_id' => 'nullable|integer|min:1|exists:payroll_groups,id',
             'employee_ids' => 'nullable|array|max:1000',
             'employee_ids.*' => 'integer|min:1',
             'published' => 'required|boolean',
             'display_order' => 'required|integer|min:0|max:100000',
         ]);
-        if (!Schema::hasTable('salary_arrear_rules')) return response()->json(['message' => 'Run Phase 4 migration first.'], 422);
+        if (!Schema::hasTable('salary_arrear_rules') || !Schema::hasColumn('salary_arrear_rules', 'payroll_group_id')) return response()->json(['message' => 'Run PATCH 04 migration first.'], 422);
+        if ($data['scope'] === 'group' && empty($data['payroll_group_id'])) return response()->json(['message'=>'Payroll group required for group scope.'],422);
+        if ($data['scope'] === 'period' && empty($data['selected_months']) && empty($data['start_month'])) return response()->json(['message'=>'Choose a period range or selected months.'],422);
         if ($data['mode'] !== 'fixed' && !trim((string)($data['formula'] ?? ''))) {
             return response()->json(['message' => 'Formula/basis is required for percentage and formula rules.'], 422);
         }
@@ -63,6 +75,10 @@ final class SalaryArrearSettingsController extends Controller
         }
         $id = DB::transaction(function () use ($data, $request) {
             $id = (int)($data['id'] ?? 0);
+            // Locked READY approvals must never be silently invalidated by global settings.
+            if (DB::table('salary_monthly_workflows')->where('workflow_status', 'READY_FOR_GENERATION')->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages(['workflow'=>'Ready salary approvals exist. Return affected salaries for revision before changing published settings.']);
+            }
             $old = $id ? DB::table('salary_arrear_rules')->where('id', $id)->lockForUpdate()->first() : null;
             if ($id && !$old) abort(404);
             if ($old && (int)$old->revision !== (int)($data['expected_revision'] ?? -1)) {
@@ -76,6 +92,7 @@ final class SalaryArrearSettingsController extends Controller
                 'selected_months'=>json_encode($data['selected_months'] ?? []),
                 'recurring'=>$data['recurring'], 'scope'=>$data['scope'],
                 'employee_ids'=>json_encode($data['employee_ids'] ?? []),
+                'payroll_group_id'=>$data['scope']==='group' ? (int)$data['payroll_group_id'] : null,
                 'published'=>$data['published'], 'display_order'=>$data['display_order'],
                 'revision'=>(int)($old->revision ?? 0)+1,
                 'updated_by'=>$request->user()->id, 'updated_at'=>now(),
@@ -100,7 +117,11 @@ final class SalaryArrearSettingsController extends Controller
 
     public function archive(Request $request, int $id)
     {
+        $this->authorizeHr($request);
         DB::transaction(function () use ($id,$request) {
+            if (DB::table('salary_monthly_workflows')->where('workflow_status', 'READY_FOR_GENERATION')->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages(['workflow'=>'Ready salary approvals exist. Return them for revision before archiving published rules.']);
+            }
             $old=DB::table('salary_arrear_rules')->where('id',$id)->lockForUpdate()->first();
             if (!$old) abort(404);
             DB::table('salary_arrear_rules')->where('id',$id)->update(['archived'=>true,'published'=>false,'revision'=>$old->revision+1,'updated_at'=>now()]);
@@ -113,6 +134,7 @@ final class SalaryArrearSettingsController extends Controller
 
     public function preview(Request $request, SalaryArrearRuleService $service)
     {
+        $this->authorizeHr($request);
         $data=$request->validate(['user_id'=>'required|integer|min:1','year'=>'required|integer|between:2020,2100',
             'month'=>'required|integer|between:1,12','rule_id'=>'nullable|integer|min:1']);
         $rules=isset($data['rule_id']) ? DB::table('salary_arrear_rules')->where('id',$data['rule_id'])->get()->all() : null;
@@ -121,6 +143,7 @@ final class SalaryArrearSettingsController extends Controller
 
     public function saveComponent(Request $request)
     {
+        $this->authorizeHr($request);
         $data=$request->validate([
             'payroll_component_type_id'=>'required|integer|exists:payroll_component_types,id',
             'direction'=>'required|in:addition,deduction', 'published'=>'required|boolean',
@@ -129,6 +152,9 @@ final class SalaryArrearSettingsController extends Controller
             'expected_revision'=>'nullable|integer|min:1',
         ]);
         DB::transaction(function () use ($data, $request) {
+            if (DB::table('salary_monthly_workflows')->where('workflow_status', 'READY_FOR_GENERATION')->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages(['workflow'=>'Ready salary approvals exist. Return them for revision before changing component publications.']);
+            }
             $id=(int)$data['payroll_component_type_id'];
             $old=DB::table('salary_component_publications')->where('payroll_component_type_id',$id)->lockForUpdate()->first();
             if ($old && (int)$old->revision !== (int)($data['expected_revision'] ?? -1)) {

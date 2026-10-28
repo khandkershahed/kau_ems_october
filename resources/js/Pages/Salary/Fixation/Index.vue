@@ -212,7 +212,7 @@ const save = (employee) => {
 <template>
     <Head title="Automated Salary Fixation" />
     <AuthenticatedLayout>
-        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-5">
+        <div class="mx-auto max-w-9xl px-4 py-6 sm:px-6 lg:px-8 space-y-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Automated Pay Fixation · 2026</h1>
@@ -339,6 +339,7 @@ const save = (employee) => {
                                 </button>
 
                                 <a :href="e.saved_id ? route('salary-fixation.admin-print', e.saved_id) : route('salary-fixation.preview', e.id)" target="_blank" rel="noopener" class="text-center rounded-lg bg-emerald-700 text-white px-3 py-2 whitespace-nowrap">Preview / Print Form</a>
+                                <a :href="route('salary-fixation.workspace', e.id) + '?year=2026&month=10'" class="text-center rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-300 px-3 py-2">Unified employee configuration (Oct 2026)</a>
                                 <button v-if="e.can_calculate" :disabled="busyId !== null" @click="save(e)" class="rounded-lg px-3 py-2 whitespace-nowrap bg-slate-800 text-white disabled:opacity-40">Save fixation snapshot</button>
                                 <button v-if="e.saved_status === 'pending_review'" :disabled="busyId !== null" @click="sendReview(e)" class="rounded-lg px-3 py-2 whitespace-nowrap border border-blue-300 text-blue-700 disabled:opacity-40">Optional: Send employee review</button>
                                 <button v-if="e.saved_id && ['pending_review', 'sent', 'employee_confirmed', 'employee_disputed', 'approved'].includes(e.saved_status)" :disabled="busyId !== null" @click="approve(e)" class="rounded-lg px-3 py-2 whitespace-nowrap bg-emerald-700 text-white disabled:opacity-40">Approve Saved Fixation</button>

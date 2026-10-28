@@ -108,6 +108,7 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/salary/setup/{user}', [\App\Http\Controllers\SalarySetupController::class, 'show'])->name('salary-setup.show');
     // Phase 2: employee/month read-only salary calculation entry; Phase 3 implements editing.
     // Phase 4 read-only/catalog settings; explicit rule changes are version-audited.
+    Route::post('/salary/arrear-settings/october-gpf-evidence', [\App\Http\Controllers\SalaryOctoberGpfEvidenceController::class, 'store'])->name('salary-arrear-settings.october-gpf-evidence.store');
     Route::get('/salary/arrear-settings', [\App\Http\Controllers\SalaryArrearSettingsController::class, 'index'])->name('salary-arrear-settings.index');
     Route::post('/salary/arrear-settings/rules', [\App\Http\Controllers\SalaryArrearSettingsController::class, 'saveRule'])->name('salary-arrear-settings.rules.store');
     Route::delete('/salary/arrear-settings/rules/{id}', [\App\Http\Controllers\SalaryArrearSettingsController::class, 'archive'])->name('salary-arrear-settings.rules.archive');
@@ -115,6 +116,16 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::post('/salary/arrear-settings/components', [\App\Http\Controllers\SalaryArrearSettingsController::class, 'saveComponent'])->name('salary-arrear-settings.components.store');
     Route::get('/salary/calculator/{user}', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'show'])->name('salary-calculator.show');
     Route::get('/salary/calculator/{user}/regular-only-preview', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'previewRegularOnly'])->name('salary-calculator.regular-only-preview');
+    // PATCH 05: read-only, resumable salary estimation and workflow worklists.
+    Route::get('/salary/estimation/horizontal-bill', [\App\Http\Controllers\SalaryProvisionalHorizontalBatchController::class, 'show'])->name('salary-estimation.horizontal-bill');
+    Route::post('/salary/estimation/bulk-save-calculations', [\App\Http\Controllers\SalaryBulkCalculationPersistenceController::class, 'save'])->name('salary-estimation.bulk-save-calculations');
+    Route::get('/salary/estimation/bulk-components', [\App\Http\Controllers\SalaryBulkComponentWorkspaceController::class, 'index'])->name('salary-estimation.bulk-components');
+    Route::get('/salary/estimation', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'index'])->name('salary-estimation.index');
+    Route::post('/salary/estimation/runs', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'start'])->name('salary-estimation.start');
+    Route::post('/salary/estimation/runs/{run}/next', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'next'])->name('salary-estimation.next')->whereNumber('run');
+    Route::get('/salary/estimation/runs/{run}/errors', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'errors'])->name('salary-estimation.errors')->whereNumber('run');
+    // PATCH 02: isolated HR workflow API (does not replace legacy salary posting).
+    require __DIR__.'/salary_workflow.php';
     Route::post('/salary/calculator/{user}/generate-bill', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'generateBill'])->name('salary-calculator.generate-bill');
     Route::post('/salary/calculator/{user}/component-override', [\App\Http\Controllers\SalaryEmployeeComponentOverrideController::class, 'save'])->name('salary-calculator.component-override');
     Route::post('/salary/calculator/{user}/versions', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'save'])->name('salary-calculator.versions.store');
@@ -125,6 +136,7 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
 
     // Automated salary fixation: read-only form and audit snapshots. No payroll mutation.
     Route::get('/salary/fixation', [\App\Http\Controllers\SalaryFixationController::class, 'index'])->name('salary-fixation.index');
+    Route::get('/salary/fixation/{user}/workspace', [\App\Http\Controllers\SalaryFixationWorkspaceController::class, 'show'])->name('salary-fixation.workspace');
     Route::get('/salary/fixation/{user}/preview', [\App\Http\Controllers\SalaryFixationController::class, 'preview'])->name('salary-fixation.preview');
     Route::post('/salary/fixation/{user}/snapshots', [\App\Http\Controllers\SalaryFixationController::class, 'store'])->name('salary-fixation.store');
     Route::post('/salary/fixation/{user}/adjustment', [\App\Http\Controllers\SalaryFixationController::class, 'saveAdjustment'])->name('salary-fixation.adjustment');
@@ -162,6 +174,9 @@ Route::get('/salary/arrears/periods/{periodId}/employees/{userId}/structured-pre
     Route::post('/salary/arrears/snapshots/{snapshotId}/review', [\App\Http\Controllers\SalaryArrearController::class, 'review'])->name('salary-arrears.review');
     Route::post('/salary/arrears/snapshots/{snapshotId}/approve', [\App\Http\Controllers\SalaryArrearController::class, 'approve'])->name('salary-arrears.approve');
     Route::post('/salary/arrears/post-approved', [\App\Http\Controllers\SalaryArrearPostingController::class, 'post'])->name('salary-arrears.post-approved');
+    Route::get('/salary/generate-ready', [\App\Http\Controllers\SalaryGenerationReadyController::class, 'index'])->name('salary-generates.ready');
+    Route::get('/salary/generation-workspace', [\App\Http\Controllers\SalaryReadyGenerationWorkspaceController::class, 'index'])->name('salary-generation-workspace.index');
+    Route::post('/salary/generation-workspace/runs', [\App\Http\Controllers\SalaryReadyGenerationWorkspaceController::class, 'start'])->name('salary-generation-workspace.start');
     Route::get('/salary/generate-bills', [SalaryGenerateController::class, 'index'])->name('salary-generates.index');
     Route::post('/salary/generate-single', [SalaryGenerateController::class, 'generateSalaryForEmployee'])->name('salary-generates.generate-single');
     Route::get('/salary/bulk-candidates', [SalaryGenerateController::class, 'bulkCandidates'])->name('salary-generates.bulk-candidates');

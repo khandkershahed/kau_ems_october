@@ -77,7 +77,43 @@ final class SalaryCalculationService
             if (self::isGpf($item)) $gpfRows[] = $item;
             else $otherDeductions[] = $normal($item, $basic, 'deduction');
         }
-        if (count($gpfRows) > 1) throw new DomainException('Duplicate GPF deduction components must be reconciled.');
+        // Resolve duplicate *configuration rows* before calculating GPF.
+        // One subscription must be deducted at most once. Explicit HR monthly
+        // overrides take precedence over published rules and legacy defaults.
+        if (count($gpfRows) > 1) {
+            $rank = static function (array $row): int {
+                return match ((string) ($row['component_source'] ?? '')) {
+                    'employee_month_override' => 3,
+                    'published_effective_rule' => 2,
+                    default => 1,
+                };
+            };
+            usort($gpfRows, static fn (array $a, array $b): int => $rank($b) <=> $rank($a));
+            $winner = $gpfRows[0];
+            $winnerRank = $rank($winner);
+            foreach (array_slice($gpfRows, 1) as $candidate) {
+                if ($rank($candidate) !== $winnerRank) {
+                    continue; // lower precedence row is superseded
+                }
+                // Same-precedence duplicates may be collapsed only when the
+                // configured GPF rule is identical, including percentage base.
+                $fields = ['calcType', 'amount', 'percentage_base_amount'];
+                foreach ($fields as $field) {
+                    $a = $winner[$field] ?? null;
+                    $b = $candidate[$field] ?? null;
+                    $equal = is_numeric($a) && is_numeric($b)
+                        ? abs((float) $a - (float) $b) < 0.00001
+                        : $a === $b;
+                    if (!$equal) {
+                        throw new DomainException(
+                            'Conflicting GPF values at the same authority level. '
+                            .'Please choose one GPF subscription in employee component settings.'
+                        );
+                    }
+                }
+            }
+            $gpfRows = [$winner];
+        }
         $gpfType = 'percentage';
         $gpfAmount = 10.0;
         $gpfSource = 'default_10_percent_half_up';

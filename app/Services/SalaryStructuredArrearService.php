@@ -324,20 +324,45 @@ final class SalaryStructuredArrearService
         ];
     }
 
-    /** Memoised parse of the historical dump (Juneâ€“September 2026), keyed by row id. */
+    /** Memoised historical evidence with a source-file-aware, private filesystem cache. */
     private function historicalDumpRows(): array
     {
-        if ($this->historicalDumpCache === null) {
-            $rows = [];
-            try {
-                foreach ((new HistoricalSalaryImportService())->parse() as $row) {
-                    $rows[(int) $row['id']] = $row;
-                }
-            } catch (\Throwable) {
-                $rows = []; // dump missing â€” no invented source.
-            }
-            $this->historicalDumpCache = $rows;
+        if ($this->historicalDumpCache !== null) {
+            return $this->historicalDumpCache;
         }
+
+        $sourcePath = base_path('database/sql/kau-app.sql');
+        $parse = static function (): array {
+            $rows = [];
+            foreach ((new HistoricalSalaryImportService())->parse() as $row) {
+                $rows[(int) $row['id']] = $row;
+            }
+            return $rows;
+        };
+
+        try {
+            if (!is_file($sourcePath)) {
+                $this->historicalDumpCache = [];
+                return $this->historicalDumpCache;
+            }
+
+            clearstatcache(true, $sourcePath);
+            $key = 'kau_historical_salary_rows_'.sha1(
+                $sourcePath.'|'.filesize($sourcePath).'|'.filemtime($sourcePath)
+            );
+            $cached = \Illuminate\Support\Facades\Cache::store('file')->remember(
+                $key, now()->addMinutes(30), $parse
+            );
+            $this->historicalDumpCache = is_array($cached) ? $cached : [];
+        } catch (\Throwable) {
+            // Cache must never be a prerequisite for payroll evidence resolution.
+            try {
+                $this->historicalDumpCache = $parse();
+            } catch (\Throwable) {
+                $this->historicalDumpCache = [];
+            }
+        }
+
         return $this->historicalDumpCache;
     }
 

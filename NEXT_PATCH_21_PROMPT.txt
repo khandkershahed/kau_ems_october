@@ -1,0 +1,17 @@
+Act as a senior Laravel 12, Vue 3, Inertia.js and MariaDB financial payroll architect. Explain everything in Bangla.
+
+KAU EMS — PATCH 21. Follow the attached KAU HR Payroll Master Plan verbatim, especially §5.3/5.4/5.5 and §12. PATCH 20 delivered only a PARTIAL aggregated Provisional Horizontal Bill sourced from active approved saved snapshots. Full Phase 3 is NOT finished.
+
+Attach latest complete source after PATCH 20, both original audited SQL snapshots, Master Plan, latest 18-employee readiness JSON, and PATCH 20 staging logs.
+
+FIRST PRIORITIES:
+1. Complete genuine, bounded, resumable arrear-inclusive Calculate All and Calculate Selected persistence, not only preview.
+2. Resolve October GPF evidence dependencies using authentic historical documentation; never invent amounts.
+3. Complete Master Plan spreadsheet-style per-employee Basic/allowances/GPF/five-arrear-component grid, including audited common actions and different values per employee.
+4. Save Draft status unchanged, two-stage approvals, snapshot signatures, and correct per-employee failure/retry states.
+5. Audited 18-employee financial reconciliation including employee code 20057 with exact historical figures from supplied SQL.
+6. MariaDB integration + amount parity + concurrency + duplicate GPF/arrear prevention tests.
+7. Verify the aggregated Provisional Horizontal Bill against persisted approved versions; ensure the report exposes final estimated net only when supported.
+8. Preserve no-posting boundary in Salary Estimation, generated bill immutability and authentication-only role policy.
+
+Deliver changed/new-files ZIP, README_BANGLA, real test results, a single Windows PowerShell code block automatically locating ZIP under D:\Projects\KAU EMS\new patch, explicit limitations and release decision. Do not claim completion without tests.

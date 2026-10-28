@@ -1,0 +1,25 @@
+﻿
+   Psy\Exception\ParseErrorException 
+
+  PHP Parse error: Syntax error, unexpected '*' on line 4
+
+  at vendor\psy\psysh\src\Exception\ParseErrorException.php:44
+     40Γûò      * @param \PhpParser\Error $e
+     41Γûò      */
+     42Γûò     public static function fromParseError(\PhpParser\Error $e): self
+     43Γûò     {
+  Γ₧£  44Γûò         return new self($e->getRawMessage(), $e->getAttributes());
+     45Γûò     }
+     46Γûò }
+     47Γûò
+
+  1   vendor\psy\psysh\src\CodeCleaner.php:657
+      Psy\Exception\ParseErrorException::fromParseError(Object(PhpParser\Error))
+
+  2   vendor\psy\psysh\src\CodeCleaner.php:273
+      Psy\CodeCleaner::parse("<?php dump([
+    october_workflows => DB::table(salary_monthly_workflows)->where(salary_year, 2026)->where(salary_month, 10)->count(),
+    october_posted_bills => DB::table(salary_generates)->where(salaryGenerationYear, 2026)->where(monthId, 10)->count(),
+    duplicate_profile_users => DB::table(employee_infos)->select(user_id)->groupBy(user_id)->havingRaw(COUNT(*)
+")
+

@@ -46,12 +46,23 @@ final class SalaryArrearRuleService
         return $out;
     }
 
-    public function published(int $userId): array
+    public function published(int $userId, ?int $year = null, ?int $month = null): array
     {
         if (!Schema::hasTable('salary_arrear_rules')) return [];
         return DB::table('salary_arrear_rules')->where('published', true)->where('archived', false)
             ->orderBy('display_order')->orderBy('id')->get()
-            ->filter(function ($row) use ($userId) {
+            ->filter(function ($row) use ($userId, $year, $month) {
+                if ($row->scope === 'period' && $year !== null && $month !== null) {
+                    $payPeriod = sprintf('%04d-%02d', $year, $month);
+                    $selected = json_decode((string)$row->selected_months, true) ?: [];
+                    if ($selected && !in_array($payPeriod, $selected, true)) return false;
+                    if (!$selected && $row->start_month && $payPeriod < substr((string)$row->start_month, 0, 7)) return false;
+                    if (!$selected && $row->end_month && $payPeriod > substr((string)$row->end_month, 0, 7)) return false;
+                }
+                if ($row->scope === 'group') {
+                    $group = DB::table('employee_infos')->where('user_id', $userId)->limit(2)->get();
+                    return $group->count() === 1 && (int) $group->first()->payroll_group_id === (int) $row->payroll_group_id;
+                }
                 if ($row->scope !== 'specific') return true;
                 $ids = json_decode((string) $row->employee_ids, true) ?: [];
                 return in_array($userId, array_map('intval', $ids), true);
@@ -70,6 +81,10 @@ final class SalaryArrearRuleService
             ->orderBy('display_order')->orderBy('id')
             ->get(['id', 'code', 'title', 'direction', 'mode', 'formula', 'scope', 'employee_ids', 'start_month', 'end_month'])
             ->filter(static function ($row) use ($userId) {
+                if ($row->scope === 'group') {
+                    $group = DB::table('employee_infos')->where('user_id', $userId)->limit(2)->get();
+                    return $group->count() === 1 && (int) $group->first()->payroll_group_id === (int) $row->payroll_group_id;
+                }
                 if ($row->scope !== 'specific') return true;
                 $ids = json_decode((string) $row->employee_ids, true) ?: [];
                 return in_array($userId, array_map('intval', $ids), true);
@@ -190,13 +205,27 @@ final class SalaryArrearRuleService
         if (!Schema::hasTable('salary_calculation_versions')) {
             throw new DomainException('Approved October GPF evidence table is unavailable.');
         }
+        // A separate document-backed, immutable GPF reference breaks the first-version
+        // dependency without inventing a 10% rule or writing a payroll/GPF ledger.
+        $evidence = Schema::hasTable('salary_october_gpf_evidence')
+            ? DB::table('salary_october_gpf_evidence')->where('user_id',$userId)
+                ->where('salary_year',2026)->where('salary_month',10)->first() : null;
         $versions = DB::table('salary_calculation_versions')
             ->where('user_id', $userId)->where('salary_year', 2026)
             ->where('salary_month', 10)->where('status', 'approved')
             ->orderByDesc('version')->limit(2)->get();
         $version = $versions->first();
         if (!$version || (int)$version->fixation_id !== (int)($fixation['salary_fixation_id'] ?? 0)) {
-            throw new DomainException('Approved employee-specific October GPF calculation for this fixation is missing.');
+            if ($evidence && (int)$evidence->fixation_id === (int)($fixation['salary_fixation_id'] ?? 0)
+                && is_numeric($evidence->verified_gpf_amount) && (float)$evidence->verified_gpf_amount > 0
+                && trim((string)$evidence->evidence_reference) !== ''
+                && trim((string)$evidence->verification_note) !== '') {
+                return ['amount'=>(float)$evidence->verified_gpf_amount,
+                    'source'=>'document_verified_october_gpf_evidence_'.(int)$evidence->id,
+                    'effective_month'=>'2026-10',
+                    'evidence_reference'=>$evidence->evidence_reference];
+            }
+            throw new DomainException('October GPF requires a same-fixation approved calculation or independently documented October GPF evidence; never default to zero.');
         }
         $result = json_decode((string)$version->calculated_result, true);
         $rule = is_array($result) ? ($result['gpf_rule'] ?? null) : null;
@@ -231,7 +260,7 @@ final class SalaryArrearRuleService
      */
     public function preview(int $userId, int $year, int $month, ?array $rules = null): array
     {
-        $rules ??= $this->published($userId);
+        $rules ??= $this->published($userId, $year, $month);
         if (!\App\Services\SalaryStructuredArrearService::applicable($year, $month)) {
             return $this->previewLegacy($userId, $year, $month, $rules);
         }
@@ -254,7 +283,7 @@ final class SalaryArrearRuleService
     /** Legacy custom-rule evaluator. Never used for structured October components. */
     private function previewLegacy(int $userId, int $year, int $month, ?array $rules = null): array
     {
-        $rules ??= $this->published($userId);
+        $rules ??= $this->published($userId, $year, $month);
         $out = [];
         foreach ($rules as $rule) {
             $rule = (object) $rule;

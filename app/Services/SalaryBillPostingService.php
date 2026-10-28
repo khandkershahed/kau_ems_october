@@ -95,6 +95,9 @@ final class SalaryBillPostingService
             }
             if (DB::table('salary_bill_source_links')->where('user_id',$userId)->where('salary_year',$year)
                 ->where('salary_month',$month)->exists()) throw new DomainException('A salary source has already been posted for this employee/month.');
+            // All existing HTTP and batch generation routes converge here.
+            // Enforce the two-stage approval under the employee row lock.
+            $workflow = app(SalaryPostingApprovalGuard::class)->assertReady($userId, $year, $month);
             // Check old and manually-entered ledger rows BEFORE creating the bill.
             $existingGpf=DB::table('general_provident_funds')->where('user_id',$userId)
                 ->where('year',$year)->where('month',$month)->where('type','monthly_deduction')->lockForUpdate()->get();
@@ -109,6 +112,8 @@ final class SalaryBillPostingService
             }
 
             $source=$this->preview($userId,$year,$month);
+            // Require exact approved regular + arrear parity before ANY ledger or bill insert.
+            app(SalaryApprovedPostingParityGuard::class)->assertReadySource($workflow, $source, $userId, $year, $month);
             SalaryBulkSourceGuard::assertMatches($expectedSourceHash, (string) $source['source_hash']);
             if ($source['arrear_payable']>0 || $source['arrear_deduction']>0) {
                 // Do not double-post a retrospective period already disbursed by
@@ -230,6 +235,9 @@ final class SalaryBillPostingService
                 || abs(($sumAdd-$sumDed)-(float)$bill->salaryTotal)>0.009) {
                 throw new DomainException('Saved bill item totals do not reconcile to Net Payable.');
             }
+            // Same transaction as the salary bill and monthly GPF entries:
+            // a successful posting cannot leave the workflow in READY state.
+            app(SalaryPostingApprovalGuard::class)->recordGenerated($workflow, (int)$bill->id, $actorId);
             return ['result'=>'generated','bill_id'=>$bill->id,'source_link_id'=>$linkId,
                 'source_hash'=>$source['source_hash'],'net_salary'=>$source['net_payable']];
         },3);

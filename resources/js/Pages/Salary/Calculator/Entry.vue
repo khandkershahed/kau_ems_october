@@ -224,12 +224,11 @@ const validBasic = computed(
         basicRows.value.length === 1 &&
         basic.value > 0 &&
         basicRows.value[0].calcType === "fixed" &&
-        (props.effective.source !== "approved_fixation" ||
-            Math.abs(basic.value - Number(props.effective.basic)) < 0.005),
+        Number.isFinite(basic.value),
 );
 const validation = computed(() => {
     if (!validBasic.value)
-        return "Exactly one positive Basic is needed. Approved fixation Basic must match the salary component.";
+        return "Exactly one positive fixed Basic Pay component is required.";
     if (
         [...additions.value, ...deductions.value].some(
             (r) =>
@@ -1043,8 +1042,11 @@ const saveComponentOverride = async () => {
                                     <option value="fixed">Fixed</option><option value="percentage">Percentage (%)</option>
                                 </select>
                                 <input v-model.number="row.amount" type="number" step="0.01" min="0"
-                                    :readonly="direction === 'addition' && isBasic(row)"
                                     aria-label="Component value" class="w-full rounded-lg border-slate-300 text-right text-sm" />
+                                <p v-if="direction === 'addition' && isBasic(row) && Math.abs(Number(row.amount) - Number(effective.basic || 0)) > 0.009"
+                                    class="col-span-3 text-xs text-amber-700">
+                                    HR Basic override: approved fixation Basic ৳{{ money(Number(effective.basic || 0)) }}. Enter revision reason and evidence reference below before approval.
+                                </p>
                                 <div class="flex gap-1 items-center">
                                     <button type="button" @click="resetRegularRow(direction, index)"
                                         :disabled="direction === 'addition' && isBasic(row)" title="Reset to initial value"
@@ -1149,6 +1151,12 @@ const saveComponentOverride = async () => {
                                     <input v-model.number="r.final_amount" type="number" min="0" step="0.01"
                                         aria-label="Arrear amount" class="flex-1 min-w-0 rounded-lg border-slate-300 text-sm text-right"
                                         placeholder="Amount (BDT)" />
+                                    <div v-if="overridden(r)" class="w-full grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <input v-model="r.reason" type="text" maxlength="2000" class="rounded-lg border-slate-300 text-sm"
+                                            aria-label="Arrear manual override reason" placeholder="Arrear override reason" />
+                                        <input v-model="r.evidence_reference" type="text" maxlength="500" class="rounded-lg border-slate-300 text-sm"
+                                            aria-label="Arrear evidence reference" placeholder="Evidence reference / HR authorization" />
+                                    </div>
                                     <button type="button" @click="removeArrear(i)" title="Delete arrear component"
                                         aria-label="Delete arrear component" class="rounded border border-rose-200 px-3 py-2 text-rose-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path :d="trashSvg" /></svg>

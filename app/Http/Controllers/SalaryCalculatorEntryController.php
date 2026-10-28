@@ -361,6 +361,57 @@ final class SalaryCalculatorEntryController extends Controller
         return response()->json(['rows'=>$service->preview($user->id,(int)$data['year'],(int)$data['month'],$input)]);
     }
 
+    /** PATCH 12: authoritative calculator input for bulk persistence, never browser totals. */
+    public function verifiedBulkInput(User $user, int $year, int $month, string $reason,
+        ApprovedFixationResolver $resolver, SalaryCalculationService $calculator): array
+    {
+        if ($year !== 2026 || $month !== 10) {
+            throw new DomainException('This verified bulk workflow is limited to October 2026.');
+        }
+        $employee = $this->profiles($user);
+        $fixation = $resolver->forUser($user->id, $year, $month);
+        [$adds, $ded] = $this->components($employee, $year, $month, $fixation);
+        $juneRent = $this->juneRentReference($user->id);
+        if ($juneRent !== null) $adds = $this->setHistoricalJuneRent($adds, $juneRent);
+        $gpf = collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))
+            ? null : ['type' => 'disabled', 'amount' => 0];
+        // Identical original calculation service and approval constraints.
+        $calculator->calculate($adds, $ded, $fixation, $gpf);
+        $rules = app(SalaryArrearRuleService::class)->preview($user->id, $year, $month);
+        if (!$rules) throw new DomainException('No published arrear rules; verify October arrear configuration.');
+        $arrears = [];
+        foreach ($rules as $rule) {
+            if (!empty($rule['error']) || !isset($rule['calculated_amount'])
+                || !is_numeric($rule['calculated_amount']) || (float)$rule['calculated_amount'] < 0) {
+                throw new DomainException('Arrear source not verified for '.$rule['title'].': '.($rule['error'] ?? 'unknown amount'));
+            }
+            $arrears[] = [
+                'rule_id' => $rule['rule_id'], 'code' => $rule['code'],
+                'title' => $rule['title'], 'direction' => $rule['direction'],
+                'mode' => $rule['mode'], 'formula' => $rule['formula'] ?? null,
+                'calculated_amount' => $rule['calculated_amount'],
+                'final_amount' => $rule['calculated_amount'], 'months' => $rule['months'] ?? [],
+            ];
+        }
+        $latest = $this->latest($user->id, $year, $month);
+        // Previously entered manual arrears must be reviewed, not silently discarded.
+        if ($latest && $latest->arrear_snapshot) {
+            $prior = json_decode((string)$latest->arrear_snapshot, true);
+            foreach (($prior['rows'] ?? []) as $row) {
+                if (empty($row['rule_id']) || !empty($row['overridden'])) {
+                    throw new DomainException('Existing custom/manual arrear lines require individual calculator review.');
+                }
+            }
+        }
+        return [
+            'year'=>$year, 'month'=>$month, 'status'=>'approved',
+            'expected_version'=>(int)($latest->version ?? 0),
+            'component_override_hash'=>app(SalaryEmployeeComponentOverrideService::class)->signature($user->id,$year,$month),
+            'additions'=>$adds, 'deductions'=>$ded, 'gpf_override'=>$gpf,
+            'arrear_rows'=>$arrears, 'reason'=>$reason,
+        ];
+    }
+
     public function save(Request $request, User $user, ApprovedFixationResolver $resolver, SalaryCalculationService $calculator)
     {
         $input = $request->validate([
@@ -412,16 +463,26 @@ final class SalaryCalculatorEntryController extends Controller
             }
             $adds = $input['additions'];
             $ded = $input['deductions'];
-            // Basic is a derived, non-editable value for approved fixation.
-            // Detect any attempt to save a mismatched Basic, rather than silently
-            // replacing user input after an approval change.
-            if ($fixation) {
-                foreach ($adds as $item) {
-                    if (preg_match('/\bbasic(?:\s+pay|\s+salary)?\b/i', $item['name'])
-                        && abs((float) $item['amount'] - (float) $fixation['basic']) > .009) {
-                        throw new DomainException('Basic Pay must match the currently approved fixation; revise the fixation first.');
-                    }
+            // The fixation itself remains immutable. A monthly HR Basic override
+            // is stored within the versioned salary components, with attribution.
+            $calculationFixation = $fixation;
+            $basicOverrides = array_values(array_filter($adds, static fn ($row) =>
+                preg_match('/\bbasic(?:\s+pay|\s+salary)?\b/i', (string) ($row['name'] ?? '')) === 1));
+            if (count($basicOverrides) !== 1) {
+                throw new DomainException('Exactly one Basic Pay component is required.');
+            }
+            $enteredBasic = (float) $basicOverrides[0]['amount'];
+            if ($enteredBasic <= 0 || ($basicOverrides[0]['calcType'] ?? '') !== 'fixed') {
+                throw new DomainException('HR Basic must be a positive fixed amount.');
+            }
+            if ($fixation && abs($enteredBasic - (float) $fixation['basic']) > .009) {
+                if ($input['status'] === 'approved' &&
+                    (!trim((string) ($input['reason'] ?? '')) || !trim((string) ($input['evidence_reference'] ?? '')))) {
+                    throw new DomainException('HR Basic override requires a revision reason and evidence/reference before approval.');
                 }
+                $calculationFixation['basic'] = $enteredBasic;
+                $calculationFixation['hr_basic_override'] = true;
+                $calculationFixation['approved_fixation_basic'] = (float) $fixation['basic'];
             }
             $gpfInput = $input['gpf_override'] ?? null;
             if ($gpfInput === null && !collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))) {
@@ -443,7 +504,7 @@ final class SalaryCalculatorEntryController extends Controller
                     }
                 }
             }
-            $calculated = $calculator->calculate($adds, $ded, $fixation, $gpfInput);
+            $calculated = $calculator->calculate($adds, $ded, $calculationFixation, $gpfInput);
             $submittedArrear = $input['arrear_rows'] ?? [];
             // Re-evaluate every published rule from authoritative historical records.
             // Never trust browser-provided automatic results or payment evidence.

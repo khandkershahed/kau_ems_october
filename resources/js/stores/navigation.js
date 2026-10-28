@@ -174,11 +174,19 @@ export const useNavigationStore = defineStore('navigation', () => {
                 },
                 {
                     title: 'Salary estimations',
-                    routeName: 'salary-setup.index',
-                    activePattern: 'salary-setup.*',
+                    routeName: 'salary-estimation.index',
+                    activePattern: 'salary-estimation.*',
                     category: 'Salary & Bonus Management',
                     keywords: ['salary setup', 'estimation', 'override', 'rule over', 'allowance customization', 'tailor salary'],
                     description: 'Personalize employee salary components & review estimations'
+                },
+                {
+                    title: 'Bulk modify 18 employees',
+                    routeName: 'salary-estimation.bulk-components',
+                    activePattern: 'salary-estimation.bulk-components',
+                    category: 'Salary & Bonus Management',
+                    keywords: ['18 employees', 'bulk components', 'salary corrections'],
+                    description: 'Edit selected component rules across multiple employees with audit tracking'
                 },
                 {
                     title: 'Bonus estimation',

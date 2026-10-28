@@ -81,7 +81,12 @@ final class SalaryOfficialReportController extends Controller
         }
         // Bulk preview must never print an incomplete or unitemized salary as payable.
         // Other report types retain their existing selection and reconciliation behavior.
-        if ($validated['kind'] === 'bulk') {
+        // Provisional horizontal preview is intentionally allowed to contain
+        // unposted and incomplete employee rows. The Blade report renders
+        // missing monetary values as UNKNOWN and labels such rows DRAFT.
+        // Never silently discard selected employees from a preview.
+        // Official/non-preview reports retain the strict reconciliation filter.
+        if ($validated['kind'] === 'bulk' && !$draftPreview) {
             $rows = array_values(array_filter($rows, static function (array $row): bool {
                 if (($row['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW'
                     || !($row['details_complete'] ?? false)
@@ -123,7 +128,7 @@ final class SalaryOfficialReportController extends Controller
                     && abs($sumDed - $deduct) < 0.011;
             }));
         }
-        if ($validated['kind'] === 'bulk' && count($rows) === 0) {
+        if ($validated['kind'] === 'bulk' && !$draftPreview && count($rows) === 0) {
             return $this->reportError('No fully reconciled saved salary bill is eligible for this horizontal report. Incomplete/unverified salary rows were excluded.');
         }
         $kind = $validated['kind'];

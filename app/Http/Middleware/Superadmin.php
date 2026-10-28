@@ -15,8 +15,8 @@ class Superadmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || ! $request->user()->roles()->whereIn('role_name', ['superadmin', 'payroll_hr', 'hr'])->exists()) {
-            abort(403, 'Unauthorized action.');
+        if (! $request->user()) {
+            abort(401, 'Authentication required.');
         }
 
         return $next($request);

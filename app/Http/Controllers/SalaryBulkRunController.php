@@ -94,10 +94,12 @@ final class SalaryBulkRunController extends Controller
                         'message'=>$saved['result'],'updated_at'=>now(),
                     ]);
                 } catch (DomainException $e) {
+                    $this->recordPostingFailure($item, $run, $e->getMessage());
                     DB::table('salary_bulk_run_items')->where('id',$id)->update([
                         'status'=>'blocked','message'=>$e->getMessage(),'updated_at'=>now(),
                     ]);
                 } catch (\Throwable $e) {
+                    $this->recordPostingFailure($item, $run, 'Unexpected posting failure; inspect Laravel logs.');
                     report($e);
                     DB::table('salary_bulk_run_items')->where('id',$id)->update([
                         'status'=>'error','message'=>'Unexpected server error; inspect Laravel logs.','updated_at'=>now(),
@@ -111,6 +113,25 @@ final class SalaryBulkRunController extends Controller
             ]);
             return response()->json(['remaining'=>$remaining,'processed'=>$processed]+$this->summaryData($this->getRun($token)));
         } catch (DomainException $e) {return response()->json(['message'=>$e->getMessage()],422);}
+    }
+
+    /** A failed bill transaction has already rolled back. Record the failure separately. */
+    private function recordPostingFailure(object $item, object $run, string $reason): void
+    {
+        try {
+            $state = DB::table('salary_monthly_workflows')
+                ->where('user_id', $item->user_id)->where('salary_year', $run->salary_year)
+                ->where('salary_month', $run->salary_month)->first();
+            if (!$state || $state->workflow_status !== 'READY_FOR_GENERATION') return;
+            app(\App\Services\SalaryWorkflowService::class)->transition(
+                (int) $item->user_id, (int) $run->salary_year, (int) $run->salary_month,
+                'posting_failed', (int) $run->created_by, 'Posting failed: '.substr($reason, 0, 1700),
+                null, null, substr($reason, 0, 1700), (int) $state->revision
+            );
+        } catch (\Throwable $auditException) {
+            // Never conceal the original posting failure or alter an existing bill.
+            report($auditException);
+        }
     }
 
     private function summaryData(object $run): array

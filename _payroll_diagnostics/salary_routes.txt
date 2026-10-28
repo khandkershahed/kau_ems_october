@@ -1,0 +1,78 @@
+﻿
+  GET|HEAD  dashboard/salary/arrear-settings ..... salary-arrear-settings.index ΓÇ║ SalaryArrearSettingsController@index
+  POST      dashboard/salary/arrear-settings/components salary-arrear-settings.components.store ΓÇ║ SalaryArrearSettingΓÇª
+  GET|HEAD  dashboard/salary/arrear-settings/preview salary-arrear-settings.rules.preview ΓÇ║ SalaryArrearSettingsContrΓÇª
+  POST      dashboard/salary/arrear-settings/rules salary-arrear-settings.rules.store ΓÇ║ SalaryArrearSettingsControlleΓÇª
+  DELETE    dashboard/salary/arrear-settings/rules/{id} salary-arrear-settings.rules.archive ΓÇ║ SalaryArrearSettingsCoΓÇª
+  GET|HEAD  dashboard/salary/arrears ............................. salary-arrears.index ΓÇ║ SalaryArrearController@index
+  GET|HEAD  dashboard/salary/arrears/periods ................. salary-arrears.periods ΓÇ║ SalaryArrearController@periods
+  POST      dashboard/salary/arrears/periods ....... salary-arrears.periods.store ΓÇ║ SalaryArrearController@storePeriod
+  PUT       dashboard/salary/arrears/periods/{periodId} salary-arrears.periods.policy ΓÇ║ SalaryArrearController@updateΓÇª
+  GET|HEAD  dashboard/salary/arrears/periods/{periodId}/employees/{userId} salary-arrears.statement ΓÇ║ SalaryArrearConΓÇª
+  POST      dashboard/salary/arrears/periods/{periodId}/employees/{userId}/manual salary-arrears.manual ΓÇ║ SalaryArreaΓÇª
+  POST      dashboard/salary/arrears/periods/{periodId}/employees/{userId}/payment-confirmation salary-arrears.paymenΓÇª
+  POST      dashboard/salary/arrears/periods/{periodId}/employees/{userId}/snapshots salary-arrears.snapshot ΓÇ║ SalaryΓÇª
+  POST      dashboard/salary/arrears/periods/{periodId}/employees/{userId}/source salary-arrears.source ΓÇ║ SalaryArreaΓÇª
+  GET|HEAD  dashboard/salary/arrears/periods/{periodId}/employees/{userId}/structured-preview salary-arrears.structurΓÇª
+  GET|HEAD  dashboard/salary/arrears/periods/{periodId}/preview salary-arrears.preview ΓÇ║ SalaryArrearController@previΓÇª
+  POST      dashboard/salary/arrears/post-approved . salary-arrears.post-approved ΓÇ║ SalaryArrearPostingController@post
+  POST      dashboard/salary/arrears/snapshots/{snapshotId}/approve salary-arrears.approve ΓÇ║ SalaryArrearController@aΓÇª
+  POST      dashboard/salary/arrears/snapshots/{snapshotId}/review salary-arrears.review ΓÇ║ SalaryArrearController@revΓÇª
+  GET|HEAD  dashboard/salary/bulk-candidates salary-generates.bulk-candidates ΓÇ║ SalaryGenerateController@bulkCandidatΓÇª
+  POST      dashboard/salary/bulk-runs ........................ salary-bulk-runs.start ΓÇ║ SalaryBulkRunController@start
+  GET|HEAD  dashboard/salary/bulk-runs/{token} ............ salary-bulk-runs.summary ΓÇ║ SalaryBulkRunController@summary
+  GET|HEAD  dashboard/salary/bulk-runs/{token}/csv ................ salary-bulk-runs.csv ΓÇ║ SalaryBulkRunController@csv
+  POST      dashboard/salary/bulk-runs/{token}/next ............. salary-bulk-runs.next ΓÇ║ SalaryBulkRunController@next
+  GET|HEAD  dashboard/salary/calculator/{user} ......... salary-calculator.show ΓÇ║ SalaryCalculatorEntryController@show
+  POST      dashboard/salary/calculator/{user}/arrear-preview salary-calculator.arrear-preview ΓÇ║ SalaryCalculatorEntrΓÇª
+  POST      dashboard/salary/calculator/{user}/component-override salary-calculator.component-override ΓÇ║ SalaryEmployΓÇª
+  POST      dashboard/salary/calculator/{user}/generate-bill salary-calculator.generate-bill ΓÇ║ SalaryCalculatorEntryCΓÇª
+  GET|HEAD  dashboard/salary/calculator/{user}/regular-only-preview salary-calculator.regular-only-preview ΓÇ║ SalaryCaΓÇª
+  POST      dashboard/salary/calculator/{user}/versions salary-calculator.versions.store ΓÇ║ SalaryCalculatorEntryContrΓÇª
+  GET|HEAD  dashboard/salary/estimation .......... salary-estimation.index ΓÇ║ SalaryEstimationWorkspaceController@index
+  GET|HEAD  dashboard/salary/estimation/bulk-components salary-estimation.bulk-components ΓÇ║ SalaryBulkComponentWorkspΓÇª
+  POST      dashboard/salary/estimation/bulk-save-calculations salary-estimation.bulk-save-calculations ΓÇ║ SalaryBulkCΓÇª
+  POST      dashboard/salary/estimation/runs ..... salary-estimation.start ΓÇ║ SalaryEstimationWorkspaceController@start
+  GET|HEAD  dashboard/salary/estimation/runs/{run}/errors salary-estimation.errors ΓÇ║ SalaryEstimationWorkspaceControlΓÇª
+  POST      dashboard/salary/estimation/runs/{run}/next salary-estimation.next ΓÇ║ SalaryEstimationWorkspaceController@ΓÇª
+  GET|HEAD  dashboard/salary/fixation ......................... salary-fixation.index ΓÇ║ SalaryFixationController@index
+  POST      dashboard/salary/fixation/bulk-approve-saved salary-fixation.bulk-approve-saved ΓÇ║ SalaryFixationControlleΓÇª
+  POST      dashboard/salary/fixation/bulk-decision salary-fixation.bulk-decision ΓÇ║ SalaryFixationController@bulkDeciΓÇª
+  POST      dashboard/salary/fixation/review/{salaryFixation}/approve salary-fixation.approve ΓÇ║ SalaryFixationControlΓÇª
+  GET|HEAD  dashboard/salary/fixation/review/{salaryFixation}/print salary-fixation.admin-print ΓÇ║ SalaryFixationContrΓÇª
+  POST      dashboard/salary/fixation/review/{salaryFixation}/send salary-fixation.send-review ΓÇ║ SalaryFixationControΓÇª
+  POST      dashboard/salary/fixation/{user}/adjustment salary-fixation.adjustment ΓÇ║ SalaryFixationController@saveAdjΓÇª
+  POST      dashboard/salary/fixation/{user}/approve-now salary-fixation.approve-now ΓÇ║ SalaryFixationController@approΓÇª
+  GET|HEAD  dashboard/salary/fixation/{user}/preview ...... salary-fixation.preview ΓÇ║ SalaryFixationController@preview
+  POST      dashboard/salary/fixation/{user}/reject ......... salary-fixation.reject ΓÇ║ SalaryFixationController@reject
+  POST      dashboard/salary/fixation/{user}/snapshots ........ salary-fixation.store ΓÇ║ SalaryFixationController@store
+  GET|HEAD  dashboard/salary/fixation/{user}/workspace salary-fixation.workspace ΓÇ║ SalaryFixationWorkspaceController@ΓÇª
+  GET|HEAD  dashboard/salary/generate-bills .................. salary-generates.index ΓÇ║ SalaryGenerateController@index
+  POST      dashboard/salary/generate-bulk .... salary-generates.generate-bulk ΓÇ║ SalaryGenerateController@generateBulk
+  GET|HEAD  dashboard/salary/generate-ready ........... salary-generates.ready ΓÇ║ SalaryGenerationReadyController@index
+  POST      dashboard/salary/generate-single salary-generates.generate-single ΓÇ║ SalaryGenerateController@generateSalaΓÇª
+  PATCH     dashboard/salary/generates/override-bulk-review salary-generates.override-bulk-review ΓÇ║ SalaryGenerateConΓÇª
+  POST      dashboard/salary/generates/send-bulk-review salary-generates.send-bulk-review ΓÇ║ SalaryGenerateController@ΓÇª
+  GET|HEAD  dashboard/salary/generates/{salaryGenerate} ........ salary-generates.show ΓÇ║ SalaryGenerateController@show
+  PATCH     dashboard/salary/generates/{salaryGenerate}/override-review salary-generates.override-review ΓÇ║ SalaryGeneΓÇª
+  POST      dashboard/salary/generates/{salaryGenerate}/send-review salary-generates.send-review ΓÇ║ SalaryGenerateContΓÇª
+  GET|HEAD  dashboard/salary/generation-workspace salary-generation-workspace.index ΓÇ║ SalaryReadyGenerationWorkspaceCΓÇª
+  POST      dashboard/salary/generation-workspace/runs salary-generation-workspace.start ΓÇ║ SalaryReadyGenerationWorksΓÇª
+  GET|HEAD  dashboard/salary/manual-adjustments salary-manual-adjustments.index ΓÇ║ SalaryManualAdjustmentController@inΓÇª
+  POST      dashboard/salary/manual-adjustments salary-manual-adjustments.store ΓÇ║ SalaryManualAdjustmentController@stΓÇª
+  DELETE    dashboard/salary/manual-adjustments/{id} salary-manual-adjustments.destroy ΓÇ║ SalaryManualAdjustmentControΓÇª
+  GET|HEAD  dashboard/salary/payroll-preview ..... salary-payroll-preview.index ΓÇ║ SalaryPayrollPreviewController@index
+  GET|HEAD  dashboard/salary/payroll-preview/data .. salary-payroll-preview.data ΓÇ║ SalaryPayrollPreviewController@data
+  GET|HEAD  dashboard/salary/provisional/{user} ....... salary-provisional.show ΓÇ║ SalaryProvisionalBillController@show
+  GET|HEAD  dashboard/salary/setup .................................. salary-setup.index ΓÇ║ SalarySetupController@index
+  POST      dashboard/salary/setup/send-bulk-review salary-setup.send-bulk-review ΓÇ║ SalarySetupController@sendBulkRevΓÇª
+  POST      dashboard/salary/setup/update-single-salary-calc salary-setup.update.single-calc ΓÇ║ SalarySetupController@ΓÇª
+  GET|HEAD  dashboard/salary/setup/{user} ............................. salary-setup.show ΓÇ║ SalarySetupController@show
+  POST      dashboard/salary/setup/{user}/send-review .... salary-setup.send-review ΓÇ║ SalarySetupController@sendReview
+  POST      dashboard/salary/workflow/bulk-approve salary-workflow.bulk-approve ΓÇ║ SalaryBulkWorkflowApprovalControlleΓÇª
+  POST      dashboard/salary/workflow/reconcile ....... salary-workflow.reconcile ΓÇ║ SalaryWorkflowController@reconcile
+  GET|HEAD  dashboard/salary/workflow/{user}/{year}/{month} ..... salary-workflow.show ΓÇ║ SalaryWorkflowController@show
+  POST      dashboard/salary/workflow/{user}/{year}/{month}/transition salary-workflow.transition ΓÇ║ SalaryWorkflowConΓÇª
+
+                                                                                                   Showing [74] routes
+

@@ -20,6 +20,7 @@ final class SalaryEmployeeComponentOverrideController extends Controller
 {
     public function save(Request $request, User $user, Overrides $service)
     {
+        abort_unless($request->user(), 401); // PATCH 06: role-free authenticated operator
         $data = $request->validate([
             'year'=>'required|integer|between:2020,2100',
             'month'=>'required|integer|between:1,12',
@@ -137,6 +138,29 @@ final class SalaryEmployeeComponentOverrideController extends Controller
             }
             return DB::transaction(function () use ($request,$user,$year,$month,$key,$data,$typeId,$name,$mode,$calcType,$value,$basis,$legacy) {
                 User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                // Lock workflow before changing financially approved inputs.
+                $workflow = DB::table('salary_monthly_workflows')
+                    ->where('user_id', $user->id)->where('salary_year', $year)
+                    ->where('salary_month', $month)->lockForUpdate()->first();
+                if (!$workflow) {
+                    // V1 usability: initialize a missing employee-period record on first edit.
+                    // The existing canonical reconciler preserves posted bills and records ambiguities.
+                    app(\App\Services\SalaryWorkflowRosterService::class)->reconcile($year, $month, [(int) $user->id], 1);
+                    $workflow = DB::table('salary_monthly_workflows')
+                        ->where('user_id', $user->id)->where('salary_year', $year)
+                        ->where('salary_month', $month)->lockForUpdate()->first();
+                    if (!$workflow) {
+                        throw new DomainException('Unable to initialize employee-period workflow.');
+                    }
+                }
+                if (in_array($workflow->workflow_status, ['READY_FOR_GENERATION', 'GENERATED'], true)) {
+                    return response()->json(['message'=>'Return the workflow for revision before changing approved components; generated salary is immutable.'], 409);
+                }
+                if (DB::table('salary_generates')->where('user_id', $user->id)
+                    ->where('salaryGenerationYear', $year)->where('monthId', $month)->exists()) {
+                    return response()->json(['message'=>'An actual posted bill exists. Historical payroll inputs cannot be edited.'], 409);
+                }
+
                 $query=DB::table('salary_component_employee_overrides')
                     ->where('user_id',$user->id)->where('salary_year',$year)->where('salary_month',$month)
                     ->where('direction',$data['direction'])->where('component_key',$key);
@@ -176,6 +200,28 @@ final class SalaryEmployeeComponentOverrideController extends Controller
                     'after_state'=>$after?json_encode($after,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):null,
                     'actor_id'=>$request->user()->id,'created_at'=>now(),
                 ]);
+                // Existing CALCULATED approval is invalid after any effective component edit.
+                // A new calculation version and fresh first/second approval are mandatory.
+                if ($workflow->workflow_status === 'CALCULATED' && ($mode !== 'automatic' || $before)) {
+                    DB::table('salary_monthly_workflows')->where('id', $workflow->id)->update([
+                        'workflow_status' => 'BLOCKED', 'revision' => (int)$workflow->revision + 1,
+                        'active_calculation_version_id' => null,
+                        'ready_calculation_version_id' => null, 'ready_snapshot_hash' => null,
+                        'calculation_approved_by' => null, 'calculation_approved_at' => null,
+                        'ready_approved_by' => null, 'ready_approved_at' => null,
+                        'blocking_reasons' => json_encode(['Components changed; recalculate and obtain new approvals.']),
+                        'updated_at' => now(),
+                    ]);
+                    DB::table('salary_workflow_events')->insert([
+                        'salary_monthly_workflow_id' => $workflow->id,
+                        'user_id' => $user->id, 'salary_year' => $year, 'salary_month' => $month,
+                        'action' => 'financial_input_changed', 'from_status' => 'CALCULATED',
+                        'to_status' => 'BLOCKED', 'actor_id' => $request->user()->id,
+                        'reason' => trim((string)($data['reason'] ?? 'Component configuration changed')),
+                        'before_hash' => $workflow->ready_snapshot_hash, 'after_hash' => null,
+                        'revision' => (int)$workflow->revision + 1, 'created_at' => now(),
+                    ]);
+                }
                 return response()->json(['message'=>'Employee/month override saved. Refresh to recalculate and save a new salary version.',
                     'revision'=>(int)($after['revision']??0),'mode'=>$mode]);
             });

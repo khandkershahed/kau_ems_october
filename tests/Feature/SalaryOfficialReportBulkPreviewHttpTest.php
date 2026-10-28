@@ -65,6 +65,22 @@ final class SalaryOfficialReportBulkPreviewHttpTest extends TestCase
         $this->assertSame($before, $this->counts(), 'Preview must not write.');
     }
 
+    public function test_provisional_bulk_preview_does_not_filter_unposted_rows(): void
+    {
+        $this->refuseRemote();
+        $ids = DB::table('employee_infos')->whereNotNull('user_id')
+            ->distinct()->orderBy('user_id')->limit(3)->pluck('user_id')->all();
+        if (!$ids) $this->markTestSkipped('No employees.');
+        $before = $this->counts();
+        $response = $this->fetch(http_build_query([
+            'ids' => implode(',', $ids), 'year' => 2026, 'month' => 10,
+            'kind' => 'bulk', 'format' => 'json', 'mode' => 'preview',
+        ]));
+        $response->assertStatus(200);
+        $this->assertCount(count($ids), $response->json('records'));
+        $this->assertSame($before, $this->counts(), 'Report GET must not write financial data.');
+    }
+
     public function test_mixed_generated_and_ungenerated_preview_200(): void
     {
         $this->refuseRemote();
