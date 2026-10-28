@@ -70,9 +70,9 @@ const totalInWords = computed(() => {
                     <p class="text-[10px] text-slate-600 mt-0.5">
                         {{ displayAddress }}
                     </p>
-                    <div class="mt-1 font-semibold text-[11px] text-slate-800">
+                    <!-- <div class="mt-1 font-semibold text-[11px] text-slate-800">
                         {{ displaySubtitle }}
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
