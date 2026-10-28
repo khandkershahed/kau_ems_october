@@ -66,8 +66,7 @@ final class SalaryOfficialReportController extends Controller
             // An official (non-preview) report still reads posted bills only.
             if ($draftPreview) {
                 $savedRow = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
-                if (($savedRow['source'] ?? 'NOT_SAVED') !== 'NOT_SAVED'
-                    && is_numeric($savedRow['current_gross'] ?? null)) {
+                if (($savedRow['source'] ?? 'NOT_SAVED') !== 'NOT_SAVED') {
                     $rows[] = $savedRow;
                     continue;
                 }
@@ -290,7 +289,7 @@ final class SalaryOfficialReportController extends Controller
         $deduct = 0.0;
         foreach (($arrear['rows'] ?? []) as $item) {
             if (!is_array($item)) { $validArrear = false; continue; }
-            $value = $amount($item['final_amount'] ?? null);
+            $value = $amount($item['final_amount'] ?? $item['amount'] ?? $item['total'] ?? null);
             if ($value === null) $validArrear = false;
             $direction = (string) ($item['direction'] ?? '');
             if ($direction === 'payable' && $value !== null) $payable += $value;

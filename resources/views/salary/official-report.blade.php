@@ -528,7 +528,7 @@
                                             elseif (str_contains($title, 'additional provident fund') || str_contains($title, 'additional gpf')) $code = 'additional_gpf';
                                         }
                                         if (!array_key_exists($code, $arrearValues)) continue;
-                                        if (!in_array(($arrearItem['direction'] ?? ''), $code === 'basic_arrear_gross' ? ['payable', 'allowance'] : ['deduction'], true)) continue;
+                                        if (!in_array(strtolower(trim((string) ($arrearItem['direction'] ?? ''))), $code === 'basic_arrear_gross' ? ['payable', 'allowance'] : ['deduction'], true)) continue;
                                         $raw = $arrearItem['final_amount'] ?? $arrearItem['amount'] ?? $arrearItem['total'] ?? null;
                                         if (!is_numeric($raw) || !is_finite((float) $raw) || (float) $raw < 0) continue;
                                         // Duplicate canonical components are not
