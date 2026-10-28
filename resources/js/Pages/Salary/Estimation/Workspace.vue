@@ -1,6 +1,5 @@
 <script setup>
 
-
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 const props = defineProps({ rows:Object, counts:Object, runs:Array, year:Number, month:Number });
@@ -76,9 +75,9 @@ async function saveCalculations(){
 }
 </script>
 <template>
-        <Head title="My 2026 Salary Fixation Review" />
+<Head title="My 2026 Salary Fixation Review" />
   <AuthenticatedLayout>
-  <main class="mx-auto max-w-7xl space-y-5 p-4 text-slate-800 md:p-6">
+  <main class="mx-auto max-w-9xl space-y-5 p-4 text-slate-800 md:p-6">
     <header class="flex flex-wrap items-start justify-between gap-3">
       <div><div class="text-xs font-semibold uppercase tracking-wide text-indigo-600">October {{year}} · Salary estimation</div>
         <h1 class="text-2xl font-bold">Salary Estimation / Calculation</h1>

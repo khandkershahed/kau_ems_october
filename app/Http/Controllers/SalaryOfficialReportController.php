@@ -8,6 +8,9 @@ use App\Services\SalaryOfficialReportSource;
 use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\EmployeeInfo;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Process\Process;
@@ -74,7 +77,7 @@ final class SalaryOfficialReportController extends Controller
             // read-only draft rows. Saved-bill reconciliation is preserved for
             // posted bills and for non-preview mode.
             if ($draftPreview) {
-                $rows[] = $this->draftRow($id, (int) $validated['year'], (int) $validated['month']);
+                $rows[] = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
                 continue;
             }
             return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
@@ -195,17 +198,123 @@ final class SalaryOfficialReportController extends Controller
      * Regular amounts come from the read-only regular-only preview service;
      * arrear amounts stay null (never estimated). Never writes.
      */
+    /**
+     * Read the exact latest version saved in Salary Calculator. Never recompute
+     * it using changed rules, never replace missing source amounts with zero.
+     * An explicit NOT_SAVED row makes gaps visible without fabricating salaries.
+     */
+    private function savedCalculatorRow(int $userId, int $year, int $month): array
+    {
+        $profile = EmployeeInfo::query()->with(['payrollGroup.grade', 'departmentOffice'])
+            ->where('user_id', $userId)->orderBy('id')->first();
+        $employee = User::query()->find($userId);
+        $code = $profile?->employeeCode ?: null;
+        $name = $employee?->name ?: null;
+        $grade = $profile?->payrollGroup?->grade?->grade_name ?: 'NOT RECORDED';
+        $department = $profile?->departmentOffice?->name ?? 'NOT RECORDED';
+        $designation = 'NOT RECORDED';
+
+        $base = [
+            'id' => null, 'user_id' => $userId,
+            'employee_code' => $code ?: 'USER-'.$userId,
+            'name' => $name ?: 'EMPLOYEE NAME NOT RECORDED',
+            'designation' => $designation, 'department' => $department,
+            'department_is_current' => true, 'grade' => $grade,
+            'pay_scale' => 'NOT RECORDED', 'bank_account_no' => 'NOT RECORDED',
+            'bank_address' => 'NOT RECORDED', 'year' => $year, 'month' => $month,
+            'basic' => null, 'allowances' => [], 'deductions' => [],
+            'arrear_rows' => [], 'current_gross' => null,
+            'current_deductions' => null, 'current_net' => null,
+            'arrear_payable' => null, 'arrear_deductions' => null,
+            'net_arrear' => null, 'gross' => null,
+            'total_deductions' => null, 'net' => null,
+            'source' => 'NOT_SAVED', 'source_hash' => null,
+            'details_complete' => false,
+            'remarks' => 'No saved Salary Calculator version for this employee/month. Salary NOT VERIFIED.',
+        ];
+        if (!Schema::hasTable('salary_calculation_versions')) return $base;
+        $version = DB::table('salary_calculation_versions')
+            ->where('user_id', $userId)->where('salary_year', $year)
+            ->where('salary_month', $month)->orderByDesc('version')->orderByDesc('id')->first();
+        if (!$version) return $base;
+        $calculated = json_decode((string) ($version->calculated_result ?? ''), true);
+        $arrear = json_decode((string) ($version->arrear_snapshot ?? ''), true);
+        if (!is_array($calculated) || !is_array($arrear)) {
+            $base['remarks'] = 'Saved calculation version #'.$version->id.' is incomplete or unreadable. Needs reconciliation.';
+            return $base;
+        }
+        $amount = static fn ($v) => is_numeric($v) && is_finite((float) $v) ? round((float) $v, 2) : null;
+        $component = static function ($item, $direction) use ($amount): array {
+            $value = $amount($item['calculated_amount'] ?? null);
+            return [
+                'title' => (string) ($item['name'] ?? 'Unnamed component'),
+                'direction' => $direction, 'current' => $value,
+                'arrear' => null, 'total' => $value,
+                'code' => null, 'months' => [],
+                'evidence' => $item['manual_evidence_reference'] ?? null,
+                'unverified' => $value === null,
+            ];
+        };
+        foreach (($calculated['allowances'] ?? []) as $item) {
+            if (is_array($item)) $base['allowances'][] = $component($item, 'allowance');
+        }
+        foreach (($calculated['deductions'] ?? []) as $item) {
+            if (is_array($item)) $base['deductions'][] = $component($item, 'deduction');
+        }
+        $validArrear = true;
+        $payable = 0.0;
+        $deduct = 0.0;
+        foreach (($arrear['rows'] ?? []) as $item) {
+            if (!is_array($item)) { $validArrear = false; continue; }
+            $value = $amount($item['final_amount'] ?? null);
+            if ($value === null) $validArrear = false;
+            $direction = (string) ($item['direction'] ?? '');
+            if ($direction === 'payable' && $value !== null) $payable += $value;
+            elseif ($direction === 'deduction' && $value !== null) $deduct += $value;
+            else $validArrear = false;
+            $base['arrear_rows'][] = [
+                'code' => $item['code'] ?? null,
+                'title' => (string) ($item['title'] ?? 'Arrear component'),
+                'direction' => $direction, 'final_amount' => $value,
+                'amount' => $value, 'months' => $item['months'] ?? [],
+                'evidence' => $item['evidence_reference'] ?? null,
+                'unverified' => $value === null,
+            ];
+        }
+        $payable = round($payable, 2);
+        $deduct = round($deduct, 2);
+        $basic = $amount($calculated['basic'] ?? null);
+        $gross = $amount($calculated['total_allowance'] ?? null);
+        $regularDed = $amount($calculated['total_deduction'] ?? null);
+        $regularNet = $amount($calculated['net_salary'] ?? null);
+        $snapshotNetArrear = $amount($arrear['net_arrear'] ?? null);
+        // Prevent broken partial snapshots from yielding apparently final pay.
+        $complete = $validArrear && $basic !== null && $gross !== null
+            && $regularDed !== null && $regularNet !== null
+            && $snapshotNetArrear !== null
+            && abs($snapshotNetArrear - ($payable - $deduct)) < .011
+            && abs($regularNet - ($gross - $regularDed)) < .011;
+        $base['basic'] = $basic;
+        $base['current_gross'] = $gross;
+        $base['current_deductions'] = $regularDed;
+        $base['current_net'] = $regularNet;
+        $base['arrear_payable'] = $validArrear ? $payable : null;
+        $base['arrear_deductions'] = $validArrear ? $deduct : null;
+        $base['net_arrear'] = $validArrear ? $snapshotNetArrear : null;
+        $base['gross'] = $complete ? round($gross + $payable, 2) : null;
+        $base['total_deductions'] = $complete ? round($regularDed + $deduct, 2) : null;
+        $base['net'] = $complete ? round($regularNet + $snapshotNetArrear, 2) : null;
+        $base['source'] = $version->status === 'approved'
+            ? 'APPROVED_CALCULATOR_SNAPSHOT' : 'DRAFT_CALCULATOR_SNAPSHOT';
+        $base['source_hash'] = $version->snapshot_hash ?? null;
+        $base['details_complete'] = $complete;
+        $base['remarks'] = 'Saved calculator version #'.$version->version.' ('.$version->status.')'
+            .($complete ? '; provisional, not a posted bill.' : '; INCOMPLETE: do not approve this report.');
+        return $base;
+    }
+
     private function draftRow(int $userId, int $year, int $month): array
     {
-        // An existing salary calculation is the authoritative provisional
-        // report source. Never regenerate amounts from legacy designation
-        // defaults when the employee has an edited/saved monthly snapshot.
-        $saved = \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
-            ->where('user_id', $userId)->where('salary_year', $year)
-            ->where('salary_month', $month)->orderByDesc('version')->first();
-        if ($saved) {
-            return $this->savedCalculationDraftRow($saved, $userId, $year, $month);
-        }
         $service = app(SalaryBillCompositionService::class);
         try {
             $draft = $service->composeRegularOnly($userId, $year, $month);
@@ -255,81 +364,6 @@ final class SalaryOfficialReportController extends Controller
         $base['remarks'] = 'DRAFT regular-only preview (no posted bill). Arrear unverified: '
             .(implode('; ', $draft['arrear_blocking_reasons'] ?? []) ?: 'no arrear rules returned amounts.');
         return $base;
-    }
-
-    /**
-     * Read-only provisional horizontal bill from the exact saved calculator
-     * version. It is not a posted salary bill or verification of evidence.
-     */
-    private function savedCalculationDraftRow(object $saved, int $userId, int $year, int $month): array
-    {
-        $financial = json_decode((string) $saved->calculated_result, true);
-        $arrear = json_decode((string) $saved->arrear_snapshot, true);
-        if (!is_array($financial) || !is_array($arrear)) {
-            throw new DomainException('The saved calculation has unreadable financial/arrear data.');
-        }
-        $user = \App\Models\User::findOrFail($userId);
-        $profile = \App\Models\EmployeeInfo::with(['payScale', 'payrollGroup.grade', 'payrollGroup.payrollGroupType'])
-            ->where('user_id', $userId)->first();
-        $add = $financial['allowances'] ?? [];
-        $ded = $financial['deductions'] ?? [];
-        $toComponent = static function (array $r, string $direction): array {
-            $raw = $r['calculated_amount'] ?? null;
-            $amount = is_numeric($raw) ? round((float) $raw, 2) : null;
-            return ['title' => (string) ($r['name'] ?? ''), 'direction' => $direction,
-                'current' => $amount, 'arrear' => 0.0, 'total' => $amount,
-                'code' => null, 'months' => [], 'evidence' => $r['manual_evidence_reference'] ?? null,
-                'unverified' => $amount === null];
-        };
-        $allowances = array_map(static fn ($r) => $toComponent($r, 'allowance'), $add);
-        $deductions = array_map(static fn ($r) => $toComponent($r, 'deduction'), $ded);
-        $arrearRows = [];
-        $arrearPay = 0.0; $arrearDed = 0.0; $missingArrear = false;
-        foreach (($arrear['rows'] ?? []) as $item) {
-            $amount = $item['final_amount'] ?? null;
-            $value = is_numeric($amount) ? round((float) $amount, 2) : null;
-            $direction = ($item['direction'] ?? '') === 'payable' ? 'payable' : 'deduction';
-            $arrearRows[] = ['title' => (string) ($item['title'] ?? ''),
-                'code' => (string) ($item['code'] ?? ''), 'direction' => $direction,
-                'total' => $value, 'months' => $item['months'] ?? [],
-                'evidence' => $item['evidence_reference'] ?? null,
-                'source_state' => $item['overridden'] ?? false ? 'HR_MANUAL_OVERRIDE' : 'SAVED_CALCULATION',
-                'month_amounts' => null];
-            if ($value === null) { $missingArrear = true; continue; }
-            $direction === 'payable' ? $arrearPay += $value : $arrearDed += $value;
-        }
-        $gross = isset($financial['total_allowance']) ? (float) $financial['total_allowance'] : null;
-        $regularDed = isset($financial['total_deduction']) ? (float) $financial['total_deduction'] : null;
-        $regularNet = isset($financial['net_salary']) ? (float) $financial['net_salary'] : null;
-        $netArrear = $missingArrear ? null : round($arrearPay - $arrearDed, 2);
-        $grade = $profile?->payrollGroup?->grade;
-        return [
-            'id' => null, 'user_id' => $userId,
-            'employee_code' => (string) ($profile?->employeeCode ?? ''),
-            'name' => (string) ($user->name ?? ''),
-            'designation' => (string) ($profile?->payrollGroup?->payrollGroupType?->group_name ?? '—'),
-            'department' => '—', 'department_is_current' => true,
-            'grade' => (string) ($grade?->grade_number ?? '—'),
-            'pay_scale' => (string) ($profile?->payScale?->scale_name ?? '—'),
-            'bank_account_no' => '—', 'bank_address' => '—',
-            'year' => $year, 'month' => $month,
-            'basic' => $financial['basic'] ?? null,
-            'allowances' => $allowances, 'deductions' => $deductions,
-            'arrear_rows' => $arrearRows,
-            'current_gross' => $gross, 'current_deductions' => $regularDed,
-            'current_net' => $regularNet,
-            'arrear_payable' => $missingArrear ? null : round($arrearPay, 2),
-            'arrear_deductions' => $missingArrear ? null : round($arrearDed, 2),
-            'net_arrear' => $netArrear,
-            'gross' => $gross === null || $missingArrear ? null : round($gross + $arrearPay, 2),
-            'total_deductions' => $regularDed === null || $missingArrear ? null : round($regularDed + $arrearDed, 2),
-            'net' => $regularNet === null || $missingArrear ? null : round($regularNet + $netArrear, 2),
-            'source' => 'PROVISIONAL_SAVED_'.strtoupper((string) $saved->status),
-            'source_hash' => (string) ($saved->snapshot_hash ?? ''),
-            'details_complete' => !$missingArrear && $gross !== null && $regularDed !== null,
-            'remarks' => 'PROVISIONAL saved calculator version '.(int) $saved->version
-                .'; not a posted bill. '.($missingArrear ? 'Unverified arrear line(s); totals incomplete.' : 'Review all components before HR approval.'),
-        ];
     }
 
     private function embeddedLogo(): ?string
