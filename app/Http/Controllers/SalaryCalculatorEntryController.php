@@ -496,14 +496,54 @@ final class SalaryCalculatorEntryController extends Controller
                 ->rows($user->id, $year, $month);
             [$adds, $ded] = SalaryEmployeeComponentOverrideService::reconcileForApproval(
                 $adds, $ded, $storedOverrides);
-            foreach (app(SalaryEmployeeComponentOverrideService::class)->rows($user->id,$year,$month) as $row) {
-                if ($row['direction']==='deduction' && SalaryCalculationService::isGpf(['name'=>$row['component_title']])) {
-                    if ($row['mode']==='manual' && $gpfInput!==null && $gpfInput['type']!=='disabled') {
-                        throw new DomainException('GPF has a saved employee override; use the component override editor rather than a second GPF override.');
+            // One GPF authority per month: the persisted employee override wins
+            // over the separate legacy Calculator GPF control. Do not reject
+            // approval because the browser submitted both representations.
+            $gpfRules = array_values(array_filter($storedOverrides, static fn ($row) =>
+                ($row['direction'] ?? null) === 'deduction'
+                && SalaryCalculationService::isGpf(['name' => (string) ($row['component_title'] ?? '')])
+            ));
+            if (count($gpfRules) > 1) {
+                throw new DomainException('Multiple saved monthly GPF rules need reconciliation; no salary was changed.');
+            }
+            if (count($gpfRules) === 1) {
+                $gpfRule = $gpfRules[0];
+                // Discard only the *submitted* GPF representation, not any
+                // underlying employee configuration or persisted override.
+                $ded = array_values(array_filter($ded, static fn ($row) =>
+                    !SalaryCalculationService::isGpf($row)));
+                if ($gpfRule['mode'] === 'disabled') {
+                    $gpfInput = ['type' => 'disabled', 'amount' => 0];
+                } elseif ($gpfRule['mode'] === 'manual') {
+                    $type = (string) ($gpfRule['calc_type'] ?? '');
+                    $value = $gpfRule['value'] ?? null;
+                    $basis = (string) ($gpfRule['basis'] ?? '');
+                    if (!in_array($type, ['fixed', 'percentage'], true)
+                        || !is_numeric($value) || (float)$value < 0
+                        || ($type === 'percentage' && ((float)$value > 100
+                            || !in_array($basis, ['payable_basic', 'legacy_basic'], true)))
+                        || ($type === 'fixed' && $basis !== 'none')) {
+                        throw new DomainException('Invalid saved GPF employee override; review its rule.');
                     }
-                    if ($row['mode']==='disabled' && $gpfInput!==null && ($gpfInput['type']??'')!=='disabled') {
-                        throw new DomainException('Disabled GPF cannot be re-enabled by the calculator snapshot.');
+                    $savedGpf = [
+                        'name' => (string) $gpfRule['component_title'],
+                        'calcType' => $type, 'amount' => (float) $value,
+                        'component_type' => 'deduction',
+                        'component_source' => 'employee_month_override',
+                        'employee_override_id' => (int) $gpfRule['id'],
+                        'override_component_key' => (string) $gpfRule['component_key'],
+                    ];
+                    if ($type === 'percentage' && $basis === 'legacy_basic') {
+                        $legacy = $gpfRule['legacy_basic_reference'] ?? null;
+                        if (!is_numeric($legacy) || (float) $legacy <= 0) {
+                            throw new DomainException('Verified Legacy Basic reference is required for saved GPF.');
+                        }
+                        $savedGpf['percentage_base_amount'] = (float) $legacy;
                     }
+                    $ded[] = $savedGpf;
+                    $gpfInput = null;
+                } else {
+                    throw new DomainException('Invalid saved monthly GPF mode.');
                 }
             }
             // Monthly GPF off is a real saved decision. Do not pass a published
