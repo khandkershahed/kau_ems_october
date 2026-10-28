@@ -118,7 +118,10 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/salary/calculator/{user}/regular-only-preview', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'previewRegularOnly'])->name('salary-calculator.regular-only-preview');
     // PATCH 05: read-only, resumable salary estimation and workflow worklists.
     Route::get('/salary/estimation/horizontal-bill', [\App\Http\Controllers\SalaryProvisionalHorizontalBatchController::class, 'show'])->name('salary-estimation.horizontal-bill');
+    Route::post('/salary/estimation/bulk-operator/batch', [\App\Http\Controllers\SalaryEstimationBulkOperatorController::class, 'batch'])->name('salary-estimation.bulk-operator.batch');
     Route::post('/salary/estimation/bulk-save-calculations', [\App\Http\Controllers\SalaryBulkCalculationPersistenceController::class, 'save'])->name('salary-estimation.bulk-save-calculations');
+    Route::get('/salary/estimation/bulk-salary-review', [\App\Http\Controllers\SalaryBulkSalaryEditorController::class, 'index'])->name('salary-estimation.bulk-salary-review');
+    Route::post('/salary/estimation/bulk-salary-review/save', [\App\Http\Controllers\SalaryBulkSalaryEditorController::class, 'save'])->name('salary-estimation.bulk-salary-review.save');
     Route::get('/salary/estimation/bulk-components', [\App\Http\Controllers\SalaryBulkComponentWorkspaceController::class, 'index'])->name('salary-estimation.bulk-components');
     Route::get('/salary/estimation', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'index'])->name('salary-estimation.index');
     Route::post('/salary/estimation/runs', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'start'])->name('salary-estimation.start');
@@ -127,6 +130,7 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     // PATCH 02: isolated HR workflow API (does not replace legacy salary posting).
     require __DIR__.'/salary_workflow.php';
     Route::post('/salary/calculator/{user}/generate-bill', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'generateBill'])->name('salary-calculator.generate-bill');
+    Route::post('/salary/calculator/{user}/component-override/{overrideId}/manage', [\App\Http\Controllers\SalaryEmployeeComponentOverrideController::class, 'manageExisting'])->name('salary-calculator.component-override.manage')->whereNumber('overrideId');
     Route::post('/salary/calculator/{user}/component-override', [\App\Http\Controllers\SalaryEmployeeComponentOverrideController::class, 'save'])->name('salary-calculator.component-override');
     Route::post('/salary/calculator/{user}/versions', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'save'])->name('salary-calculator.versions.store');
     Route::post('/salary/calculator/{user}/arrear-preview', [\App\Http\Controllers\SalaryCalculatorEntryController::class, 'previewArrear'])->name('salary-calculator.arrear-preview');

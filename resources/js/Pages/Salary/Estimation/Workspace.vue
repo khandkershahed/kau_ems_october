@@ -10,6 +10,9 @@ const pendingCodes=['1003','10046','10108','20029','20033','20038','20049','2005
 const total=computed(()=>Number(props.counts?.WORK_BLOCKED||0)+Number(props.counts?.CALCULATED||0)+Number(props.counts?.READY_FOR_GENERATION||0)+Number(props.counts?.GENERATED||0));
 const pageRows=computed(()=>props.rows?.data||[]);
 const canSelect=(r)=>r.profile_count===1 && ['NOT_INITIALIZED','BLOCKED','CALCULATED'].includes(r.display_status);
+const canApprove=(r)=>r.profile_count===1 && r.display_status==='CALCULATED' && Number(r.active_calculation_version_id)>0 && Number(r.revision)>0;
+const approvedSelected=computed(()=>pageRows.value.filter(r=>selected.value.includes(r.user_id)&&canApprove(r)));
+const allSelectedApproved=computed(()=>selected.value.length>0 && approvedSelected.value.length===selected.value.length);
 const csrf=()=>document.querySelector('meta[name="csrf-token"]')?.content||'';
 async function post(url,payload){
  const res=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf()},body:JSON.stringify(payload)});
@@ -53,12 +56,22 @@ async function approve(action){
  busy.value=true;notice.value='';
  try{
   if(reason.value.trim().length<3||!selected.value.length)throw Error('Select employees and enter an audit reason.');
-  const items=selected.value.map(id=>{const r=pageRows.value.find(e=>e.user_id===id);return {user_id:id,expected_revision:r.revision,calculation_version_id:action==='approve_calculation'?r.latest_approved_calculation_version_id:r.active_calculation_version_id};});
+  const items=selected.value.map(id=>{const r=pageRows.value.find(e=>e.user_id===id);return {user_id:id,expected_revision:r.revision,calculation_version_id:r.active_calculation_version_id || r.latest_approved_calculation_version_id};});
   if(items.some(i=>!i.expected_revision))throw Error('Initialize selected workflows before approval.');
+  if(action==='approve_for_generation' && !allSelectedApproved.value)throw Error('Select only CALCULATED employees with an active approved calculation.');
+  if(items.length>50)throw Error('Approve up to 50 employees per batch.');
   const data=await post('/dashboard/salary/workflow/bulk-approve',{year:props.year,month:props.month,action,reason:reason.value,items});
   notice.value=`${data.succeeded} successful, ${data.failed} failed. ${(data.results||[]).filter(x=>!x.ok).map(x=>`${x.user_id}: ${x.error}`).join('; ')}`;
   refresh();
  }catch(e){notice.value=e.message;}finally{busy.value=false;}
+}
+function provisionalHorizontal(){
+ const eligible=approvedSelected.value.map(r=>r.user_id);
+ if(!eligible.length){notice.value='Select CALCULATED employees with approved saved versions.';return;}
+ if(eligible.length>50){notice.value='Select up to 50 per report.';return;}
+ const q=new URLSearchParams({year:String(props.year),month:String(props.month)});
+ eligible.forEach(id=>q.append('user_ids[]',String(id)));
+ window.open(`/dashboard/salary/estimation/horizontal-bill?${q.toString()}`,'_blank','noopener');
 }
 const selectedCodes=computed(()=>pageRows.value.filter(r=>selected.value.includes(r.user_id)).map(r=>r.employee_code));
 const issues=computed(()=>pageRows.value.filter(r=>Number(r.profile_count)>1 || r.display_status==='NOT_INITIALIZED'));
@@ -73,6 +86,38 @@ async function saveCalculations(){
   notice.value=`Saved ${data.succeeded}, failed ${data.failed}.\n`+(data.results||[]).map(r=>`${r.code}: ${r.ok?'Saved version '+r.version:r.error}`).join('\n');
   refresh();
  }catch(e){notice.value=e.message;}finally{busy.value=false;}
+}
+
+// All pages are selected by the SERVER cursor, not by current-page checkboxes.
+const operationSize=ref('100');
+const bulkSaveStatus=ref('draft');
+const operationBusy=ref(false);
+const operationLog=ref([]);
+const operationSummary=ref({checked:0,ok:0,failed:0});
+function exportOperationLog(){
+ const cells=[['employee_code','user_id','status','result','message'],...operationLog.value.map(x=>[x.code,x.user_id,x.status,x.ok?'OK':'FAILED',x.message||''])];
+ const csv=cells.map(a=>a.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`KAU_calculation_audit_${props.year}_${props.month}.csv`;a.click();URL.revokeObjectURL(url);
+}
+async function calculateAll(){
+ if(operationBusy.value||reason.value.trim().length<3){notice.value='Enter an HR audit reason (at least 3 characters).';return;}
+ if(!window.confirm(bulkSaveStatus.value==='draft'
+ ? 'Save PROVISIONAL DRAFT salary snapshots? Unverified arrear amounts remain unresolved. NO bills will be generated.'
+ : 'Save APPROVED snapshots only for employees passing all financial checks? NO bills will be generated.'))return;
+ operationBusy.value=true;operationLog.value=[];operationSummary.value={checked:0,ok:0,failed:0};
+ let cursor=0;const max=operationSize.value==='all'?Number.MAX_SAFE_INTEGER:Number(operationSize.value);
+ try{
+  while(operationSummary.value.checked<max){
+   const data=await post('/dashboard/salary/estimation/bulk-operator/batch',{year:props.year,month:props.month,cursor,batch_size:Math.min(10,max-operationSummary.value.checked),reason:reason.value,action:bulkSaveStatus.value});
+   cursor=data.cursor;
+   operationLog.value.push(...data.results);operationSummary.value.checked+=data.examined;
+   operationSummary.value.ok+=data.succeeded;operationSummary.value.failed+=data.failed;
+   notice.value=`Bulk calculation: ${operationSummary.value.checked} checked, ${operationSummary.value.ok} saved/preserved, ${operationSummary.value.failed} blocked. No salary posting.`;
+   if(!data.has_more||data.examined===0)break;
+  }
+ }catch(e){notice.value=`Stopped after ${operationSummary.value.checked} checks: ${e.message}. Export the CSV; rerun will retain approved snapshots.`;}
+ finally{operationBusy.value=false;refresh();}
 }
 </script>
 <template>
@@ -89,6 +134,20 @@ async function saveCalculations(){
       <div v-for="(label,key) in { WORK_BLOCKED:'Needs attention', CALCULATED:'Calculated', READY_FOR_GENERATION:'Ready', GENERATED:'Generated' }" :key="key" class="rounded-xl border bg-white p-3 shadow-sm">
         <p class="text-xs text-slate-500">{{label}}</p><p class="text-2xl font-bold">{{Number(counts[key]||0)}}</p>
       </div>
+    </section>
+    <section class="rounded-xl border-2 border-indigo-200 bg-white p-4 space-y-3">
+      <h2 class="text-lg font-bold">1. Bulk Calculate + Save Snapshots (No Salary Generation)</h2>
+      <p class="text-sm text-slate-600">All-pages server selection. Runs in 10-employee requests, preserving existing approved snapshots. Draft mode can save unresolved historical arrears with their errors, without declaring them approved. Approval mode remains financial-review gated.</p>
+      <div class="flex flex-wrap gap-3 items-center">
+        <label class="text-sm font-semibold">Process <select v-model="operationSize" class="rounded border px-3 py-2"><option value="100">100</option><option value="500">500</option><option value="1000">1000</option><option value="all">All eligible</option></select></label>
+        <label class="text-sm font-semibold">Save as <select v-model="bulkSaveStatus" class="rounded border px-3 py-2"><option value="draft">Provisional Draft (recommended)</option><option value="approved">Approved (verified only)</option></select></label>
+        <input v-model="reason" class="min-w-64 flex-1 rounded border px-3 py-2 text-sm" placeholder="HR audit reason / reference (required)" />
+        <button :disabled="operationBusy||reason.trim().length<3" @click="calculateAll" class="rounded bg-indigo-700 px-4 py-2 font-semibold text-white disabled:opacity-40">{{operationBusy?'Processing…':bulkSaveStatus==='draft'?'Calculate + Save Draft':'Calculate + Save Approved'}}</button>
+        <button :disabled="!operationLog.length" @click="exportOperationLog" class="rounded border px-3 py-2 disabled:opacity-40">Export results CSV</button>
+      </div>
+      <p class="text-sm">Checked {{operationSummary.checked}} · Saved/preserved {{operationSummary.ok}} · Blocked {{operationSummary.failed}}</p>
+      <details v-if="operationLog.length"><summary class="cursor-pointer text-sm underline">Show per-employee results</summary><div class="max-h-48 overflow-auto text-xs"><p v-for="(r,i) in operationLog" :key="i" :class="r.ok?'text-emerald-700':'text-rose-700'">{{r.code}} · {{r.status}} · {{r.message||''}}</p></div></details>
+      <p class="text-xs text-amber-800">A successful save is not a verified financial audit. Review provisional Horizontal Bill before promoting to Ready for Generation.</p>
     </section>
     <section v-if="Number(counts.NOT_INITIALIZED||0)>0" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
       <div><strong>{{counts.NOT_INITIALIZED}} employees need roster initialization</strong><p class="text-xs text-amber-800">Safe one-time setup; existing bills and GPF records stay unchanged.</p></div>
@@ -111,6 +170,16 @@ async function saveCalculations(){
           <button :disabled="busy" @click="preview('pending')" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">Preview pending 18</button>
           <button :disabled="busy||!selected.length" @click="preview('selected')" class="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">Preview selected</button>
         </div>
+        <section class="rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2">
+           <h3 class="font-semibold">HR Review & Bulk Approval — no salary posting</h3>
+           <p class="text-xs">Select CALCULATED employees. First print the approved-snapshot Horizontal Bill, review with HR, then approve for generation (up to 50/page). Errors are reported by employee.</p>
+           <input v-model="reason" class="w-full rounded border p-2 text-sm" placeholder="Required HR decision / approval reference" />
+           <div class="flex flex-wrap gap-2">
+             <button :disabled="busy||!approvedSelected.length" @click="provisionalHorizontal" class="rounded bg-white px-3 py-2 text-sm border disabled:opacity-40">Print Provisional Horizontal Bill ({{approvedSelected.length}})</button>
+             <button :disabled="busy||!allSelectedApproved||reason.trim().length<3" @click="approve('approve_for_generation')" class="rounded bg-indigo-700 px-3 py-2 text-sm text-white disabled:opacity-40">Bulk Approve for Generation ({{approvedSelected.length}})</button>
+           </div>
+           <p class="text-xs text-amber-900">This moves CALCULATED → READY only. No salary bill, bank payment, GPF ledger or arrear disbursement is created.</p>
+        </section>
         <details class="rounded-lg border p-3"><summary class="cursor-pointer font-semibold">Save calculations & approval actions</summary>
           <p class="mt-2 text-xs text-slate-500">Save uses existing audited calculator versioning; approval is separate. Failed employees remain visible. Never posts a bill.</p>
           <div class="mt-3 flex flex-wrap gap-2"><input v-model="reason" placeholder="Correction / approval reason" class="min-w-56 flex-1 rounded-lg border px-3 py-2 text-sm"/>

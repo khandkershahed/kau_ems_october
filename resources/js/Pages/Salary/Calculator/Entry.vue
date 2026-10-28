@@ -883,6 +883,49 @@ const saveComponentOverride = async () => {
         overrideSaving.value = false;
     }
 };
+
+// Audited manager: displays EVERY saved row, not only effective visible components.
+const allOverrideManagerOpen = ref(false);
+const overrideManagerError = ref('');
+const overrideManagerBusy = ref(false);
+const overrideEdits = ref((props.componentOverrides || []).map(r => ({
+    ...r, action:r.mode === 'disabled' ? 'disabled':'manual',
+    edit_type:r.calc_type || 'fixed', edit_value:r.value ?? 0,
+    edit_basis:r.basis || 'payable_basic', edit_legacy:r.legacy_basic_reference || null,
+    edit_reason:r.reason || '',edit_evidence:r.evidence_reference || '',
+})));
+const normalizeGroup = r => {
+    const n=String(r.component_title||'').trim().toLowerCase().replace(/\s+/g,' ');
+    return /^(gpf|general provident fund|general provident fund \(gpf\))$/.test(n) ? 'gpf' : n;
+};
+const conflictGroups = computed(() => {
+    const m=new Map();
+    overrideEdits.value.forEach(r=>{
+        const k=`${r.direction}:${normalizeGroup(r)}`;
+        if(!m.has(k))m.set(k,[]);
+        m.get(k).push(r);
+    });
+    return [...m.entries()].filter(([,v])=>v.length>1);
+});
+const conflictIds = computed(()=>new Set(conflictGroups.value.flatMap(([,v])=>v.map(r=>Number(r.id)))));
+async function manageSavedOverride(r,action=r.action){
+    if(overrideManagerBusy.value)return;
+    if(!r.edit_reason.trim() || r.edit_reason.trim().length<3){overrideManagerError.value='Enter an HR change reason (minimum 3 characters).';return;}
+    if(action==='reset' && !window.confirm(`Reset saved override #${r.id}? The inherited rule may become active.`))return;
+    overrideManagerBusy.value=true;overrideManagerError.value='';
+    try {
+        await axios.post(`/dashboard/salary/calculator/${props.employee.id}/component-override/${r.id}/manage`,{
+            year:props.period.year,month:props.period.month,expected_revision:Number(r.revision),
+            action,calc_type:action==='manual'?r.edit_type:null,
+            value:action==='manual'?Number(r.edit_value):null,
+            basis:action==='manual'?(r.edit_type==='fixed'?'none':r.edit_basis):null,
+            legacy_basic_reference:action==='manual'&&r.edit_type==='percentage'&&r.edit_basis==='legacy_basic'?Number(r.edit_legacy):null,
+            reason:r.edit_reason,evidence_reference:r.edit_evidence,
+        });
+        window.location.reload();
+    }catch(e){overrideManagerError.value=e.response?.data?.message||Object.values(e.response?.data?.errors||{}).flat().join('; ')||'Override update failed.';}
+    finally{overrideManagerBusy.value=false;}
+}
 </script>
 
 <template>
@@ -892,6 +935,31 @@ const saveComponentOverride = async () => {
             class="max-w-screen-2xl mx-auto px-4 py-5 space-y-4 text-slate-800"
             id="calculator-screen"
         >
+
+            <section class="rounded-xl border bg-white p-4 space-y-3" aria-label="All saved monthly overrides">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div><h2 class="font-semibold">HR Monthly Override & Conflict Manager</h2>
+                    <p class="text-xs text-slate-600">All saved monthly rules, including disabled and hidden GPF aliases. Edits are audited and require new calculation approval.</p></div>
+                    <button type="button" @click="allOverrideManagerOpen=!allOverrideManagerOpen" class="rounded bg-slate-800 px-4 py-2 text-white">{{allOverrideManagerOpen?'Close':'View / Edit All Overrides'}} ({{overrideEdits.length}})</button>
+                </div>
+                <p v-if="conflictGroups.length" class="rounded bg-amber-50 p-2 text-sm text-amber-900">{{conflictGroups.length}} possible conflict groups (same component name/GPF aliases). Select one effective rule; reset conflicting records only after HR review.</p>
+                <div v-if="allOverrideManagerOpen" class="space-y-3">
+                    <p v-if="overrideManagerError" role="alert" class="rounded bg-rose-50 p-2 text-rose-800">{{overrideManagerError}}</p>
+                    <div class="overflow-x-auto"><table class="w-full min-w-[1100px] text-left text-xs">
+                        <thead><tr class="bg-slate-100"><th class="p-2">ID / identity</th><th class="p-2">Direction</th><th class="p-2">Action</th><th class="p-2">Type</th><th class="p-2">Amount</th><th class="p-2">Basis</th><th class="p-2">Reason & evidence</th><th class="p-2">Save / reset</th></tr></thead>
+                        <tbody><tr v-for="r in overrideEdits" :key="r.id" :class="conflictIds.has(Number(r.id))?'bg-amber-50':''" class="border-b align-top">
+                            <td class="p-2"><b>#{{r.id}} {{r.component_title}}</b><div class="max-w-52 break-all text-slate-500">{{r.component_key}}</div><div>Existing: {{r.mode}} / {{r.value??'—'}}</div></td>
+                            <td class="p-2">{{r.direction}}</td>
+                            <td class="p-2"><select v-model="r.action" class="rounded border p-1"><option value="manual">Manual</option><option value="disabled">Disabled</option></select></td>
+                            <td class="p-2"><select v-model="r.edit_type" :disabled="r.action!=='manual'" class="rounded border p-1"><option value="fixed">Fixed</option><option value="percentage">Percentage</option></select></td>
+                            <td class="p-2"><input v-model.number="r.edit_value" :disabled="r.action!=='manual'" type="number" step="0.01" min="0" class="w-24 rounded border p-1"/></td>
+                            <td class="p-2"><select v-model="r.edit_basis" :disabled="r.action!=='manual'||r.edit_type!=='percentage'" class="rounded border p-1"><option value="payable_basic">Payable basic</option><option value="legacy_basic">Legacy basic</option></select><input v-if="r.action==='manual'&&r.edit_type==='percentage'&&r.edit_basis==='legacy_basic'" v-model.number="r.edit_legacy" type="number" min="0.01" class="mt-1 w-24 rounded border p-1" placeholder="Old basic"/></td>
+                            <td class="p-2"><input v-model="r.edit_reason" class="mb-1 w-44 rounded border p-1" placeholder="HR decision reason"/><input v-model="r.edit_evidence" class="w-44 rounded border p-1" placeholder="Memo/evidence reference"/></td>
+                            <td class="p-2"><div class="flex gap-1"><button :disabled="overrideManagerBusy" @click="manageSavedOverride(r)" class="rounded bg-emerald-700 px-2 py-1 text-white disabled:opacity-40">Save</button><button :disabled="overrideManagerBusy" @click="manageSavedOverride(r,'reset')" class="rounded bg-rose-700 px-2 py-1 text-white disabled:opacity-40">Reset</button></div></td>
+                        </tr><tr v-if="!overrideEdits.length"><td colspan="8" class="p-3">No saved monthly overrides.</td></tr></tbody>
+                    </table></div>
+                </div>
+            </section>
             <header
                 class="rounded-xl border bg-white p-5 flex justify-between flex-wrap gap-2 items-start"
             >

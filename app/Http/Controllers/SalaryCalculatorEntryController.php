@@ -31,7 +31,7 @@ final class SalaryCalculatorEntryController extends Controller
         $rows = EmployeeInfo::with(['payScale', 'payrollGroup.grade', 'payrollGroup.payrollGroupType'])
             ->where('user_id', $user->id)->limit(2)->get();
         if ($rows->count() !== 1) {
-            throw new DomainException('Exactly one employee salary profile is required; found '.$rows->count().'.');
+            throw new DomainException('Exactly one employee salary profile is required; found ' . $rows->count() . '.');
         }
         return $rows->first();
     }
@@ -59,11 +59,18 @@ final class SalaryCalculatorEntryController extends Controller
         $adds = SalaryComponentNormalizer::rows($employee->additionObjects);
         $ded = SalaryComponentNormalizer::rows($employee->substractionObjects);
         if (Schema::hasTable('salary_manual_adjustments')) {
-            foreach (DB::table('salary_manual_adjustments')->where('user_id', $employee->user_id)
-                ->where('salary_year', $year)->where('salary_month', $month)->orderBy('id')->get() as $row) {
-                $item = ['name' => $row->title, 'calcType' => 'fixed', 'amount' => (float) $row->amount,
-                    'manual_adjustment_id' => $row->id, 'reason' => $row->reason,
-                    'evidence_reference' => $row->evidence_reference];
+            foreach (
+                DB::table('salary_manual_adjustments')->where('user_id', $employee->user_id)
+                    ->where('salary_year', $year)->where('salary_month', $month)->orderBy('id')->get() as $row
+            ) {
+                $item = [
+                    'name' => $row->title,
+                    'calcType' => 'fixed',
+                    'amount' => (float) $row->amount,
+                    'manual_adjustment_id' => $row->id,
+                    'reason' => $row->reason,
+                    'evidence_reference' => $row->evidence_reference
+                ];
                 if ($row->direction === 'addition') $adds[] = $item;
                 elseif ($row->direction === 'deduction') $ded[] = $item;
             }
@@ -92,8 +99,10 @@ final class SalaryCalculatorEntryController extends Controller
     {
         foreach ($additions as &$row) {
             $name = strtolower(trim((string)($row['name'] ?? '')));
-            if (str_contains($name, 'house rent') && !str_contains($name, 'difference')
-                && !str_contains($name, 'arrear')) {
+            if (
+                str_contains($name, 'house rent') && !str_contains($name, 'difference')
+                && !str_contains($name, 'arrear')
+            ) {
                 $row['amount'] = $rent;
                 $row['calcType'] = 'fixed';
                 $row['historical_source'] = 'approved_june_2026_salary';
@@ -134,8 +143,8 @@ final class SalaryCalculatorEntryController extends Controller
             }
             // GPF is an optional published/employee-configured component, not a
             // silently inserted deduction for an empty Payroll Component list.
-            $gpfOverride = collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))
-                ? null : ['type'=>'disabled','amount'=>0];
+            $gpfOverride = collect($ded)->contains(fn($r) => SalaryCalculationService::isGpf($r))
+                ? null : ['type' => 'disabled', 'amount' => 0];
             $baseline = $calculator->calculate($adds, $ded, $fixation, $gpfOverride);
             $arrearRows = app(SalaryArrearRuleService::class)->preview($user->id, $year, $month);
             if ($overrideChanged) {
@@ -170,8 +179,8 @@ final class SalaryCalculatorEntryController extends Controller
                         $correctedAdds = $this->setHistoricalJuneRent($adds, $juneRent);
                         if (json_encode($correctedAdds) !== json_encode($adds)) {
                             $adds = $correctedAdds;
-                            $error = trim(($error ? $error.' ' : '')
-                                .'October House Rent now uses the approved June 2026 salary. Review and save a NEW calculation version before generating a bill.');
+                            $error = trim(($error ? $error . ' ' : '')
+                                . 'October House Rent now uses the approved June 2026 salary. Review and save a NEW calculation version before generating a bill.');
                         }
                     }
                     $financial = $calculator->calculate($adds, $ded, null, $gpfOverride);
@@ -192,16 +201,18 @@ final class SalaryCalculatorEntryController extends Controller
                 $priorRows = is_array($prior) ? ($prior['rows'] ?? []) : [];
                 $publishedRulesChanged = SalaryArrearRuleView::hasPublishedChanges($priorRows, $arrearRows);
                 if ($publishedRulesChanged) {
-                    $oldManual = array_values(array_filter($priorRows, static fn ($r) => empty($r['rule_id'])));
+                    $oldManual = array_values(array_filter($priorRows, static fn($r) => empty($r['rule_id'])));
                     $arrearRows = array_merge($arrearRows, $oldManual);
-                    $error = trim(($error ? $error.' ' : '')
-                        .'Published arrear rules or verified payment sources changed since the saved calculation. '
-                        .'Current published rules are displayed; review and save a new calculation version before posting.');
+                    $error = trim(($error ? $error . ' ' : '')
+                        . 'Published arrear rules or verified payment sources changed since the saved calculation. '
+                        . 'Current published rules are displayed; review and save a new calculation version before posting.');
                 }
             }
             if ($gpfOverride === null && ($financial['gpf_rule']['source'] ?? '') === 'existing_employee_subscription') {
-                $gpfOverride = ['type' => $financial['gpf_rule']['type'],
-                    'amount' => $financial['gpf_rule']['amount']];
+                $gpfOverride = [
+                    'type' => $financial['gpf_rule']['type'],
+                    'amount' => $financial['gpf_rule']['amount']
+                ];
             }
         } catch (DomainException $e) {
             $error = $e->getMessage();
@@ -212,8 +223,8 @@ final class SalaryCalculatorEntryController extends Controller
         // existing key, but are deliberately not silently mapped by similar names.
         $componentOptions = ['addition' => [], 'deduction' => []];
         $typeIds = collect(array_merge($adds, $ded))
-            ->map(static fn ($r) => (int) ($r['payroll_component_type_id'] ?? $r['payroll_component_type']['id'] ?? 0))
-            ->filter(static fn ($id) => $id > 0)->unique()->values();
+            ->map(static fn($r) => (int) ($r['payroll_component_type_id'] ?? $r['payroll_component_type']['id'] ?? 0))
+            ->filter(static fn($id) => $id > 0)->unique()->values();
         // Include unambiguous master mappings for historical name-only components,
         // but ONLY when the employee's payroll group has an active assignment
         // in the same direction. Ambiguous/unmapped legacy rows remain untouched.
@@ -228,39 +239,54 @@ final class SalaryCalculatorEntryController extends Controller
                 $id = (int) ($item['payroll_component_type_id'] ?? $item['payroll_component_type']['id'] ?? 0);
                 $sourceName = trim((string) ($item['name'] ?? ''));
                 if ($id <= 0) {
-                    $candidates = $masters->filter(static fn ($master) =>
-                        strcasecmp(trim((string) $master->name), $sourceName) === 0 &&
-                        $master->payrollComponents->contains(static fn ($component) =>
-                            in_array(strtolower((string) $component->component_type),
-                                $direction === 'addition' ? ['allowance','addition'] : ['deduction'], true)));
+                    $candidates = $masters->filter(static fn($master) =>
+                    strcasecmp(trim((string) $master->name), $sourceName) === 0 &&
+                        $master->payrollComponents->contains(static fn($component) =>
+                        in_array(
+                            strtolower((string) $component->component_type),
+                            $direction === 'addition' ? ['allowance', 'addition'] : ['deduction'],
+                            true
+                        )));
                     if ($candidates->count() !== 1) continue;
                     $id = (int) $candidates->first()->id;
                 }
                 if (!isset($masterNames[$id]) || isset($seen[$id])) continue;
                 if (SalaryEmployeeComponentOverrideService::basic((string) $masterNames[$id])) continue;
                 $seen[$id] = true;
-                $componentOptions[$direction][] = ['id' => $id, 'name' => (string) $masterNames[$id],
-                    'source_name' => $sourceName];
+                $componentOptions[$direction][] = [
+                    'id' => $id,
+                    'name' => (string) $masterNames[$id],
+                    'source_name' => $sourceName
+                ];
             }
             // Offer assigned active master components that were deleted from the
             // current draft as well, so they can be added back without a modal.
             foreach ($masters as $master) {
                 $id = (int) $master->id;
                 if (isset($seen[$id]) || SalaryEmployeeComponentOverrideService::basic((string) $master->name)) continue;
-                $assigned = $master->payrollComponents->contains(static fn ($component) =>
-                    in_array(strtolower((string) $component->component_type),
-                        $direction === 'addition' ? ['allowance','addition'] : ['deduction'], true));
+                $assigned = $master->payrollComponents->contains(static fn($component) =>
+                in_array(
+                    strtolower((string) $component->component_type),
+                    $direction === 'addition' ? ['allowance', 'addition'] : ['deduction'],
+                    true
+                ));
                 if (!$assigned) continue;
                 $seen[$id] = true;
-                $assignment = $master->payrollComponents->first(static fn ($component) =>
-                    in_array(strtolower((string) $component->component_type),
-                        $direction === 'addition' ? ['allowance','addition'] : ['deduction'], true));
-                $componentOptions[$direction][] = ['id' => $id, 'name' => (string) $master->name,
+                $assignment = $master->payrollComponents->first(static fn($component) =>
+                in_array(
+                    strtolower((string) $component->component_type),
+                    $direction === 'addition' ? ['allowance', 'addition'] : ['deduction'],
+                    true
+                ));
+                $componentOptions[$direction][] = [
+                    'id' => $id,
+                    'name' => (string) $master->name,
                     'source_name' => (string) $master->name,
                     'calcType' => strtolower((string) ($assignment?->calcType ?? 'fixed')) === 'percentage' ? 'percentage' : 'fixed',
-                    'amount' => (float) ($assignment?->amount ?? 0)];
+                    'amount' => (float) ($assignment?->amount ?? 0)
+                ];
             }
-            usort($componentOptions[$direction], static fn ($a, $b) => strcasecmp($a['name'], $b['name']));
+            usort($componentOptions[$direction], static fn($a, $b) => strcasecmp($a['name'], $b['name']));
         }
         $accounts = BankAccount::where('user_id', $user->id)->get();
         $selectedBank = SalaryBankAccountResolver::resolve($user->id, $employee?->bank_account_id, $accounts->all());
@@ -268,32 +294,45 @@ final class SalaryCalculatorEntryController extends Controller
         return Inertia::render('Salary/Calculator/Entry', [
             'verifiedBank' => $selectedBank['errors'] ? null : ($bankRecord?->account_no ?? null),
             'bankWarnings' => $selectedBank['errors'] ?: $selectedBank['warnings'],
-            'employee' => ['id' => $user->id, 'name' => $user->name,
+            'employee' => [
+                'id' => $user->id,
+                'name' => $user->name,
                 'code' => $employee?->employeeCode,
-                'designation' => $employee?->payrollGroup?->payrollGroupType?->group_name],
+                'designation' => $employee?->payrollGroup?->payrollGroupType?->group_name
+            ],
             'period' => ['year' => $year, 'month' => $month],
-            'effective' => ['pay_scale' => $fixation['pay_scale'] ?? ($employee?->payScale?->scale_name ?? 'Not configured'),
+            'effective' => [
+                'pay_scale' => $fixation['pay_scale'] ?? ($employee?->payScale?->scale_name ?? 'Not configured'),
                 'grade' => $fixation['grade'] ?? ($employee?->payrollGroup?->grade?->grade_name ?? 'Not configured'),
                 'basic' => $fixation['basic'] ?? ($baseline['basic'] ?? null),
                 'fixation_id' => $fixation['salary_fixation_id'] ?? null,
                 'effective_date' => $fixation['effective_date'] ?? null,
-                'source' => $source],
+                'source' => $source
+            ],
             'financial' => $financial,
-            'statement' => $financial ? SalaryStatementBreakdown::build($financial,
+            'statement' => $financial ? SalaryStatementBreakdown::build(
+                $financial,
                 $latest && !$overrideChanged && $latest->arrear_snapshot && !$publishedRulesChanged
-                    ? (json_decode((string) $latest->arrear_snapshot, true)['rows'] ?? $arrearRows) : $arrearRows) : null,
+                    ? (json_decode((string) $latest->arrear_snapshot, true)['rows'] ?? $arrearRows) : $arrearRows
+            ) : null,
             'baseline' => $baseline,
-            'additions' => $adds, 'deductions' => $ded,
+            'additions' => $adds,
+            'deductions' => $ded,
             'gpfOverride' => $gpfOverride,
             'componentOverrides' => $overrideRows,
             'componentOptions' => $componentOptions,
             'componentOverrideHash' => $componentSignature,
             'arrearRows' => $latest && !$overrideChanged && $latest->arrear_snapshot && !$publishedRulesChanged ? (json_decode($latest->arrear_snapshot, true)['rows'] ?? $arrearRows) : $arrearRows,
             'unpublishedArrearTemplates' => app(SalaryArrearRuleService::class)->unpublishedTemplates($user->id),
-            'saved' => $latest ? ['id' => $latest->id, 'version' => (int) $latest->version,
-                'status' => $latest->status, 'fixation_id' => $latest->fixation_id,
-                'snapshot_hash' => $latest->snapshot_hash, 'reason' => $latest->reason,
-                'evidence_reference' => $latest->evidence_reference] : null,
+            'saved' => $latest ? [
+                'id' => $latest->id,
+                'version' => (int) $latest->version,
+                'status' => $latest->status,
+                'fixation_id' => $latest->fixation_id,
+                'snapshot_hash' => $latest->snapshot_hash,
+                'reason' => $latest->reason,
+                'evidence_reference' => $latest->evidence_reference
+            ] : null,
             'error' => $error,
         ]);
     }
@@ -301,13 +340,16 @@ final class SalaryCalculatorEntryController extends Controller
     /** Never convert missing evidence to zero. Unresolved lines stay null in a draft. */
     private function validateArrearSnapshot(array $rows, string $status): array
     {
-        $seen = []; $seenTitles = []; $items = []; $unknown = [];
+        $seen = [];
+        $seenTitles = [];
+        $items = [];
+        $unknown = [];
         foreach ($rows as $index => $row) {
             $key = $row['rule_id'] ?? null;
-            if ($key && isset($seen[$key])) throw new DomainException('Duplicate published arrear rule #'.$key);
+            if ($key && isset($seen[$key])) throw new DomainException('Duplicate published arrear rule #' . $key);
             if ($key) $seen[$key] = true;
             $titleKey = strtolower(trim(preg_replace('/\s+/u', ' ', (string) ($row['title'] ?? ''))));
-            $titleIdentity = ($row['direction'] ?? '').':'.$titleKey;
+            $titleIdentity = ($row['direction'] ?? '') . ':' . $titleKey;
             if ($titleKey === '' || isset($seenTitles[$titleIdentity])) {
                 throw new DomainException('Duplicate or empty arrear title and direction; reconcile repeated entries before saving.');
             }
@@ -315,22 +357,29 @@ final class SalaryCalculatorEntryController extends Controller
             $automatic = $row['calculated_amount'] ?? null;
             $final = $row['final_amount'] ?? null;
             $overridden = ($automatic === null && $final !== null)
-                || ($automatic !== null && $final !== null && abs((float)$final-(float)$automatic) > 0.009);
+                || ($automatic !== null && $final !== null && abs((float)$final - (float)$automatic) > 0.009);
             if ($status === 'approved' && $overridden && (!trim((string)($row['reason'] ?? '')) || !trim((string)($row['evidence_reference'] ?? '')))) {
-                throw new DomainException('Manual arrear override needs reason and evidence reference for '.$row['title']);
+                throw new DomainException('Manual arrear override needs reason and evidence reference for ' . $row['title']);
             }
             if ($final === null) $unknown[] = $row['title'];
             $items[] = [
-                'rule_id'=>$key, 'code'=>$row['code'] ?? null, 'title'=>$row['title'], 'direction'=>$row['direction'],
-                'mode'=>$row['mode'], 'formula'=>$row['formula'] ?? null,
-                'calculated_amount'=>$automatic, 'final_amount'=>$final,
-                'overridden'=>$overridden, 'months'=>$row['months'] ?? [],
-                'reason'=>$row['reason'] ?? null, 'evidence_reference'=>$row['evidence_reference'] ?? null,
-                'error'=>$row['error'] ?? null,
+                'rule_id' => $key,
+                'code' => $row['code'] ?? null,
+                'title' => $row['title'],
+                'direction' => $row['direction'],
+                'mode' => $row['mode'],
+                'formula' => $row['formula'] ?? null,
+                'calculated_amount' => $automatic,
+                'final_amount' => $final,
+                'overridden' => $overridden,
+                'months' => $row['months'] ?? [],
+                'reason' => $row['reason'] ?? null,
+                'evidence_reference' => $row['evidence_reference'] ?? null,
+                'error' => $row['error'] ?? null,
             ];
         }
         if ($status === 'approved' && $unknown) {
-            throw new DomainException('Arrear amount remains UNKNOWN for: '.implode(', ', $unknown).'. Supply documented override or unpublish the rule.');
+            throw new DomainException('Arrear amount remains UNKNOWN for: ' . implode(', ', $unknown) . '. Supply documented override or unpublish the rule.');
         }
         $pay = $ded = 0;
         foreach ($items as $row) {
@@ -338,33 +387,53 @@ final class SalaryCalculatorEntryController extends Controller
             if ($row['direction'] === 'payable') $pay += (float)$row['final_amount'];
             else $ded += (float)$row['final_amount'];
         }
-        return ['rows'=>$items,'known_payable'=>round($pay,2), 'known_deduction'=>round($ded,2),
-            'net_arrear'=> $unknown ? null : round($pay-$ded,2), 'unknown_lines'=>$unknown];
+        return [
+            'rows' => $items,
+            'known_payable' => round($pay, 2),
+            'known_deduction' => round($ded, 2),
+            'net_arrear' => $unknown ? null : round($pay - $ded, 2),
+            'unknown_lines' => $unknown
+        ];
     }
 
     public function previewArrear(Request $request, User $user, SalaryArrearRuleService $service)
     {
         $data = $request->validate([
-            'year'=>'required|integer|between:2020,2100','month'=>'required|integer|between:1,12',
-            'rows'=>'required|array|max:100', 'rows.*.title'=>'required|string|max:160',
-            'rows.*.direction'=>'required|in:payable,deduction',
-            'rows.*.code'=>'nullable|string|max:60',
-            'rows.*.mode'=>'required|in:fixed,percentage,formula',
-            'rows.*.amount'=>'nullable|numeric|min:0', 'rows.*.formula'=>'nullable|string|max:400',
-            'rows.*.start_month'=>'nullable|date_format:Y-m','rows.*.end_month'=>'nullable|date_format:Y-m',
-            'rows.*.selected_months'=>'nullable|array|max:60',
+            'year' => 'required|integer|between:2020,2100',
+            'month' => 'required|integer|between:1,12',
+            'rows' => 'required|array|max:100',
+            'rows.*.title' => 'required|string|max:160',
+            'rows.*.direction' => 'required|in:payable,deduction',
+            'rows.*.code' => 'nullable|string|max:60',
+            'rows.*.mode' => 'required|in:fixed,percentage,formula',
+            'rows.*.amount' => 'nullable|numeric|min:0',
+            'rows.*.formula' => 'nullable|string|max:400',
+            'rows.*.start_month' => 'nullable|date_format:Y-m',
+            'rows.*.end_month' => 'nullable|date_format:Y-m',
+            'rows.*.selected_months' => 'nullable|array|max:60',
         ]);
-        $input = array_map(fn ($r) => (object) array_merge([
-            'id'=>null,'code'=>null,'revision'=>1,'start_month'=>null,
-            'end_month'=>null,'selected_months'=>[], 'recurring'=>false,
+        $input = array_map(fn($r) => (object) array_merge([
+            'id' => null,
+            'code' => null,
+            'revision' => 1,
+            'start_month' => null,
+            'end_month' => null,
+            'selected_months' => [],
+            'recurring' => false,
         ], $r), $data['rows']);
-        return response()->json(['rows'=>$service->preview($user->id,(int)$data['year'],(int)$data['month'],$input)]);
+        return response()->json(['rows' => $service->preview($user->id, (int)$data['year'], (int)$data['month'], $input)]);
     }
 
     /** PATCH 12: authoritative calculator input for bulk persistence, never browser totals. */
-    public function verifiedBulkInput(User $user, int $year, int $month, string $reason,
-        ApprovedFixationResolver $resolver, SalaryCalculationService $calculator): array
-    {
+    public function verifiedBulkInput(
+        User $user,
+        int $year,
+        int $month,
+        string $reason,
+        ApprovedFixationResolver $resolver,
+        SalaryCalculationService $calculator,
+        string $saveStatus = 'approved'
+    ): array {
         if ($year !== 2026 || $month !== 10) {
             throw new DomainException('This verified bulk workflow is limited to October 2026.');
         }
@@ -373,24 +442,35 @@ final class SalaryCalculatorEntryController extends Controller
         [$adds, $ded] = $this->components($employee, $year, $month, $fixation);
         $juneRent = $this->juneRentReference($user->id);
         if ($juneRent !== null) $adds = $this->setHistoricalJuneRent($adds, $juneRent);
-        $gpf = collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))
+        $gpf = collect($ded)->contains(fn($r) => SalaryCalculationService::isGpf($r))
             ? null : ['type' => 'disabled', 'amount' => 0];
         // Identical original calculation service and approval constraints.
         $calculator->calculate($adds, $ded, $fixation, $gpf);
         $rules = app(SalaryArrearRuleService::class)->preview($user->id, $year, $month);
-        if (!$rules) throw new DomainException('No published arrear rules; verify October arrear configuration.');
+        if (!$rules && $saveStatus === 'approved') throw new DomainException('No published arrear rules; verify October arrear configuration.');
         $arrears = [];
         foreach ($rules as $rule) {
-            if (!empty($rule['error']) || !isset($rule['calculated_amount'])
-                || !is_numeric($rule['calculated_amount']) || (float)$rule['calculated_amount'] < 0) {
-                throw new DomainException('Arrear source not verified for '.$rule['title'].': '.($rule['error'] ?? 'unknown amount'));
+            if (
+                !empty($rule['error']) || !isset($rule['calculated_amount'])
+                || !is_numeric($rule['calculated_amount']) || (float)$rule['calculated_amount'] < 0
+            ) {
+                if ($saveStatus === 'approved') {
+                    throw new DomainException('Arrear source not verified for ' . $rule['title'] . ': ' . ($rule['error'] ?? 'unknown amount'));
+                }
             }
             $arrears[] = [
-                'rule_id' => $rule['rule_id'], 'code' => $rule['code'],
-                'title' => $rule['title'], 'direction' => $rule['direction'],
-                'mode' => $rule['mode'], 'formula' => $rule['formula'] ?? null,
-                'calculated_amount' => $rule['calculated_amount'],
-                'final_amount' => $rule['calculated_amount'], 'months' => $rule['months'] ?? [],
+                'rule_id' => $rule['rule_id'],
+                'code' => $rule['code'],
+                'title' => $rule['title'],
+                'direction' => $rule['direction'],
+                'mode' => $rule['mode'],
+                'formula' => $rule['formula'] ?? null,
+                'calculated_amount' => is_numeric($rule['calculated_amount'] ?? null) && empty($rule['error'])
+                    ? (float) $rule['calculated_amount'] : null,
+                'final_amount' => is_numeric($rule['calculated_amount'] ?? null) && empty($rule['error'])
+                    ? (float) $rule['calculated_amount'] : null,
+                'error' => $rule['error'] ?? null,
+                'months' => $rule['months'] ?? [],
             ];
         }
         $latest = $this->latest($user->id, $year, $month);
@@ -398,17 +478,22 @@ final class SalaryCalculatorEntryController extends Controller
         if ($latest && $latest->arrear_snapshot) {
             $prior = json_decode((string)$latest->arrear_snapshot, true);
             foreach (($prior['rows'] ?? []) as $row) {
-                if (empty($row['rule_id']) || !empty($row['overridden'])) {
+                if ($saveStatus === 'approved' && (empty($row['rule_id']) || !empty($row['overridden']))) {
                     throw new DomainException('Existing custom/manual arrear lines require individual calculator review.');
                 }
             }
         }
         return [
-            'year'=>$year, 'month'=>$month, 'status'=>'approved',
-            'expected_version'=>(int)($latest->version ?? 0),
-            'component_override_hash'=>app(SalaryEmployeeComponentOverrideService::class)->signature($user->id,$year,$month),
-            'additions'=>$adds, 'deductions'=>$ded, 'gpf_override'=>$gpf,
-            'arrear_rows'=>$arrears, 'reason'=>$reason,
+            'year' => $year,
+            'month' => $month,
+            'status' => $saveStatus,
+            'expected_version' => (int)($latest->version ?? 0),
+            'component_override_hash' => app(SalaryEmployeeComponentOverrideService::class)->signature($user->id, $year, $month),
+            'additions' => $adds,
+            'deductions' => $ded,
+            'gpf_override' => $gpf,
+            'arrear_rows' => $arrears,
+            'reason' => $reason,
         ];
     }
 
@@ -452,22 +537,24 @@ final class SalaryCalculatorEntryController extends Controller
         }
         try {
             $employee = $this->profiles($user);
-            $year = (int) $input['year']; $month = (int) $input['month'];
+            $year = (int) $input['year'];
+            $month = (int) $input['month'];
             $fixation = $resolver->forUser($user->id, $year, $month);
             $sourceId = (int) ($fixation['salary_fixation_id'] ?? 0);
-            $componentSignature = app(SalaryEmployeeComponentOverrideService::class)->signature($user->id,$year,$month);
+            $componentSignature = app(SalaryEmployeeComponentOverrideService::class)->signature($user->id, $year, $month);
             if (($input['component_override_hash'] ?? null) !== null
                 ? !hash_equals($componentSignature, $input['component_override_hash'])
-                : count(app(SalaryEmployeeComponentOverrideService::class)->rows($user->id,$year,$month)) > 0) {
-                return response()->json(['message'=>'Employee component overrides changed; reload this calculator before saving.'],409);
+                : count(app(SalaryEmployeeComponentOverrideService::class)->rows($user->id, $year, $month)) > 0
+            ) {
+                return response()->json(['message' => 'Employee component overrides changed; reload this calculator before saving.'], 409);
             }
             $adds = $input['additions'];
             $ded = $input['deductions'];
             // The fixation itself remains immutable. A monthly HR Basic override
             // is stored within the versioned salary components, with attribution.
             $calculationFixation = $fixation;
-            $basicOverrides = array_values(array_filter($adds, static fn ($row) =>
-                preg_match('/\bbasic(?:\s+pay|\s+salary)?\b/i', (string) ($row['name'] ?? '')) === 1));
+            $basicOverrides = array_values(array_filter($adds, static fn($row) =>
+            preg_match('/\bbasic(?:\s+pay|\s+salary)?\b/i', (string) ($row['name'] ?? '')) === 1));
             if (count($basicOverrides) !== 1) {
                 throw new DomainException('Exactly one Basic Pay component is required.');
             }
@@ -476,8 +563,10 @@ final class SalaryCalculatorEntryController extends Controller
                 throw new DomainException('HR Basic must be a positive fixed amount.');
             }
             if ($fixation && abs($enteredBasic - (float) $fixation['basic']) > .009) {
-                if ($input['status'] === 'approved' &&
-                    (!trim((string) ($input['reason'] ?? '')) || !trim((string) ($input['evidence_reference'] ?? '')))) {
+                if (
+                    $input['status'] === 'approved' &&
+                    (!trim((string) ($input['reason'] ?? '')) || !trim((string) ($input['evidence_reference'] ?? '')))
+                ) {
                     throw new DomainException('HR Basic override requires a revision reason and evidence/reference before approval.');
                 }
                 $calculationFixation['basic'] = $enteredBasic;
@@ -485,8 +574,8 @@ final class SalaryCalculatorEntryController extends Controller
                 $calculationFixation['approved_fixation_basic'] = (float) $fixation['basic'];
             }
             $gpfInput = $input['gpf_override'] ?? null;
-            if ($gpfInput === null && !collect($ded)->contains(fn ($r) => SalaryCalculationService::isGpf($r))) {
-                $gpfInput = ['type'=>'disabled','amount'=>0];
+            if ($gpfInput === null && !collect($ded)->contains(fn($r) => SalaryCalculationService::isGpf($r))) {
+                $gpfInput = ['type' => 'disabled', 'amount' => 0];
             }
             // Monthly overrides remain authoritative, even if the browser
             // omitted a row, duplicated it, or lost its master component key.
@@ -495,39 +584,103 @@ final class SalaryCalculatorEntryController extends Controller
             $storedOverrides = app(SalaryEmployeeComponentOverrideService::class)
                 ->rows($user->id, $year, $month);
             [$adds, $ded] = SalaryEmployeeComponentOverrideService::reconcileForApproval(
-                $adds, $ded, $storedOverrides);
+                $adds,
+                $ded,
+                $storedOverrides
+            );
             // One GPF authority per month: the persisted employee override wins
             // over the separate legacy Calculator GPF control. Do not reject
             // approval because the browser submitted both representations.
-            $gpfRules = array_values(array_filter($storedOverrides, static fn ($row) =>
-                ($row['direction'] ?? null) === 'deduction'
-                && SalaryCalculationService::isGpf(['name' => (string) ($row['component_title'] ?? '')])
+            // Resolve equivalent saved monthly GPF rules without
+            // applying GPF more than once.
+            //
+            // Conflicting financial rules are NOT silently overwritten.
+
+            $gpfRules = array_values(array_filter(
+                $storedOverrides,
+                static fn($row) => ($row['direction'] ?? null) === 'deduction'
+                    && SalaryCalculationService::isGpf([
+                        'name' => (string) ($row['component_title'] ?? ''),
+                    ])
             ));
+
             if (count($gpfRules) > 1) {
-                throw new DomainException('Multiple saved monthly GPF rules need reconciliation; no salary was changed.');
+
+                $ruleGroups = [];
+
+                foreach ($gpfRules as $rule) {
+
+                    $fingerprint = json_encode([
+                        'mode' => (string) ($rule['mode'] ?? ''),
+                        'calc_type' => (string) ($rule['calc_type'] ?? ''),
+                        'value' => is_numeric($rule['value'] ?? null)
+                            ? round((float) $rule['value'], 4)
+                            : null,
+                        'basis' => (string) ($rule['basis'] ?? ''),
+                        'legacy_basic_reference' =>
+                        is_numeric($rule['legacy_basic_reference'] ?? null)
+                            ? round((float) $rule['legacy_basic_reference'], 4)
+                            : null,
+                    ], JSON_THROW_ON_ERROR);
+
+                    $ruleGroups[$fingerprint][] = $rule;
+                }
+
+                if (count($ruleGroups) === 1) {
+
+                    // All saved rules are financially equivalent.
+                    // Use one effective rule without deleting history.
+
+                    usort(
+                        $gpfRules,
+                        static fn($a, $b) => ((int) ($b['id'] ?? 0))
+                            <=>
+                            ((int) ($a['id'] ?? 0))
+                    );
+
+                    $gpfRules = [$gpfRules[0]];
+                } else {
+
+                    // Different GPF amounts or calculation bases
+                    // require an explicit HR decision.
+
+                    $conflictingIds = array_map(
+                        static fn($r) => (int) ($r['id'] ?? 0),
+                        $gpfRules
+                    );
+
+                    throw new DomainException(
+                        'Conflicting GPF rules: #'
+                            . implode(', #', $conflictingIds)
+                            . '. Select one effective GPF rule in Employee Overrides.'
+                    );
+                }
             }
             if (count($gpfRules) === 1) {
                 $gpfRule = $gpfRules[0];
                 // Discard only the *submitted* GPF representation, not any
                 // underlying employee configuration or persisted override.
-                $ded = array_values(array_filter($ded, static fn ($row) =>
-                    !SalaryCalculationService::isGpf($row)));
+                $ded = array_values(array_filter($ded, static fn($row) =>
+                !SalaryCalculationService::isGpf($row)));
                 if ($gpfRule['mode'] === 'disabled') {
                     $gpfInput = ['type' => 'disabled', 'amount' => 0];
                 } elseif ($gpfRule['mode'] === 'manual') {
                     $type = (string) ($gpfRule['calc_type'] ?? '');
                     $value = $gpfRule['value'] ?? null;
                     $basis = (string) ($gpfRule['basis'] ?? '');
-                    if (!in_array($type, ['fixed', 'percentage'], true)
+                    if (
+                        !in_array($type, ['fixed', 'percentage'], true)
                         || !is_numeric($value) || (float)$value < 0
                         || ($type === 'percentage' && ((float)$value > 100
                             || !in_array($basis, ['payable_basic', 'legacy_basic'], true)))
-                        || ($type === 'fixed' && $basis !== 'none')) {
+                        || ($type === 'fixed' && $basis !== 'none')
+                    ) {
                         throw new DomainException('Invalid saved GPF employee override; review its rule.');
                     }
                     $savedGpf = [
                         'name' => (string) $gpfRule['component_title'],
-                        'calcType' => $type, 'amount' => (float) $value,
+                        'calcType' => $type,
+                        'amount' => (float) $value,
                         'component_type' => 'deduction',
                         'component_source' => 'employee_month_override',
                         'employee_override_id' => (int) $gpfRule['id'],
@@ -551,15 +704,15 @@ final class SalaryCalculatorEntryController extends Controller
             // Source configuration remains unchanged; the versioned snapshot
             // records this month's effective deduction list and GPF decision.
             if (($gpfInput['type'] ?? null) === 'disabled') {
-                $ded = array_values(array_filter($ded, static fn ($row) =>
-                    !SalaryCalculationService::isGpf($row)));
+                $ded = array_values(array_filter($ded, static fn($row) =>
+                !SalaryCalculationService::isGpf($row)));
             }
             $calculated = $calculator->calculate($adds, $ded, $calculationFixation, $gpfInput);
             $submittedArrear = $input['arrear_rows'] ?? [];
             // Re-evaluate every published rule from authoritative historical records.
             // Never trust browser-provided automatic results or payment evidence.
             $liveRules = app(SalaryArrearRuleService::class)->preview($user->id, $year, $month);
-            $byId = collect($liveRules)->filter(fn ($r) => $r['rule_id'] !== null)
+            $byId = collect($liveRules)->filter(fn($r) => $r['rule_id'] !== null)
                 ->keyBy('rule_id');
             foreach ($submittedArrear as &$ar) {
                 if (empty($ar['rule_id'])) {
@@ -583,24 +736,46 @@ final class SalaryCalculatorEntryController extends Controller
             }
             unset($ar);
             $arrear = $this->validateArrearSnapshot($submittedArrear, $input['status']);
-            if ($input['status'] === 'approved' && $arrear['net_arrear'] !== null
-                && (float)$calculated['net_salary'] + (float)$arrear['net_arrear'] < -0.009) {
+            if (
+                $input['status'] === 'approved' && $arrear['net_arrear'] !== null
+                && (float)$calculated['net_salary'] + (float)$arrear['net_arrear'] < -0.009
+            ) {
                 throw new DomainException('Combined deductions exceed salary and payable arrears; review the adjustment.');
             }
             // Persist normalized components; do not create a second GPF row.
             $normalizedAdds = $calculated['allowances'];
             $normalizedDed = $calculated['deductions'];
             $hash = hash('sha256', json_encode([
-                'user_id' => $user->id, 'year' => $year, 'month' => $month,
-                'fixation_id' => $sourceId, 'additions' => $normalizedAdds,
-                'deductions' => $normalizedDed, 'result' => $calculated, 'arrear' => $arrear,
+                'user_id' => $user->id,
+                'year' => $year,
+                'month' => $month,
+                'fixation_id' => $sourceId,
+                'additions' => $normalizedAdds,
+                'deductions' => $normalizedDed,
+                'result' => $calculated,
+                'arrear' => $arrear,
             ], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
-            $response = DB::transaction(function () use ($request, $user, $employee, $input, $year, $month,
-                $calculated, $normalizedAdds, $normalizedDed, $sourceId, $hash, $calculator, $arrear, $gpfInput, $componentSignature) {
+            $response = DB::transaction(function () use (
+                $request,
+                $user,
+                $employee,
+                $input,
+                $year,
+                $month,
+                $calculated,
+                $normalizedAdds,
+                $normalizedDed,
+                $sourceId,
+                $hash,
+                $calculator,
+                $arrear,
+                $gpfInput,
+                $componentSignature
+            ) {
                 User::whereKey($user->id)->lockForUpdate()->firstOrFail();
-                $liveSignature = app(SalaryEmployeeComponentOverrideService::class)->signature($user->id,$year,$month);
+                $liveSignature = app(SalaryEmployeeComponentOverrideService::class)->signature($user->id, $year, $month);
                 if (!hash_equals($componentSignature, $liveSignature)) {
-                    return response()->json(['message'=>'Component overrides changed during calculation. Reload and retry.'],409);
+                    return response()->json(['message' => 'Component overrides changed during calculation. Reload and retry.'], 409);
                 }
                 $latest = $this->latest($user->id, $year, $month);
                 $currentVersion = (int) ($latest->version ?? 0);
@@ -608,8 +783,11 @@ final class SalaryCalculatorEntryController extends Controller
                     return response()->json(['message' => 'Another calculation version was saved. Reload this employee before saving changes.'], 409);
                 }
                 if ($latest && $latest->snapshot_hash === $hash && $latest->status === $input['status']) {
-                    return response()->json(['message' => 'Identical snapshot already saved.',
-                        'version' => $currentVersion, 'status' => $latest->status]);
+                    return response()->json([
+                        'message' => 'Identical snapshot already saved.',
+                        'version' => $currentVersion,
+                        'status' => $latest->status
+                    ]);
                 }
                 $baselineAdds = SalaryComponentNormalizer::rows($employee->additionObjects);
                 $baselineDed = SalaryComponentNormalizer::rows($employee->substractionObjects);
@@ -621,11 +799,14 @@ final class SalaryCalculatorEntryController extends Controller
                 }
                 $now = now();
                 $id = DB::table('salary_calculation_versions')->insertGetId([
-                    'user_id' => $user->id, 'employee_info_id' => $employee->id,
-                    'salary_year' => $year, 'salary_month' => $month,
-                    'version' => $currentVersion + 1, 'status' => $input['status'],
+                    'user_id' => $user->id,
+                    'employee_info_id' => $employee->id,
+                    'salary_year' => $year,
+                    'salary_month' => $month,
+                    'version' => $currentVersion + 1,
+                    'status' => $input['status'],
                     'fixation_id' => $sourceId ?: null,
-                    'component_override_hash'=>$componentSignature,
+                    'component_override_hash' => $componentSignature,
                     'source' => $sourceId ? 'approved_fixation' : 'legacy_employee_setup',
                     'additions' => json_encode($normalizedAdds, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                     'deductions' => json_encode($normalizedDed, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
@@ -636,27 +817,42 @@ final class SalaryCalculatorEntryController extends Controller
                     'arrear_source_hash' => hash('sha256', json_encode($arrear, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)),
                     'reason' => trim((string) ($input['reason'] ?? '')) ?: null,
                     'evidence_reference' => trim((string) ($input['evidence_reference'] ?? '')) ?: null,
-                    'snapshot_hash' => $hash, 'created_by' => $request->user()->id,
+                    'snapshot_hash' => $hash,
+                    'created_by' => $request->user()->id,
                     'approved_at' => $input['status'] === 'approved' ? $now : null,
-                    'created_at' => $now, 'updated_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
                 foreach ($arrear['rows'] as $position => $row) {
                     if (!$row['overridden']) continue;
                     DB::table('salary_arrear_employee_overrides')->insert([
-                        'salary_calculation_version_id'=>$id,
-                        'user_id'=>$user->id, 'salary_year'=>$year, 'salary_month'=>$month,
-                        'rule_id'=>$row['rule_id'], 'row_number'=>$position,
-                        'title'=>$row['title'], 'direction'=>$row['direction'],
-                        'automatic_amount'=>$row['calculated_amount'], 'final_amount'=>$row['final_amount'],
-                        'formula'=>$row['formula'], 'reason'=>$row['reason'],
-                        'evidence_reference'=>$row['evidence_reference'],
-                        'source_hash'=>hash('sha256', json_encode($row, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)),
-                        'created_by'=>$request->user()->id,'created_at'=>$now,'updated_at'=>$now,
+                        'salary_calculation_version_id' => $id,
+                        'user_id' => $user->id,
+                        'salary_year' => $year,
+                        'salary_month' => $month,
+                        'rule_id' => $row['rule_id'],
+                        'row_number' => $position,
+                        'title' => $row['title'],
+                        'direction' => $row['direction'],
+                        'automatic_amount' => $row['calculated_amount'],
+                        'final_amount' => $row['final_amount'],
+                        'formula' => $row['formula'],
+                        'reason' => $row['reason'],
+                        'evidence_reference' => $row['evidence_reference'],
+                        'source_hash' => hash('sha256', json_encode($row, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)),
+                        'created_by' => $request->user()->id,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ]);
                 }
-                return response()->json(['message' => ucfirst($input['status']).' version saved. No bill or GPF ledger entry created.',
-                    'id' => $id, 'version' => $currentVersion + 1, 'status' => $input['status'],
-                    'financial' => $calculated, 'arrear'=>$arrear]);
+                return response()->json([
+                    'message' => ucfirst($input['status']) . ' version saved. No bill or GPF ledger entry created.',
+                    'id' => $id,
+                    'version' => $currentVersion + 1,
+                    'status' => $input['status'],
+                    'financial' => $calculated,
+                    'arrear' => $arrear
+                ]);
             });
             return $response;
         } catch (DomainException $e) {
@@ -673,17 +869,16 @@ final class SalaryCalculatorEntryController extends Controller
     /** Direct bill generation: browser never supplies salary or arrear amounts. */
     public function generateBill(Request $request, User $user, \App\Services\SalaryBillPostingService $service)
     {
-        $data=$request->validate([
-            'year'=>'required|integer|between:2020,2100',
-            'month'=>'required|integer|between:1,12',
-            'expected_version'=>'required|integer|min:0',
+        $data = $request->validate([
+            'year' => 'required|integer|between:2020,2100',
+            'month' => 'required|integer|between:1,12',
+            'expected_version' => 'required|integer|min:0',
         ]);
         try {
-            $result=$service->post($user->id,(int)$data['year'],(int)$data['month'],$request->user()?->id,(int)$data['expected_version']);
+            $result = $service->post($user->id, (int)$data['year'], (int)$data['month'], $request->user()?->id, (int)$data['expected_version']);
             return response()->json($result);
         } catch (DomainException $e) {
-            return response()->json(['message'=>$e->getMessage()],422);
+            return response()->json(['message' => $e->getMessage()], 422);
         }
     }
-
 }

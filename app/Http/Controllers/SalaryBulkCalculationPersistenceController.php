@@ -23,8 +23,10 @@ final class SalaryBulkCalculationPersistenceController extends Controller
             'employee_codes'=>'required|array|min:1|max:50',
             'employee_codes.*'=>'required|string|max:32|distinct',
             'reason'=>'required|string|min:3|max:2000',
+            'save_status'=>'nullable|in:draft,approved',
         ]);
         $year=2026; $month=10; $results=[];
+        $saveStatus = $data['save_status'] ?? 'approved';
         // Exactly one employee at a time: failures do not roll back verified successes.
         foreach ($data['employee_codes'] as $code) {
             try {
@@ -46,7 +48,7 @@ final class SalaryBulkCalculationPersistenceController extends Controller
                     ->where('salaryGenerationYear',$year)->where('monthId',$month)->exists()) {
                     throw new DomainException('A posted bill already exists.');
                 }
-                $payload=$calculatorController->verifiedBulkInput($user,$year,$month,$data['reason'],$fixations,$calculator);
+                $payload=$calculatorController->verifiedBulkInput($user,$year,$month,$data['reason'],$fixations,$calculator,$saveStatus);
                 $internal=Request::create('/dashboard/salary/calculator/'.$userId.'/versions','POST',$payload);
                 $internal->setUserResolver(fn ()=>$request->user());
                 $response=$calculatorController->save($internal,$user,$fixations,$calculator);
@@ -56,7 +58,7 @@ final class SalaryBulkCalculationPersistenceController extends Controller
                 }
                 $saved=DB::table('salary_calculation_versions')->where('user_id',$userId)
                     ->where('salary_year',$year)->where('salary_month',$month)->orderByDesc('version')->first();
-                if (!$saved || $saved->status!=='approved') throw new DomainException('No approved snapshot persisted.');
+                if (!$saved || $saved->status!==$saveStatus) throw new DomainException('No requested snapshot persisted.');
                 $results[]=['code'=>$code,'user_id'=>$userId,'ok'=>true,'version_id'=>$saved->id,
                     'version'=>(int)$saved->version,'snapshot_hash'=>$saved->snapshot_hash,
                     'message'=>$body['message']??'Approved calculation version saved.'];

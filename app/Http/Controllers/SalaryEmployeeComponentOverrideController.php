@@ -229,4 +229,92 @@ final class SalaryEmployeeComponentOverrideController extends Controller
             return response()->json(['message'=>$e->getMessage()],422);
         }
     }
+    /** Edit/reset one EXISTING record by ID, preserving audit and approval invalidation. */
+    public function manageExisting(Request $request, User $user, int $overrideId)
+    {
+        abort_unless($request->user(), 401);
+        $data = $request->validate([
+            'year'=>'required|integer|between:2020,2100',
+            'month'=>'required|integer|between:1,12',
+            'action'=>'required|in:manual,disabled,reset',
+            'expected_revision'=>'required|integer|min:1',
+            'calc_type'=>'nullable|in:fixed,percentage',
+            'value'=>'nullable|numeric|min:0|max:1000000000',
+            'basis'=>'nullable|in:none,payable_basic,legacy_basic',
+            'legacy_basic_reference'=>'nullable|numeric|gt:0',
+            'reason'=>'required|string|min:3|max:2000',
+            'evidence_reference'=>'nullable|string|max:500',
+        ]);
+        try {
+            return DB::transaction(function () use ($request, $user, $overrideId, $data) {
+                User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $year=(int)$data['year'];$month=(int)$data['month'];
+                $record=DB::table('salary_component_employee_overrides')
+                    ->where('id',$overrideId)->where('user_id',$user->id)
+                    ->where('salary_year',$year)->where('salary_month',$month)
+                    ->lockForUpdate()->first();
+                if (!$record) return response()->json(['message'=>'Override not found. Reload.'],404);
+                if ((int)$record->revision !== (int)$data['expected_revision'])
+                    return response()->json(['message'=>'Override changed elsewhere. Reload.'],409);
+                if (DB::table('salary_generates')->where('user_id',$user->id)
+                    ->where('salaryGenerationYear',$year)->where('monthId',$month)->exists())
+                    return response()->json(['message'=>'Posted bill exists: reversal workflow required.'],409);
+                $wf=DB::table('salary_monthly_workflows')->where('user_id',$user->id)
+                    ->where('salary_year',$year)->where('salary_month',$month)->lockForUpdate()->first();
+                if ($wf && in_array($wf->workflow_status,['READY_FOR_GENERATION','GENERATED'],true))
+                    return response()->json(['message'=>'Return workflow for revision first.'],409);
+                $action=$data['action'];$before=(array)$record;$after=null;
+                if ($action==='reset') {
+                    DB::table('salary_component_employee_overrides')->where('id',$record->id)->delete();
+                } else {
+                    $type=$action==='manual'?($data['calc_type']??null):null;
+                    $value=$action==='manual'?($data['value']??null):null;
+                    $basis=$action==='manual'?($type==='fixed'?'none':($data['basis']??null)):null;
+                    $legacy=$action==='manual' && $basis==='legacy_basic'?($data['legacy_basic_reference']??null):null;
+                    if ($action==='manual' && (!in_array($type,['fixed','percentage'],true) || !is_numeric($value)
+                        || ($type==='percentage' && ((float)$value>100 || !in_array($basis,['payable_basic','legacy_basic'],true)))
+                        || ($basis==='legacy_basic' && (!is_numeric($legacy) || (float)$legacy<=0))))
+                        return response()->json(['message'=>'Invalid manual override amount or basis.'],422);
+                    DB::table('salary_component_employee_overrides')->where('id',$record->id)->update([
+                        'mode'=>$action,'calc_type'=>$type,'value'=>$value,'basis'=>$basis,
+                        'legacy_basic_reference'=>$legacy,'reason'=>$data['reason'],
+                        'evidence_reference'=>$data['evidence_reference']??null,
+                        'revision'=>(int)$record->revision+1,'changed_by'=>$request->user()->id,
+                        'updated_at'=>now(),
+                    ]);
+                    $after=(array)DB::table('salary_component_employee_overrides')->where('id',$record->id)->first();
+                }
+                DB::table('salary_component_override_events')->insert([
+                    'override_id'=>$record->id,'user_id'=>$user->id,'salary_year'=>$year,'salary_month'=>$month,
+                    'direction'=>$record->direction,'component_key'=>$record->component_key,
+                    'action'=>$action==='reset'?'reset':'save',
+                    'before_state'=>json_encode($before,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR),
+                    'after_state'=>$after?json_encode($after,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR):null,
+                    'actor_id'=>$request->user()->id,'created_at'=>now(),
+                ]);
+                if ($wf && $wf->workflow_status==='CALCULATED') {
+                    DB::table('salary_monthly_workflows')->where('id',$wf->id)->update([
+                        'workflow_status'=>'BLOCKED','revision'=>(int)$wf->revision+1,
+                        'active_calculation_version_id'=>null,'ready_calculation_version_id'=>null,
+                        'ready_snapshot_hash'=>null,'calculation_approved_by'=>null,
+                        'calculation_approved_at'=>null,'ready_approved_by'=>null,'ready_approved_at'=>null,
+                        'blocking_reasons'=>json_encode(['Monthly override changed; recalculate and approve.']),
+                        'updated_at'=>now(),
+                    ]);
+                    DB::table('salary_workflow_events')->insert([
+                        'salary_monthly_workflow_id'=>$wf->id,'user_id'=>$user->id,
+                        'salary_year'=>$year,'salary_month'=>$month,
+                        'action'=>'financial_input_changed','from_status'=>'CALCULATED',
+                        'to_status'=>'BLOCKED','actor_id'=>$request->user()->id,
+                        'reason'=>$data['reason'],'before_hash'=>$wf->ready_snapshot_hash,
+                        'after_hash'=>null,'revision'=>(int)$wf->revision+1,'created_at'=>now(),
+                    ]);
+                }
+                return response()->json(['message'=>'Override updated. Recalculate and reapprove before posting.']);
+            });
+        } catch (DomainException $e) {
+            return response()->json(['message'=>$e->getMessage()],422);
+        }
+    }
+
 }
