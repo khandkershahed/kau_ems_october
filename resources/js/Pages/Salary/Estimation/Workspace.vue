@@ -1,4 +1,6 @@
 <script setup>
+
+
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 const props = defineProps({ rows:Object, counts:Object, runs:Array, year:Number, month:Number });
