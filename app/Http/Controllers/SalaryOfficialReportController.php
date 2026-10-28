@@ -197,6 +197,15 @@ final class SalaryOfficialReportController extends Controller
      */
     private function draftRow(int $userId, int $year, int $month): array
     {
+        // An existing salary calculation is the authoritative provisional
+        // report source. Never regenerate amounts from legacy designation
+        // defaults when the employee has an edited/saved monthly snapshot.
+        $saved = \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
+            ->where('user_id', $userId)->where('salary_year', $year)
+            ->where('salary_month', $month)->orderByDesc('version')->first();
+        if ($saved) {
+            return $this->savedCalculationDraftRow($saved, $userId, $year, $month);
+        }
         $service = app(SalaryBillCompositionService::class);
         try {
             $draft = $service->composeRegularOnly($userId, $year, $month);
@@ -246,6 +255,81 @@ final class SalaryOfficialReportController extends Controller
         $base['remarks'] = 'DRAFT regular-only preview (no posted bill). Arrear unverified: '
             .(implode('; ', $draft['arrear_blocking_reasons'] ?? []) ?: 'no arrear rules returned amounts.');
         return $base;
+    }
+
+    /**
+     * Read-only provisional horizontal bill from the exact saved calculator
+     * version. It is not a posted salary bill or verification of evidence.
+     */
+    private function savedCalculationDraftRow(object $saved, int $userId, int $year, int $month): array
+    {
+        $financial = json_decode((string) $saved->calculated_result, true);
+        $arrear = json_decode((string) $saved->arrear_snapshot, true);
+        if (!is_array($financial) || !is_array($arrear)) {
+            throw new DomainException('The saved calculation has unreadable financial/arrear data.');
+        }
+        $user = \App\Models\User::findOrFail($userId);
+        $profile = \App\Models\EmployeeInfo::with(['payScale', 'payrollGroup.grade', 'payrollGroup.payrollGroupType'])
+            ->where('user_id', $userId)->first();
+        $add = $financial['allowances'] ?? [];
+        $ded = $financial['deductions'] ?? [];
+        $toComponent = static function (array $r, string $direction): array {
+            $raw = $r['calculated_amount'] ?? null;
+            $amount = is_numeric($raw) ? round((float) $raw, 2) : null;
+            return ['title' => (string) ($r['name'] ?? ''), 'direction' => $direction,
+                'current' => $amount, 'arrear' => 0.0, 'total' => $amount,
+                'code' => null, 'months' => [], 'evidence' => $r['manual_evidence_reference'] ?? null,
+                'unverified' => $amount === null];
+        };
+        $allowances = array_map(static fn ($r) => $toComponent($r, 'allowance'), $add);
+        $deductions = array_map(static fn ($r) => $toComponent($r, 'deduction'), $ded);
+        $arrearRows = [];
+        $arrearPay = 0.0; $arrearDed = 0.0; $missingArrear = false;
+        foreach (($arrear['rows'] ?? []) as $item) {
+            $amount = $item['final_amount'] ?? null;
+            $value = is_numeric($amount) ? round((float) $amount, 2) : null;
+            $direction = ($item['direction'] ?? '') === 'payable' ? 'payable' : 'deduction';
+            $arrearRows[] = ['title' => (string) ($item['title'] ?? ''),
+                'code' => (string) ($item['code'] ?? ''), 'direction' => $direction,
+                'total' => $value, 'months' => $item['months'] ?? [],
+                'evidence' => $item['evidence_reference'] ?? null,
+                'source_state' => $item['overridden'] ?? false ? 'HR_MANUAL_OVERRIDE' : 'SAVED_CALCULATION',
+                'month_amounts' => null];
+            if ($value === null) { $missingArrear = true; continue; }
+            $direction === 'payable' ? $arrearPay += $value : $arrearDed += $value;
+        }
+        $gross = isset($financial['total_allowance']) ? (float) $financial['total_allowance'] : null;
+        $regularDed = isset($financial['total_deduction']) ? (float) $financial['total_deduction'] : null;
+        $regularNet = isset($financial['net_salary']) ? (float) $financial['net_salary'] : null;
+        $netArrear = $missingArrear ? null : round($arrearPay - $arrearDed, 2);
+        $grade = $profile?->payrollGroup?->grade;
+        return [
+            'id' => null, 'user_id' => $userId,
+            'employee_code' => (string) ($profile?->employeeCode ?? ''),
+            'name' => (string) ($user->name ?? ''),
+            'designation' => (string) ($profile?->payrollGroup?->payrollGroupType?->group_name ?? '—'),
+            'department' => '—', 'department_is_current' => true,
+            'grade' => (string) ($grade?->grade_number ?? '—'),
+            'pay_scale' => (string) ($profile?->payScale?->scale_name ?? '—'),
+            'bank_account_no' => '—', 'bank_address' => '—',
+            'year' => $year, 'month' => $month,
+            'basic' => $financial['basic'] ?? null,
+            'allowances' => $allowances, 'deductions' => $deductions,
+            'arrear_rows' => $arrearRows,
+            'current_gross' => $gross, 'current_deductions' => $regularDed,
+            'current_net' => $regularNet,
+            'arrear_payable' => $missingArrear ? null : round($arrearPay, 2),
+            'arrear_deductions' => $missingArrear ? null : round($arrearDed, 2),
+            'net_arrear' => $netArrear,
+            'gross' => $gross === null || $missingArrear ? null : round($gross + $arrearPay, 2),
+            'total_deductions' => $regularDed === null || $missingArrear ? null : round($regularDed + $arrearDed, 2),
+            'net' => $regularNet === null || $missingArrear ? null : round($regularNet + $netArrear, 2),
+            'source' => 'PROVISIONAL_SAVED_'.strtoupper((string) $saved->status),
+            'source_hash' => (string) ($saved->snapshot_hash ?? ''),
+            'details_complete' => !$missingArrear && $gross !== null && $regularDed !== null,
+            'remarks' => 'PROVISIONAL saved calculator version '.(int) $saved->version
+                .'; not a posted bill. '.($missingArrear ? 'Unverified arrear line(s); totals incomplete.' : 'Review all components before HR approval.'),
+        ];
     }
 
     private function embeddedLogo(): ?string

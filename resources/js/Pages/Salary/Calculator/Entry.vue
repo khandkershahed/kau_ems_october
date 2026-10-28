@@ -447,12 +447,14 @@ const save = async (selectedStatus) => {
                 ...r,
                 amount: Number(r.amount),
             })),
-            gpf_override: hasGpf.value
-                ? configuredGpf?.component_source ===
-                      "employee_month_override" || gpfMode.value === "default"
-                    ? null
-                    : { type: gpfMode.value, amount: Number(gpfAmount.value) }
-                : { type: "disabled", amount: 0 },
+            // Persist the user's explicit monthly GPF choice even if a
+            // published or employee-level source exists. Disabling must survive
+            // save/reopen; Restore must persist an actual rate or fixed value.
+            gpf_override: !hasGpf.value
+                ? { type: "disabled", amount: 0 }
+                : gpfMode.value === "default"
+                  ? { type: "percentage", amount: 10 }
+                  : { type: gpfMode.value, amount: Number(gpfAmount.value) },
             arrear_rows: arrears.value.map((r) => ({
                 rule_id: r.rule_id,
                 code: r.code || null,

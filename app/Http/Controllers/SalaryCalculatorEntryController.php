@@ -504,6 +504,14 @@ final class SalaryCalculatorEntryController extends Controller
                     }
                 }
             }
+            // Monthly GPF off is a real saved decision. Do not pass a published
+            // or legacy GPF deduction together with the explicit disabled state.
+            // Source configuration remains unchanged; the versioned snapshot
+            // records this month's effective deduction list and GPF decision.
+            if (($gpfInput['type'] ?? null) === 'disabled') {
+                $ded = array_values(array_filter($ded, static fn ($row) =>
+                    !SalaryCalculationService::isGpf($row)));
+            }
             $calculated = $calculator->calculate($adds, $ded, $calculationFixation, $gpfInput);
             $submittedArrear = $input['arrear_rows'] ?? [];
             // Re-evaluate every published rule from authoritative historical records.
