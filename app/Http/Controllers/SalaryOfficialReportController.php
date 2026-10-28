@@ -60,6 +60,18 @@ final class SalaryOfficialReportController extends Controller
         $draftPreview = ($validated['mode'] ?? null) === 'preview';
         $rows = [];
         foreach ($ids as $id) {
+            // In preview mode the operator explicitly requests the values LAST
+            // SAVED in Salary Calculator, even if an older regular-only bill
+            // exists. This NEVER mutates or replaces the posted salary bill.
+            // An official (non-preview) report still reads posted bills only.
+            if ($draftPreview) {
+                $savedRow = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
+                if (($savedRow['source'] ?? 'NOT_SAVED') !== 'NOT_SAVED'
+                    && is_numeric($savedRow['current_gross'] ?? null)) {
+                    $rows[] = $savedRow;
+                    continue;
+                }
+            }
             $group = $bills->get($id);
             if ($group && $group->count() === 1) {
                 try {
@@ -77,13 +89,9 @@ final class SalaryOfficialReportController extends Controller
             // read-only draft rows. Saved-bill reconciliation is preserved for
             // posted bills and for non-preview mode.
             if ($draftPreview) {
-                $savedRow = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
-                // Unsaved employees need the legacy read-only regular estimate,
-                // rather than misleading zero rows. Saved snapshots always win.
-                // This never creates a salary bill or modifies financial records.
-                $rows[] = ($savedRow['source'] ?? '') === 'NOT_SAVED'
-                    ? $this->draftRow($id, (int) $validated['year'], (int) $validated['month'])
-                    : $savedRow;
+                // No saved calculator and no posted bill. Keep a regular-only
+                // read-only estimate, but DO NOT invent the missing arrear.
+                $rows[] = $this->draftRow($id, (int) $validated['year'], (int) $validated['month']);
                 continue;
             }
             return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
@@ -143,10 +151,12 @@ final class SalaryOfficialReportController extends Controller
         $kind = $validated['kind'];
         $perPage = (int) ($validated['per_page'] ?? 15);
         $pages = $kind === 'bulk' ? array_chunk($rows, $perPage) : array_map(static fn ($row) => [$row], $rows);
-        $totalNet = round(array_sum(array_column($rows, 'net')), 2);
+        // A grand total is not final when any employee has no saved net.
+        $totalNet = count(array_filter($rows, static fn (array $r): bool => !is_numeric($r['net'] ?? null))) > 0
+            ? null : round(array_sum(array_column($rows, 'net')), 2);
         if (($validated['format'] ?? 'html') === 'json') {
             return response()->json(['records' => $rows, 'summary' => ['total_records' => count($rows),
-                'grand_net' => $totalNet], 'source' => 'SAVED_POSTED_BILL_ONLY'])
+                'grand_net' => $totalNet], 'source' => $draftPreview ? 'CALCULATOR_FIRST_PREVIEW' : 'SAVED_POSTED_BILL_ONLY'])
                 ->header('Cache-Control', 'no-store, private');
         }
         if (($validated['format'] ?? 'html') === 'csv') {
@@ -243,12 +253,20 @@ final class SalaryOfficialReportController extends Controller
             ->where('user_id', $userId)->where('salary_year', $year)
             ->where('salary_month', $month)->orderByDesc('version')->orderByDesc('id')->first();
         if (!$version) return $base;
+        $base['source'] = $version->status === 'approved'
+            ? 'APPROVED_CALCULATOR_SNAPSHOT' : 'DRAFT_CALCULATOR_SNAPSHOT';
+        $base['source_hash'] = $version->snapshot_hash ?? null;
         $calculated = json_decode((string) ($version->calculated_result ?? ''), true);
         $arrear = json_decode((string) ($version->arrear_snapshot ?? ''), true);
-        if (!is_array($calculated) || !is_array($arrear)) {
-            $base['remarks'] = 'Saved calculation version #'.$version->id.' is incomplete or unreadable. Needs reconciliation.';
+        // An arrear snapshot may be absent in an older saved version. Preserve
+        // its actual regular salary components rather than replacing the entire
+        // saved salary with a newly estimated regular-only draft.
+        if (!is_array($calculated)) {
+            $base['remarks'] = 'Saved calculator version #'.$version->id.' has unreadable regular salary JSON; not a payable report.';
             return $base;
         }
+        if (!is_array($arrear)) $arrear = ['rows' => [], 'net_arrear' => null];
+        if (!is_array($arrear['rows'] ?? null)) $arrear['rows'] = [];
         $amount = static fn ($v) => is_numeric($v) && is_finite((float) $v) ? round((float) $v, 2) : null;
         $component = static function ($item, $direction) use ($amount): array {
             $value = $amount($item['calculated_amount'] ?? null);
@@ -267,7 +285,7 @@ final class SalaryOfficialReportController extends Controller
         foreach (($calculated['deductions'] ?? []) as $item) {
             if (is_array($item)) $base['deductions'][] = $component($item, 'deduction');
         }
-        $validArrear = true;
+        $validArrear = is_array($arrear['rows'] ?? null) && count($arrear['rows']) > 0;
         $payable = 0.0;
         $deduct = 0.0;
         foreach (($arrear['rows'] ?? []) as $item) {
@@ -310,9 +328,6 @@ final class SalaryOfficialReportController extends Controller
         $base['gross'] = $complete ? round($gross + $payable, 2) : null;
         $base['total_deductions'] = $complete ? round($regularDed + $deduct, 2) : null;
         $base['net'] = $complete ? round($regularNet + $snapshotNetArrear, 2) : null;
-        $base['source'] = $version->status === 'approved'
-            ? 'APPROVED_CALCULATOR_SNAPSHOT' : 'DRAFT_CALCULATOR_SNAPSHOT';
-        $base['source_hash'] = $version->snapshot_hash ?? null;
         $base['details_complete'] = $complete;
         $base['remarks'] = 'Saved calculator version #'.$version->version.' ('.$version->status.')'
             .($complete ? '; provisional, not a posted bill.' : '; INCOMPLETE: do not approve this report.');
@@ -364,12 +379,13 @@ final class SalaryOfficialReportController extends Controller
         $base['current_gross'] = $draft['regular_gross'];
         $base['current_deductions'] = $draft['regular_deductions'];
         $base['current_net'] = $draft['regular_net'];
-        $base['gross'] = $draft['regular_gross'];
-        $base['total_deductions'] = $draft['regular_deductions'];
-        $base['net'] = $draft['regular_net'];
+        $base['gross'] = null;
+        $base['total_deductions'] = null;
+        // Regular net is known, but final Net (regular + arrear) is not.
+        $base['net'] = null;
         $base['source_hash'] = $draft['calculation_source_hash'] ?? null;
-        $base['details_complete'] = true;
-        $base['remarks'] = 'DRAFT regular-only preview (no posted bill). Arrear unverified: '
+        $base['details_complete'] = false;
+        $base['remarks'] = 'DRAFT regular-only preview (no saved calculator and no posted bill). Arrear unverified: '
             .(implode('; ', $draft['arrear_blocking_reasons'] ?? []) ?: 'no arrear rules returned amounts.');
         return $base;
     }

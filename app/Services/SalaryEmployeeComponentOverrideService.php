@@ -70,6 +70,89 @@ final class SalaryEmployeeComponentOverrideService
         }
     }
 
+
+    /**
+     * Rebuild the effective non-GPF component rows from persisted monthly rules.
+     * This closes gaps caused by removed UI rows or stale type/name metadata;
+     * it never deletes or changes an override in the database.
+     * GPF is submitted in a separate dedicated control and handled by its own policy.
+     */
+    public static function reconcileForApproval(array $adds, array $deds, array $overrides): array
+    {
+        foreach ($overrides as $raw) {
+            $o = (array) $raw;
+            $direction = (string) ($o['direction'] ?? '');
+            if (!in_array($direction, ['addition', 'deduction'], true)) {
+                throw new DomainException('Invalid monthly override direction.');
+            }
+            // GPF has a dedicated monthly control and validation path.
+            if ($direction === 'deduction' && SalaryCalculationService::isGpf([
+                'name' => (string) ($o['component_title'] ?? ''),
+            ])) continue;
+
+            $target = $direction === 'addition' ? $adds : $deds;
+            $key = (string) ($o['component_key'] ?? '');
+            $title = trim((string) ($o['component_title'] ?? ''));
+            $matches = [];
+            foreach ($target as $i => $row) {
+                if (!is_array($row) || isset($row['manual_adjustment_id'])) continue;
+                $id = (int) ($row['payroll_component_type_id'] ?? $row['payroll_component_type']['id'] ?? 0);
+                $name = trim((string) ($row['name'] ?? ''));
+                if ($key === (string) ($row['override_component_key'] ?? '')
+                    || ($name !== '' && $key === self::key($id ?: null, $name))
+                    || ($title !== '' && strcasecmp($name, $title) === 0
+                        && ($id === 0 || $id === (int) ($o['payroll_component_type_id'] ?? 0)))) {
+                    $matches[] = $i;
+                }
+            }
+            // Keep nonmatching rows verbatim. The monthly override owns its
+            // matching rows: disabled removes them; manual replaces with one.
+            foreach (array_reverse($matches) as $idx) array_splice($target, $idx, 1);
+            $mode = (string) ($o['mode'] ?? '');
+            if ($mode === 'manual') {
+                if (self::basic($title)) {
+                    throw new DomainException('Basic Pay must be modified using the calculator Basic field.');
+                }
+                $type = (string) ($o['calc_type'] ?? '');
+                $value = $o['value'] ?? null;
+                $basis = (string) ($o['basis'] ?? '');
+                if (!in_array($type, ['fixed','percentage'], true) || !is_numeric($value)
+                    || !is_finite((float) $value) || (float) $value < 0
+                    || ($type === 'percentage' && ((float) $value > 100
+                        || !in_array($basis, ['payable_basic','legacy_basic'], true)))
+                    || ($type === 'fixed' && $basis !== 'none')) {
+                    throw new DomainException('Invalid saved monthly component override: '.$title);
+                }
+                $row = [
+                    'name' => $title,
+                    'payroll_component_type_id' => $o['payroll_component_type_id'] ?? null,
+                    'calcType' => $type,
+                    'amount' => (float) $value,
+                    'component_type' => $direction === 'addition' ? 'allowance' : 'deduction',
+                    'component_source' => 'employee_month_override',
+                    'employee_override_id' => (int) ($o['id'] ?? 0),
+                    'override_component_key' => $key,
+                    'effective_rule_basis' => $basis,
+                    'override_reason' => $o['reason'] ?? null,
+                    'override_evidence_reference' => $o['evidence_reference'] ?? null,
+                ];
+                if ($type === 'percentage' && $basis === 'legacy_basic') {
+                    if (!is_numeric($o['legacy_basic_reference'] ?? null)
+                        || (float) $o['legacy_basic_reference'] <= 0) {
+                        throw new DomainException('Verified Legacy Basic reference is required for '.$title);
+                    }
+                    $row['percentage_base_amount'] = (float) $o['legacy_basic_reference'];
+                }
+                $target[] = $row;
+            } elseif ($mode !== 'disabled') {
+                throw new DomainException('Invalid saved monthly override mode: '.$title);
+            }
+            if ($direction === 'addition') $adds = $target;
+            else $deds = $target;
+        }
+        return [array_values($adds), array_values($deds)];
+    }
+
     public static function basic(string $name): bool
     {
         return preg_match('/\bbasic(?:\s+pay|\s+salary)?\b/i', $name) === 1;
