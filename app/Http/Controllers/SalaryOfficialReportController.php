@@ -147,6 +147,49 @@ final class SalaryOfficialReportController extends Controller
         if ($validated['kind'] === 'bulk' && !$draftPreview && count($rows) === 0) {
             return $this->reportError('No fully reconciled saved salary bill is eligible for this horizontal report. Incomplete/unverified salary rows were excluded.');
         }
+        // Consistent display-only grouping for Report Factory PDF and JSON exports.
+        // Ranking is based on the best grade among the selected category's staff,
+        // not on category label, category ID, or insertion order.
+        if (count($rows) > 1) {
+            $reportIds = array_column($rows, 'user_id');
+            $catData = DB::table('user_user_categories')
+                ->whereIn('user_id', $reportIds)
+                ->orderBy('user_category_id')
+                ->get(['user_id', 'user_category_id'])->groupBy('user_id')
+                ->map(static fn ($items) => (int) $items->first()->user_category_id);
+            $gradeData = DB::table('employee_infos as ei')
+                ->leftJoin('payroll_groups as pg', 'pg.id', '=', 'ei.payroll_group_id')
+                ->leftJoin('grades as g', 'g.id', '=', 'pg.grade_id')
+                ->whereIn('ei.user_id', $reportIds)
+                ->get(['ei.user_id', 'g.grade_name', 'g.min as grade_min'])
+                ->groupBy('user_id')->map(static function ($items) {
+                    $grade = $items->first();
+                    preg_match('/\d+/', (string) ($grade->grade_name ?? ''), $match);
+                    return ['number' => isset($match[0]) ? (int) $match[0] : null,
+                        'minimum' => $grade->grade_min === null ? null : (float) $grade->grade_min];
+                });
+            $categoryRanks = [];
+            foreach ($rows as $row) {
+                $category = $catData->get($row['user_id']);
+                if ($category === null) continue;
+                $grade = $gradeData->get($row['user_id'], ['number' => null, 'minimum' => null]);
+                $candidate = [$grade['number'] ?? PHP_INT_MAX, -($grade['minimum'] ?? 0)];
+                if (!isset($categoryRanks[$category]) || $candidate < $categoryRanks[$category]) {
+                    $categoryRanks[$category] = $candidate;
+                }
+            }
+            usort($rows, static function ($a, $b) use ($catData, $gradeData, $categoryRanks) {
+                $ca = $catData->get($a['user_id']); $cb = $catData->get($b['user_id']);
+                $ga = $gradeData->get($a['user_id'], ['number' => null, 'minimum' => null]);
+                $gb = $gradeData->get($b['user_id'], ['number' => null, 'minimum' => null]);
+                return (($ca === null ? [PHP_INT_MAX, 0] : ($categoryRanks[$ca] ?? [PHP_INT_MAX, 0]))
+                    <=> ($cb === null ? [PHP_INT_MAX, 0] : ($categoryRanks[$cb] ?? [PHP_INT_MAX, 0])))
+                    ?: (($ca ?? PHP_INT_MAX) <=> ($cb ?? PHP_INT_MAX))
+                    ?: (($ga['number'] ?? PHP_INT_MAX) <=> ($gb['number'] ?? PHP_INT_MAX))
+                    ?: ((-($ga['minimum'] ?? 0)) <=> (-($gb['minimum'] ?? 0)))
+                    ?: strnatcasecmp((string) $a['employee_code'], (string) $b['employee_code']);
+            });
+        }
         $kind = $validated['kind'];
         $perPage = (int) ($validated['per_page'] ?? 15);
         $pages = $kind === 'bulk' ? array_chunk($rows, $perPage) : array_map(static fn ($row) => [$row], $rows);

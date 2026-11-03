@@ -117,26 +117,103 @@ export const useSalaryReportStore = defineStore('salaryReport', {
     },
 
     getters: {
+        // selectedRecords: (state) => {
+        //     if (!state.selectedUserIds || state.selectedUserIds.length === 0) {
+        //         return [];
+        //     }
+        //     const idSet = new Set(state.selectedUserIds.map(String));
+
+        //     if (state.allFilteredRecords && state.allFilteredRecords.length > 0) {
+        //         return state.allFilteredRecords.filter(r => idSet.has(String(r.user_id)));
+        //     }
+
+        //     const list = [];
+        //     state.selectedUserIds.forEach(id => {
+        //         const item = state.recordsCache[id]
+        //             || (state.reports.data || []).find(r => String(r.user_id) === String(id));
+        //         if (item) {
+        //             list.push(item);
+        //         }
+        //     });
+        //     return list;
+        // },
+
+        
         selectedRecords: (state) => {
             if (!state.selectedUserIds || state.selectedUserIds.length === 0) {
                 return [];
             }
+
             const idSet = new Set(state.selectedUserIds.map(String));
 
+            let records = [];
+
             if (state.allFilteredRecords && state.allFilteredRecords.length > 0) {
-                return state.allFilteredRecords.filter(r => idSet.has(String(r.user_id)));
+                records = state.allFilteredRecords.filter(r =>
+                    idSet.has(String(r.user_id))
+                );
+            } else {
+                state.selectedUserIds.forEach(id => {
+                    const item = state.recordsCache[id]
+                        || (state.reports.data || []).find(
+                            r => String(r.user_id) === String(id)
+                        );
+
+                    if (item) {
+                        records.push(item);
+                    }
+                });
             }
 
-            const list = [];
-            state.selectedUserIds.forEach(id => {
-                const item = state.recordsCache[id]
-                    || (state.reports.data || []).find(r => String(r.user_id) === String(id));
-                if (item) {
-                    list.push(item);
+            // Apply this ordering only to Bank Advice reports.
+            const bankAdviceTypes = [
+                'Bank Advice',
+                'Provisional Bank Advice',
+                'Bonus Bank Advice',
+            ];
+
+            if (!bankAdviceTypes.includes(state.reportType)) {
+                return records;
+            }
+
+            // Category ascending, then grade ascending.
+            // numeric: true handles values such as Grade 2 before Grade 10.
+            return [...records].sort((a, b) => {
+                const categoryA = String(a.user_category ?? '').trim();
+                const categoryB = String(b.user_category ?? '').trim();
+
+                const categoryComparison = categoryA.localeCompare(
+                    categoryB,
+                    undefined,
+                    { numeric: true, sensitivity: 'base' }
+                );
+
+                if (categoryComparison !== 0) {
+                    return categoryComparison;
                 }
+
+                const gradeA = String(a.grade ?? '').trim();
+                const gradeB = String(b.grade ?? '').trim();
+
+                const gradeComparison = gradeA.localeCompare(
+                    gradeB,
+                    undefined,
+                    { numeric: true, sensitivity: 'base' }
+                );
+
+                if (gradeComparison !== 0) {
+                    return gradeComparison;
+                }
+
+                // Deterministic ordering when category and grade are equal.
+                return String(a.employee_code ?? '').localeCompare(
+                    String(b.employee_code ?? ''),
+                    undefined,
+                    { numeric: true, sensitivity: 'base' }
+                );
             });
-            return list;
         },
+
 
         isAllFilteredSelected: (state) => {
             if (state.reports.total === 0) return false;
@@ -496,7 +573,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
             }
         },
 
-        async generatePdf({ records: customRecords = null, isPrint = false, rowsPerPage: customRowsPerPage = 15, headerConfig = null } = {}) {
+        async generatePdf({ records: customRecords = null, isPrint = false, rowsPerPage: customRowsPerPage = 25, headerConfig = null } = {}) {
             this.generatingPdf = true;
             try {
                 const records = (customRecords && customRecords.length > 0)
@@ -540,6 +617,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                     const logoBase64 = await getBase64ImageFromUrl('/logo.png');
 
                     const rowsPerPage = (customRowsPerPage && customRowsPerPage > 0) ? customRowsPerPage : 15;
+                    // const rowsPerPage = 25;
                     const totalRecords = records.length;
                     const totalPages = Math.ceil(totalRecords / rowsPerPage) || 1;
 
@@ -558,29 +636,29 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         let currentY = 14;
 
                         // 1. Vue Conditional Warning block implementation
-                        if (provisionalAdvice) {
-                            doc.setDrawColor(217, 119, 6); // amber-600
-                            doc.setLineWidth(0.5);
-                            doc.setFillColor(255, 251, 235); // amber-50
-                            doc.rect(14, 10, pageWidth - 28, 12, 'FD');
+                        // if (provisionalAdvice) {
+                        //     doc.setDrawColor(217, 119, 6); // amber-600
+                        //     doc.setLineWidth(0.5);
+                        //     doc.setFillColor(255, 251, 235); // amber-50
+                        //     doc.rect(14, 10, pageWidth - 28, 12, 'FD');
 
-                            doc.setFont('helvetica', 'bold');
-                            doc.setFontSize(10);
-                            doc.setTextColor(120, 53, 15); // amber-900
-                            doc.text('PROVISIONAL — NOT FOR BANK PAYMENT', pageWidth / 2, 15, { align: 'center' });
+                        //     doc.setFont('helvetica', 'bold');
+                        //     doc.setFontSize(10);
+                        //     doc.setTextColor(120, 53, 15); // amber-900
+                        //     doc.text('PROVISIONAL — NOT FOR BANK PAYMENT', pageWidth / 2, 15, { align: 'center' });
 
-                            doc.setFontSize(8);
-                            doc.text('Saved calculator snapshots only. No salary bill has been posted.', pageWidth / 2, 19, { align: 'center' });
+                        //     doc.setFontSize(8);
+                        //     doc.text('Saved calculator snapshots only. No salary bill has been posted.', pageWidth / 2, 19, { align: 'center' });
 
-                            currentY = 28;
-                        } else {
+                        //     currentY = 28;
+                        // } else {
                             currentY = 16;
-                        }
+                        // }
 
                         // 2. Header and Logo implementation
                         if (logoBase64) {
                             try {
-                                doc.addImage(logoBase64, 'PNG', 14, currentY - 4, 14, 14);
+                                doc.addImage(logoBase64, 'PNG', 14, currentY - 8, 14, 14);
                             } catch (e) {
                                 // ignore
                             }
@@ -589,10 +667,10 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(14);
                         doc.setTextColor(15, 23, 42); // slate-900
-                        doc.text(titleText, pageWidth / 2, currentY + 2, { align: 'center' });
+                        doc.text(titleText, pageWidth / 2, currentY, { align: 'center' });
 
                         doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(8);
+                        doc.setFontSize(9);
                         doc.setTextColor(71, 85, 105); // slate-600
                         doc.text(addressText, pageWidth / 2, currentY + 6, { align: 'center' });
 

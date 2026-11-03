@@ -171,7 +171,7 @@ const selectedRecords = computed(() => store.selectedRecords);
 
 // Rows per A4 sheet for tabular reports
 const TABULAR_ROWS_PER_PAGE = 15;
-const bankAdviceRowsPerPage = ref(15);
+const bankAdviceRowsPerPage = ref(30);
 const fixationRowsPerPage = ref(15);
 const fixationExporting = ref(false);
 const isFixationReport = computed(() => store.reportType === 'Salary Fixation Report');
@@ -187,6 +187,10 @@ const activeRowsPerPage = computed(() => {
         const value = Number(fixationRowsPerPage.value);
         return Number.isInteger(value) && value >= 1 && value <= 15 ? value : 15;
     }
+    // if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(store.reportType)) {
+    //     const val = parseInt(bankAdviceRowsPerPage.value, 10);
+    //     return (val && val > 0) ? val : 15;
+    // }
     if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(store.reportType)) {
         const val = parseInt(bankAdviceRowsPerPage.value, 10);
         return (val && val > 0) ? val : 15;
@@ -446,6 +450,65 @@ async function exportOfficialExcel() {
             XLSX.utils.book_append_sheet(wb, sheet, name);
         }
         XLSX.writeFile(wb, `KAU_Official_Salary_${store.filters.salaryGenerationYear}_${store.filters.monthId}.xlsx`);
+    } catch (error) { console.error(error); alert(error.message); }
+}
+
+// Horizontal layout for the same server-side records used by Report Factory PDF.
+// The backend returns these records in its verified dynamic category/grade order.
+async function exportHorizontalOfficialExcel() {
+    try {
+        const response = await fetch(officialReportUrl('bulk', 'json'), {
+            credentials: 'same-origin', headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error(`Horizontal source failed (${response.status}).`);
+        const payload = await response.json();
+        if (!Array.isArray(payload.records) || !payload.records.length) throw new Error('No horizontal report records.');
+        const codes = ['BASIC_ARREAR_GROSS', 'BASIC_INCREMENT_ADJUSTMENT',
+            'SPECIAL_BENEFIT_RECOVERY', 'HOUSE_RENT_RECOVERY', 'ADDITIONAL_GPF'];
+        const headers = ['SL', 'ID', 'Name', 'Designation', 'Grade', 'Basic', 'HRA', 'MA',
+            'S Benefit', 'Edu', 'Other A', 'Reg Gross', 'GPF', 'Income T', 'Other D',
+            'Reg Ded', 'Basic Arrear', 'Basic Adj.', 'SB Recovery', 'HRA Recovery',
+            'Addl. GPF', 'Net', 'Source', 'Signature'];
+        const money = v => v === null || v === undefined || v === '' ? 'N/R' : Number(v);
+        const groupedAmount = (items, pattern) => {
+            const matched = (items || []).filter(x => pattern.test(String(x.title || '')));
+            if (!matched.length) return 0;
+            return matched.some(x => x.current === null || x.current === undefined)
+                ? 'N/R' : matched.reduce((total, x) => total + Number(x.current), 0);
+        };
+        const numericSum = values => values.some(x => typeof x !== 'number' || !Number.isFinite(x))
+            ? 'N/R' : Math.round(values.reduce((a,b) => a+b, 0)*100)/100;
+        const body = payload.records.map((r, i) => {
+            const additions = r.allowances || [];
+            const deductions = r.deductions || [];
+            const known = x => /\bbasic(?:\s+pay|\s+salary)?\b/i.test(String(x.title || ''));
+            const hra = groupedAmount(additions, /house\s*rent|\bhra\b/i);
+            const medical = groupedAmount(additions, /medical/i);
+            const benefit = groupedAmount(additions, /special benefit/i);
+            const education = groupedAmount(additions, /education/i);
+            const otherLines = additions.filter(x => !known(x) && !/house\s*rent|\bhra\b|medical|special benefit|education/i.test(String(x.title || '')));
+            const other = numericSum(otherLines.map(x => money(x.current)));
+            const gpf = groupedAmount(deductions, /\bgpf\b|provident fund/i);
+            const tax = groupedAmount(deductions, /income\s*tax|\btax\b/i);
+            const otherD = numericSum(deductions.filter(x => !/\bgpf\b|provident fund|income\s*tax|\btax\b/i.test(String(x.title || ''))).map(x => money(x.current)));
+            const arrears = codes.map(code => {
+                const items = (r.arrear_rows || []).filter(x => String(x.code || '').toUpperCase() === code);
+                return items.length ? numericSum(items.map(x => money(x.final_amount ?? x.total))) : 'N/R';
+            });
+            return [i+1, String(r.employee_code), r.name, r.designation, r.grade,
+                money(r.basic), hra, medical, benefit, education, other, money(r.current_gross),
+                gpf, tax, otherD, money(r.current_deductions), ...arrears,
+                money(r.net), r.source, ''];
+        });
+        const totals = headers.map((_, col) => col >= 5 && col <= 21
+            ? numericSum(body.map(row => row[col])) : '');
+        totals[2] = `GRAND TOTAL (${body.length} employees)`;
+        const workbook = XLSX.utils.book_new();
+        const sheet = XLSX.utils.aoa_to_sheet([headers, ...body, totals]);
+        sheet['!cols'] = headers.map((_, i) => ({wch: i === 2 ? 35 : i === 3 ? 32 : 17}));
+        sheet['!autofilter'] = {ref: `A1:X${body.length + 1}`};
+        XLSX.utils.book_append_sheet(workbook, sheet, 'Horizontal Bill');
+        XLSX.writeFile(workbook, `KAU_Horizontal_Bill_${store.filters.salaryGenerationYear}_${store.filters.monthId}.xlsx`);
     } catch (error) { console.error(error); alert(error.message); }
 }
 
@@ -863,7 +926,7 @@ const handlePrintPdf = () => {
 </script>
 
 <template>
-  <div v-if="store.reportType === 'Provisional Bank Advice'" class="mx-4 mt-3 rounded-md border border-amber-400 bg-amber-50 p-2 text-center font-bold text-amber-900">PROVISIONAL — NOT FOR BANK PAYMENT. Saved calculator snapshots only; no salary bill or bank transfer has been generated.</div>
+  <!-- <div v-if="store.reportType === 'Provisional Bank Advice'" class="mx-4 mt-3 rounded-md border border-amber-400 bg-amber-50 p-2 text-center font-bold text-amber-900">PROVISIONAL — NOT FOR BANK PAYMENT. Saved calculator snapshots only; no salary bill or bank transfer has been generated.</div> -->
     <Head title="Report Factory" />
 
     <AuthenticatedLayout>
@@ -1387,6 +1450,13 @@ const handlePrintPdf = () => {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <span>{{ store.exportingExcel ? 'Exporting...' : 'Excel' }}</span>
+                            </button>
+
+                            <button v-if="isOfficialSalaryReport && store.reportType === 'Salary Bill'"
+                                type="button" :disabled="!selectedRecords.length"
+                                @click="exportHorizontalOfficialExcel"
+                                class="px-3 py-1.5 text-xs text-white bg-emerald-700 hover:bg-emerald-800 rounded disabled:opacity-40">
+                                Horizontal Bill Excel
                             </button>
 
                             <!-- Step 07: read-only bulk salary overview, one A4 landscape sheet per selected page. -->

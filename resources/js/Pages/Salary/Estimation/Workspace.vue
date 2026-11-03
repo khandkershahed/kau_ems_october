@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const props = defineProps({ rows: Object, counts: Object, runs: Array, year: Number, month: Number, filterOptions: Object, selectableCount: Number });
 const routePath = '/dashboard/salary/estimation';
@@ -127,7 +128,7 @@ function provisionalHorizontal() {
     ids.forEach(id => query.append('user_ids[]', String(id)));
     window.open(`${routePath}/horizontal-bill?${query}`, '_blank', 'noopener');
 }
-async function downloadHorizontalBill(scope) {
+async function downloadHorizontalBill(scope, format = 'pdf') {
     if (busy.value || operationBusy.value) return;
     if (scope === 'selected' && (selectionMode.value !== 'page' || !selected.value.length)) {
         notice.value = 'Select employees on the current page first.';
@@ -146,6 +147,32 @@ async function downloadHorizontalBill(scope) {
         const report = await post(`${routePath}/horizontal-bill/download`, payload);
         if (!Array.isArray(report.rows) || !report.rows.length) {
             throw Error(`No saved salary snapshots found for the requested employees. ${(report.errors || []).join('; ')}`);
+        }
+        if (format === 'xlsx') {
+            const headers = ['SL', 'ID', 'Name', 'Designation', 'Snapshot Status', 'Version',
+                'Basic', 'HRA', 'MA', 'S Benefit', 'Edu', 'Other A', 'Reg Gross', 'GPF',
+                'Income T', 'Other D', 'Reg Ded', 'Basic Arrear', 'Basic Adj.',
+                'SB Recovery', 'HRA Recovery', 'Addl. GPF', 'Net', 'Signature'];
+            const numeric = value => value === null || value === undefined ? 'N/R' : Number(value);
+            const table = [headers, ...report.rows.map((r, i) => [
+                i + 1, String(r.employee_code), r.name, r.designation, r.version_status, r.version,
+                ...report.columns.map(key => numeric(r.financial[key])), '',
+            ])];
+            table.push(['', '', `GRAND TOTAL (${report.rows.length} saved snapshots)`, '', '', '',
+                ...report.columns.map(key => numeric(report.totals[key])), '']);
+            const workbook = XLSX.utils.book_new();
+            const sheet = XLSX.utils.aoa_to_sheet(table);
+            sheet['!cols'] = headers.map((_, i) => ({ wch: i === 2 ? 36 : i === 3 ? 32 : 17 }));
+            sheet['!autofilter'] = { ref: `A1:X${table.length - 1}` };
+            XLSX.utils.book_append_sheet(workbook, sheet, 'Horizontal Bill');
+            if (report.errors?.length) {
+                XLSX.utils.book_append_sheet(workbook,
+                    XLSX.utils.aoa_to_sheet([['Excluded employees — no values invented'], ...report.errors.map(e => [e])]),
+                    'Excluded');
+            }
+            XLSX.writeFile(workbook, `KAU_Provisional_Horizontal_Bill_${props.year}_${String(props.month).padStart(2, '0')}_${scope}.xlsx`);
+            notice.value = `Horizontal Excel exported: ${report.rows.length} saved snapshots; ${(report.errors || []).length} excluded.`;
+            return;
         }
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
         const headings = [
@@ -403,6 +430,8 @@ async function calculateAll() {
                     <div v-if="operationLog.length" class="flex flex-wrap items-center gap-3 text-xs text-slate-600"><span>Processed {{operationSummary.checked}} · Saved / preserved {{operationSummary.ok}} · Failed {{operationSummary.failed}}</span><button @click="exportOperationLog" class="font-semibold text-indigo-700 underline">Export results CSV</button><details class="w-full"><summary class="cursor-pointer">View individual results</summary><div class="mt-2 max-h-40 overflow-y-auto rounded-lg border bg-white p-2"><p v-for="(r,i) in operationLog" :key="i" :class="r.ok?'text-emerald-700':'text-rose-700'">{{r.code}}: {{r.status}} {{r.message}}</p></div></details></div>
                     <div class="flex flex-wrap gap-2 text-xs">
                         <button type="button" :disabled="busy||operationBusy||selectionMode!=='page'||!selected.length" @click="downloadHorizontalBill('selected')" class="rounded-lg border border-indigo-300 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">Horizontal Bill · Selected ({{selected.length}})</button>
+                        <button type="button" :disabled="busy||operationBusy||selectionMode!=='page'||!selected.length" @click="downloadHorizontalBill('selected', 'xlsx')" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-semibold text-emerald-700 disabled:opacity-40">Horizontal Excel · Selected</button>
+                        <button type="button" :disabled="busy||operationBusy||filtersPending||!Number(rows?.total||0)" @click="downloadHorizontalBill('filtered', 'xlsx')" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-semibold text-emerald-700 disabled:opacity-40">Horizontal Excel · All Filtered</button>
                         <button type="button" :disabled="busy||operationBusy||filtersPending||!Number(rows?.total||0)" @click="downloadHorizontalBill('filtered')" class="rounded-lg border border-indigo-300 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">Horizontal Bill · All Filtered ({{rows?.total||0}})</button>
                         <button type="button" v-if="selectionMode==='page'" :disabled="busy||operationBusy||!allSelectedApproved||reason.length<3" @click="approve('approve_for_generation')" class="rounded-lg border border-indigo-400 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">HR Bulk Approval → Ready ({{approvedSelected.length}})</button>
                         <template v-if="selectionMode==='filtered'&&activeTab==='CALCULATED'">

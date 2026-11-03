@@ -229,6 +229,51 @@ final class SalaryProvisionalHorizontalBatchController extends Controller
                 'financial' => $parts, 'missing' => array_values(array_unique($missing)),
             ];
         }
+        // Display-only ordering: category priority is derived from the most senior
+        // grade among employees IN THIS report. No category names or IDs are ranked.
+        // Category ID is used only as a deterministic tie-breaker.
+        $rankData = DB::table('user_user_categories as uc')
+            ->join('user_categories as c', 'c.id', '=', 'uc.user_category_id')
+            ->whereIn('uc.user_id', array_column($rows, 'user_id'))
+            ->orderBy('uc.user_category_id')
+            ->get(['uc.user_id', 'uc.user_category_id']);
+        $employeeCategories = $rankData->groupBy('user_id')->map(
+            static fn ($records) => (int) $records->first()->user_category_id
+        );
+        $gradeData = DB::table('employee_infos as ei')
+            ->leftJoin('payroll_groups as pg', 'pg.id', '=', 'ei.payroll_group_id')
+            ->leftJoin('grades as g', 'g.id', '=', 'pg.grade_id')
+            ->whereIn('ei.user_id', array_column($rows, 'user_id'))
+            ->get(['ei.user_id', 'g.grade_name', 'g.min as grade_min']);
+        $employeeGrades = $gradeData->groupBy('user_id')->map(static function ($records) {
+            $grade = $records->first();
+            preg_match('/\d+/', (string) ($grade->grade_name ?? ''), $match);
+            return ['number' => isset($match[0]) ? (int) $match[0] : null,
+                'minimum' => $grade->grade_min === null ? null : (float) $grade->grade_min];
+        });
+        $categoryRanks = [];
+        foreach ($rows as $row) {
+            $id = $row['user_id'];
+            $category = $employeeCategories->get($id);
+            $grade = $employeeGrades->get($id, ['number' => null, 'minimum' => null]);
+            if ($category === null) continue;
+            $candidate = [$grade['number'] ?? PHP_INT_MAX, -($grade['minimum'] ?? 0)];
+            if (!isset($categoryRanks[$category]) || $candidate < $categoryRanks[$category]) {
+                $categoryRanks[$category] = $candidate;
+            }
+        }
+        usort($rows, static function ($a, $b) use ($employeeCategories, $employeeGrades, $categoryRanks) {
+            $aCat = $employeeCategories->get($a['user_id']);
+            $bCat = $employeeCategories->get($b['user_id']);
+            $aGrade = $employeeGrades->get($a['user_id'], ['number' => null, 'minimum' => null]);
+            $bGrade = $employeeGrades->get($b['user_id'], ['number' => null, 'minimum' => null]);
+            return (($aCat === null ? [PHP_INT_MAX, 0] : ($categoryRanks[$aCat] ?? [PHP_INT_MAX, 0]))
+                <=> ($bCat === null ? [PHP_INT_MAX, 0] : ($categoryRanks[$bCat] ?? [PHP_INT_MAX, 0])))
+                ?: (($aCat ?? PHP_INT_MAX) <=> ($bCat ?? PHP_INT_MAX))
+                ?: (($aGrade['number'] ?? PHP_INT_MAX) <=> ($bGrade['number'] ?? PHP_INT_MAX))
+                ?: ((-($aGrade['minimum'] ?? 0)) <=> (-($bGrade['minimum'] ?? 0)))
+                ?: strnatcasecmp((string) $a['employee_code'], (string) $b['employee_code']);
+        });
         $totals = [];
         foreach ($columns as $key) {
             $values = array_map(static fn ($row) => $row['financial'][$key] ?? null, $rows);

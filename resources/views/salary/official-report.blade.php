@@ -392,17 +392,19 @@
                             @endif
                         </strong>
                         <p>Salary period: {{ sprintf('%02d', $month) }}/{{ $year }}</p>
-                        @if (count(array_filter(array_column($pageRows, 'source'), static fn ($s) => $s !== 'FROZEN_SOURCE_SNAPSHOT' && $s !== 'LEGACY_POSTED_BILL')) > 0)
-                            <p style="font-weight:bold;color:#b45309">PROVISIONAL PREVIEW — Calculator snapshots and estimates are NOT newly posted bills</p>
+                        @if (count(array_filter(array_column($pageRows, 'source'),
+                                    static fn($s) => $s !== 'FROZEN_SOURCE_SNAPSHOT' && $s !== 'LEGACY_POSTED_BILL')) > 0)
+                            <p style="font-weight:bold;color:#b45309">PROVISIONAL PREVIEW — Calculator snapshots and
+                                estimates are NOT newly posted bills</p>
                         @endif
                     </div>
                     <div></div>
                 </header>
                 @if ($kind === 'bulk')
-                    <div style="font-size:8px;text-align:center;margin:0 0 4px;color:#7c4300">
+                    {{-- <div style="font-size:8px;text-align:center;margin:0 0 4px;color:#7c4300">
                         — in an arrear column = no verified saved value in the selected source (NOT BDT 0).
                         Calculator snapshots are provisional until a salary bill is posted.
-                    </div>
+                    </div> --}}
                     {{-- <div class="heading">Salary Statement — Page {{ $pageIndex + 1 }} / {{ count($pages) }} · Up to {{ $perPage }} employees per page</div> --}}
                     @php
                         $component = static function ($r, $group, $words) {
@@ -513,24 +515,54 @@
                                         'additional_gpf' => 'deduction',
                                     ];
                                     $seenArrearKeys = [];
-                                    foreach (($r['arrear_rows'] ?? []) as $arrearItem) {
-                                        if (!is_array($arrearItem)) continue;
+                                    foreach ($r['arrear_rows'] ?? [] as $arrearItem) {
+                                        if (!is_array($arrearItem)) {
+                                            continue;
+                                        }
                                         $code = strtolower(trim((string) ($arrearItem['code'] ?? '')));
                                         $title = strtolower(trim((string) ($arrearItem['title'] ?? '')));
                                         // Some older calculator snapshots saved only
                                         // the human-readable title, not the rule code.
                                         // Map those exact known titles for display only.
                                         if (!array_key_exists($code, $arrearValues)) {
-                                            if (preg_match('/^(bokeya prapyo|basic arrear)/i', $title)) $code = 'basic_arrear_gross';
-                                            elseif (preg_match('/^(basic difference|old increment)/i', $title)) $code = 'basic_increment_adjustment';
-                                            elseif (str_contains($title, 'special benefit recovery')) $code = 'special_benefit_recovery';
-                                            elseif (str_contains($title, 'house rent difference') || str_contains($title, 'house rent recovery')) $code = 'house_rent_recovery';
-                                            elseif (str_contains($title, 'additional provident fund') || str_contains($title, 'additional gpf')) $code = 'additional_gpf';
+                                            if (preg_match('/^(bokeya prapyo|basic arrear)/i', $title)) {
+                                                $code = 'basic_arrear_gross';
+                                            } elseif (preg_match('/^(basic difference|old increment)/i', $title)) {
+                                                $code = 'basic_increment_adjustment';
+                                            } elseif (str_contains($title, 'special benefit recovery')) {
+                                                $code = 'special_benefit_recovery';
+                                            } elseif (
+                                                str_contains($title, 'house rent difference') ||
+                                                str_contains($title, 'house rent recovery')
+                                            ) {
+                                                $code = 'house_rent_recovery';
+                                            } elseif (
+                                                str_contains($title, 'additional provident fund') ||
+                                                str_contains($title, 'additional gpf')
+                                            ) {
+                                                $code = 'additional_gpf';
+                                            }
                                         }
-                                        if (!array_key_exists($code, $arrearValues)) continue;
-                                        if (!in_array(strtolower(trim((string) ($arrearItem['direction'] ?? ''))), $code === 'basic_arrear_gross' ? ['payable', 'allowance'] : ['deduction'], true)) continue;
-                                        $raw = $arrearItem['final_amount'] ?? $arrearItem['amount'] ?? $arrearItem['total'] ?? null;
-                                        if (!is_numeric($raw) || !is_finite((float) $raw) || (float) $raw < 0) continue;
+                                        if (!array_key_exists($code, $arrearValues)) {
+                                            continue;
+                                        }
+                                        if (
+                                            !in_array(
+                                                strtolower(trim((string) ($arrearItem['direction'] ?? ''))),
+                                                $code === 'basic_arrear_gross'
+                                                    ? ['payable', 'allowance']
+                                                    : ['deduction'],
+                                                true,
+                                            )
+                                        ) {
+                                            continue;
+                                        }
+                                        $raw =
+                                            $arrearItem['final_amount'] ??
+                                            ($arrearItem['amount'] ?? ($arrearItem['total'] ?? null));
+                                        if (!is_numeric($raw) || !is_finite((float) $raw) || (float) $raw < 0) {
+                                            continue;
+                                        }
                                         // Duplicate canonical components are not
                                         // summed or guessed; keep the field unknown.
                                         if (isset($seenArrearKeys[$code])) {
@@ -569,8 +601,26 @@
                                 @endphp
                                 <tr style="height:6mm; text-align: center;">
                                     <td>{{ $pageIndex * $perPage + $i + 1 }}</td>
-                                    <td>{{ $r['employee_code'] }}@if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW') <span style="font-weight:bold">DRAFT</span>@elseif (($r['source'] ?? '') === 'DRAFT_CALCULATOR_SNAPSHOT') <span style="font-weight:bold">SAVED DRAFT</span>@elseif (($r['source'] ?? '') === 'APPROVED_CALCULATOR_SNAPSHOT') <span style="font-weight:bold">CALC APPROVED</span>@endif</td>
-                                    <td class="person">{{ $r['name'] }}@if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW') <span style="font-weight:bold">(DRAFT)</span>@elseif (($r['source'] ?? '') === 'DRAFT_CALCULATOR_SNAPSHOT') <span style="font-weight:bold">(SAVED DRAFT)</span>@elseif (($r['source'] ?? '') === 'APPROVED_CALCULATOR_SNAPSHOT') <span style="font-weight:bold">(CALC APPROVED)</span>@endif</td>
+                                    <td>{{ $r['employee_code'] }} <br>
+                                        {{ $r['grade'] }}
+                                        {{-- @dd($r) --}}
+                                        {{-- @if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW')
+                                            <span style="font-weight:bold">DRAFT</span>
+                                        @elseif (($r['source'] ?? '') === 'DRAFT_CALCULATOR_SNAPSHOT')
+                                            <span style="font-weight:bold">SAVED DRAFT</span>
+                                        @elseif (($r['source'] ?? '') === 'APPROVED_CALCULATOR_SNAPSHOT')
+                                            <span style="font-weight:bold">CALC APPROVED</span>
+                                        @endif --}}
+                                    </td>
+                                    <td class="person">{{ $r['name'] }}
+                                        {{-- @if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW')
+                                            <span style="font-weight:bold">(DRAFT)</span>
+                                        @elseif (($r['source'] ?? '') === 'DRAFT_CALCULATOR_SNAPSHOT')
+                                            <span style="font-weight:bold">(SAVED DRAFT)</span>
+                                        @elseif (($r['source'] ?? '') === 'APPROVED_CALCULATOR_SNAPSHOT')
+                                            <span style="font-weight:bold">(CALC APPROVED)</span>
+                                        @endif --}}
+                                    </td>
                                     <td class="person">{{ $r['designation'] }}</td>
                                     @foreach ($columns as $key)
                                         <td class="num" style="text-align: center;">{{ $num($vals[$key]) }}</td>
@@ -591,7 +641,8 @@
                     </table>
                     @if ($pageIndex === count($pages) - 1)
                         <div class="heading" style="text-align:right">Grand Net Total —
-                            {{ $grandTotal === null ? 'INCOMPLETE (missing saved net amounts)' : '৳'.number_format($grandTotal, 2) }}</div>
+                            {{ $grandTotal === null ? 'INCOMPLETE (missing saved net amounts)' : '৳' . number_format($grandTotal, 2) }}
+                        </div>
                     @endif
                     {{-- <div class="signature"><div>Prepared by</div><div>Checked by</div><div>Accounts Officer</div></div> --}}
                 @else
