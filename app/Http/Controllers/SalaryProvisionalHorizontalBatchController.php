@@ -133,12 +133,30 @@ final class SalaryProvisionalHorizontalBatchController extends Controller
             $version = $version ?: $versionSet->first();
             if (!$version) {
                 $errors[] = "User {$id}: no saved calculator snapshot for {$year}-".sprintf('%02d', $month);
+                $rows[] = [
+                    'user_id' => $id, 'employee_code' => $profileSet->first()->employeeCode,
+                    'name' => $users->get($id)->name ?? "User {$id}",
+                    'designation' => $profileSet->first()->designation ?? 'Not recorded',
+                    'version' => null, 'version_status' => 'NOT_SAVED',
+                    'workflow_status' => $workflow->workflow_status ?? 'NOT_INITIALIZED',
+                    'financial' => array_fill_keys($columns, null),
+                    'missing' => ['No saved calculator snapshot for this period'],
+                ];
                 continue;
             }
             $regular = json_decode((string) $version->calculated_result, true);
             $arrear = json_decode((string) $version->arrear_snapshot, true);
             if (!is_array($regular)) {
                 $errors[] = "User {$id}: saved regular salary result is invalid";
+                $rows[] = [
+                    'user_id' => $id, 'employee_code' => $profileSet->first()->employeeCode,
+                    'name' => $users->get($id)->name ?? "User {$id}",
+                    'designation' => $profileSet->first()->designation ?? 'Not recorded',
+                    'version' => $version->version, 'version_status' => 'INVALID_SNAPSHOT',
+                    'workflow_status' => $workflow->workflow_status ?? 'NOT_INITIALIZED',
+                    'financial' => array_fill_keys($columns, null),
+                    'missing' => ['Saved regular salary result is invalid'],
+                ];
                 continue;
             }
             $missing = [];

@@ -39,6 +39,7 @@ const approvedSelected = computed(() => selectionMode.value === 'page' ? pageRow
 const allSelectedApproved = computed(() => selectionMode.value === 'page' && selected.value.length > 0 && approvedSelected.value.length === selected.value.length);
 const allPageSelected = computed(() => selectionMode.value === 'page' && pageRows.value.some(canSelect) && pageRows.value.filter(canSelect).every(r => selected.value.includes(r.user_id)));
 const workBlockedCount = computed(() => Number(props.counts?.WORK_BLOCKED || 0));
+const reportAllCount = computed(() => Object.entries(props.counts || {}).filter(([key]) => key !== 'WORK_BLOCKED').reduce((sum, [, value]) => sum + Number(value || 0), 0));
 const selectedCodes = computed(() => pageRows.value.filter(r => selected.value.includes(r.user_id)).map(r => r.employee_code));
 const activeFilters = computed(() => Object.entries(filters.value).filter(([key, value]) => key !== 'per_page' && value !== '').length);
 const periodName = computed(() => new Date(props.year, props.month - 1, 1).toLocaleString('en', { month: 'long', year: 'numeric' }));
@@ -143,7 +144,7 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
     try {
         const payload = { scope, year: props.year, month: props.month };
         if (scope === 'selected') payload.user_ids = [...selected.value];
-        else Object.assign(payload, cleanQuery());
+        else Object.assign(payload, cleanQuery('ALL')); // Export all matching employees regardless of current workflow tab.
         const report = await post(`${routePath}/horizontal-bill/download`, payload);
         if (!Array.isArray(report.rows) || !report.rows.length) {
             throw Error(`No saved salary snapshots found for the requested employees. ${(report.errors || []).join('; ')}`);
@@ -158,7 +159,7 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
                 i + 1, String(r.employee_code), r.name, r.designation, r.version_status, r.version,
                 ...report.columns.map(key => numeric(r.financial[key])), '',
             ])];
-            table.push(['', '', `GRAND TOTAL (${report.rows.length} saved snapshots)`, '', '', '',
+            table.push(['', '', `GRAND TOTAL (${report.rows.length} employees)`, '', '', '',
                 ...report.columns.map(key => numeric(report.totals[key])), '']);
             const workbook = XLSX.utils.book_new();
             const sheet = XLSX.utils.aoa_to_sheet(table);
@@ -167,11 +168,11 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
             XLSX.utils.book_append_sheet(workbook, sheet, 'Horizontal Bill');
             if (report.errors?.length) {
                 XLSX.utils.book_append_sheet(workbook,
-                    XLSX.utils.aoa_to_sheet([['Excluded employees — no values invented'], ...report.errors.map(e => [e])]),
-                    'Excluded');
+                    XLSX.utils.aoa_to_sheet([['Source warnings — employee rows retained; missing amounts remain N/R'], ...report.errors.map(e => [e])]),
+                    'Source Issues');
             }
             XLSX.writeFile(workbook, `KAU_Provisional_Horizontal_Bill_${props.year}_${String(props.month).padStart(2, '0')}_${scope}.xlsx`);
-            notice.value = `Horizontal Excel exported: ${report.rows.length} saved snapshots; ${(report.errors || []).length} excluded.`;
+            notice.value = `Horizontal Excel exported: ${report.rows.length} employees included; ${(report.errors || []).length} missing/invalid source warnings.`;
             return;
         }
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
@@ -180,16 +181,16 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
             'Other A', 'Reg Gross', 'GPF', 'Income T', 'Other D', 'Reg Ded',
             'Basic Arrear', 'Basic Adj.', 'SB Recovery', 'HRA Recovery', 'Addl. GPF', 'Net', 'Signature',
         ];
-        const format = value => value === null || value === undefined
+        const formatAmount = value => value === null || value === undefined
             ? 'N/R' : Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const body = report.rows.map((r, i) => [
-            i + 1, `${r.employee_code} (${r.version_status === 'approved' ? 'APPROVED' : 'DRAFT'})`,
+            i + 1, `${r.employee_code} (${String(r.version_status || 'NOT_SAVED').toUpperCase()})`,
             r.name, r.designation,
-            ...report.columns.map(key => format(r.financial[key])), '',
+            ...report.columns.map(key => formatAmount(r.financial[key])), '',
         ]);
-        const totalRow = [{ content: `GRAND TOTAL (${report.rows.length} saved snapshots)`, colSpan: 4,
+        const totalRow = [{ content: `GRAND TOTAL (${report.rows.length} employees)`, colSpan: 4,
             styles: { halign: 'right', fontStyle: 'bold' } },
-            ...report.columns.map(key => format(report.totals[key])), ''];
+            ...report.columns.map(key => formatAmount(report.totals[key])), ''];
         autoTable(doc, {
             head: [headings], body, foot: [totalRow], showFoot: 'lastPage', startY: 28,
             margin: { top: 19, left: 6, right: 6, bottom: 14 },
@@ -205,7 +206,7 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
                 doc.text('Khulna Agricultural University — Provisional Horizontal Salary Bill', width / 2, 9, { align: 'center' });
                 doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
                 doc.text(`Period: ${String(props.month).padStart(2, '0')}/${props.year}  |  PROVISIONAL — NOT GENERATED / NOT FOR BANK PAYMENT`, width / 2, 14, { align: 'center' });
-                doc.text(`${report.rows.length} saved snapshots / ${report.requested} requested; ${(report.errors || []).length} excluded; N/R = not recorded`, 7, 18);
+                doc.text(`${report.rows.length} employees / ${report.requested} requested; ${(report.errors || []).length} source warnings; N/R = not recorded`, 7, 18);
                 doc.text(`Page ${data.pageNumber}`, width - 8, height - 7, { align: 'right' });
             },
         });
@@ -213,7 +214,7 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
             const width = doc.internal.pageSize.getWidth();
             const height = doc.internal.pageSize.getHeight();
             doc.addPage('a3', 'landscape');
-            doc.setFontSize(11); doc.text('Excluded employees — no financial amount has been invented', 12, 15);
+            doc.setFontSize(11); doc.text('Source warnings — rows retained, unverified amounts marked N/R', 12, 15);
             doc.setFontSize(8);
             let y = 23;
             for (const message of report.errors) {
@@ -223,7 +224,7 @@ async function downloadHorizontalBill(scope, format = 'pdf') {
             }
         }
         doc.save(`KAU_Provisional_Horizontal_Bill_${props.year}_${String(props.month).padStart(2, '0')}_${scope}.pdf`);
-        notice.value = `Horizontal Bill downloaded: ${report.rows.length} saved snapshots; ${(report.errors || []).length} excluded. Drafts are marked and missing values display N/R; this is not a posted salary bill.`;
+        notice.value = `Horizontal Bill downloaded: ${report.rows.length} employees included; ${(report.errors || []).length} missing/invalid source warnings. Drafts are marked and missing values display N/R; this is not a posted salary bill.`;
     } catch (error) { showError(error); } finally { busy.value = false; }
 }
 
@@ -431,8 +432,8 @@ async function calculateAll() {
                     <div class="flex flex-wrap gap-2 text-xs">
                         <button type="button" :disabled="busy||operationBusy||selectionMode!=='page'||!selected.length" @click="downloadHorizontalBill('selected')" class="rounded-lg border border-indigo-300 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">Horizontal Bill · Selected ({{selected.length}})</button>
                         <button type="button" :disabled="busy||operationBusy||selectionMode!=='page'||!selected.length" @click="downloadHorizontalBill('selected', 'xlsx')" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-semibold text-emerald-700 disabled:opacity-40">Horizontal Excel · Selected</button>
-                        <button type="button" :disabled="busy||operationBusy||filtersPending||!Number(rows?.total||0)" @click="downloadHorizontalBill('filtered', 'xlsx')" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-semibold text-emerald-700 disabled:opacity-40">Horizontal Excel · All Filtered</button>
-                        <button type="button" :disabled="busy||operationBusy||filtersPending||!Number(rows?.total||0)" @click="downloadHorizontalBill('filtered')" class="rounded-lg border border-indigo-300 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">Horizontal Bill · All Filtered ({{rows?.total||0}})</button>
+                        <button type="button" :disabled="busy||operationBusy||filtersPending||!reportAllCount" @click="downloadHorizontalBill('filtered', 'xlsx')" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 font-semibold text-emerald-700 disabled:opacity-40">Horizontal Excel · All Employees ({{reportAllCount}})</button>
+                        <button type="button" :disabled="busy||operationBusy||filtersPending||!reportAllCount" @click="downloadHorizontalBill('filtered')" class="rounded-lg border border-indigo-300 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">Horizontal Bill · All Employees ({{reportAllCount}})</button>
                         <button type="button" v-if="selectionMode==='page'" :disabled="busy||operationBusy||!allSelectedApproved||reason.length<3" @click="approve('approve_for_generation')" class="rounded-lg border border-indigo-400 bg-white px-3 py-2 font-semibold text-indigo-700 disabled:opacity-40">HR Bulk Approval → Ready ({{approvedSelected.length}})</button>
                         <template v-if="selectionMode==='filtered'&&activeTab==='CALCULATED'">
                             <label class="flex items-center gap-2 rounded-lg bg-white px-2 py-2"><input v-model="filteredBillReviewed" type="checkbox" />Provisional bills reviewed by HR</label>
@@ -446,6 +447,7 @@ async function calculateAll() {
                             <button :disabled="busy||selectionMode!=='page'||!selected.length" @click="initialize(true)" class="rounded border px-3 py-2 disabled:opacity-40">Initialize selected workflow</button>
                         </div></details>
                     </div>
+                    <p class="text-xs text-slate-500">All Employees exports include every workflow status matching the other applied filters. Missing monthly salary snapshots appear as N/R, not estimated amounts.</p>
                     <p v-if="notice" role="status" class="whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700">{{notice}}</p>
                     <p v-if="Number(counts?.NOT_INITIALIZED||0)>0" class="text-xs text-amber-800">{{counts.NOT_INITIALIZED}} workflows are not initialized. <button :disabled="busy" @click="initialize()" class="font-semibold underline disabled:opacity-40">Initialize entire period roster</button> (explicit setup action).</p>
                 </div>
