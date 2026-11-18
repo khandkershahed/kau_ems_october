@@ -1212,6 +1212,13 @@ const handlePrintPdf = () => {
                                                     step="1" :value="amountRangeValue(setting, 'min')"
                                                     @change="changeAmountBound(setting, 'min', $event.target.value)"
                                                     class="w-full accent-emerald-600" :disabled="amountRangeMinimum(setting) === amountRangeMaximum(setting)" />
+                                                <input type="number" step="0.01" inputmode="decimal"
+                                                    :value="store.filters[setting.minKey]"
+                                                    :placeholder="String(amountRangeMinimum(setting))"
+                                                    :aria-label="`${setting.label} exact minimum amount in Taka`"
+                                                    @change="changeAmountBound(setting, 'min', $event.target.value)"
+                                                    class="w-full mt-1.5 text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
+                                                />
                                             </div>
                                             <div>
                                                 <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">Maximum: ৳{{ formatMoney(amountRangeValue(setting, 'max')) }}</label>
@@ -1219,6 +1226,13 @@ const handlePrintPdf = () => {
                                                     step="1" :value="amountRangeValue(setting, 'max')"
                                                     @change="changeAmountBound(setting, 'max', $event.target.value)"
                                                     class="w-full accent-emerald-600" :disabled="amountRangeMinimum(setting) === amountRangeMaximum(setting)" />
+                                                <input type="number" step="0.01" inputmode="decimal"
+                                                    :value="store.filters[setting.maxKey]"
+                                                    :placeholder="String(amountRangeMaximum(setting))"
+                                                    :aria-label="`${setting.label} exact maximum amount in Taka`"
+                                                    @change="changeAmountBound(setting, 'max', $event.target.value)"
+                                                    class="w-full mt-1.5 text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-1.5"
+                                                />
                                             </div>
                                         </div>
                                         <p v-else class="text-[10px] text-gray-400">No available amount for this report and period.</p>
