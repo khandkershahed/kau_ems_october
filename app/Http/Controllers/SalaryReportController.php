@@ -27,6 +27,23 @@ class SalaryReportController extends Controller
             $reportType = $request->input('reportType', 'Bank Advice');
             $salaryGeneratedStatus = $request->input('salaryGeneratedStatus', 'all');
 
+            // Optional report-only bounds. These never modify posted financial values.
+            $amountFilters = $request->validate([
+                'basicMin' => 'nullable|numeric|between:-999999999,999999999',
+                'basicMax' => 'nullable|numeric|between:-999999999,999999999',
+                'grossMin' => 'nullable|numeric|between:-999999999,999999999',
+                'grossMax' => 'nullable|numeric|between:-999999999,999999999',
+                'netMin' => 'nullable|numeric|between:-999999999,999999999',
+                'netMax' => 'nullable|numeric|between:-999999999,999999999',
+            ]);
+            foreach (['basic', 'gross', 'net'] as $amountType) {
+                $minimum = $amountFilters[$amountType.'Min'] ?? null;
+                $maximum = $amountFilters[$amountType.'Max'] ?? null;
+                if ($minimum !== null && $maximum !== null && (float) $minimum > (float) $maximum) {
+                    abort(422, 'Report amount minimum must not exceed its maximum.');
+                }
+            }
+
             $query = $this->buildReportQuery($request, $monthId, $year, $reportType);
 
             // Eager load relational data
@@ -69,12 +86,34 @@ class SalaryReportController extends Controller
 
             if ($isExportAll) {
                 $users = $query->get();
-                $transformed = $this->transformUsers($users, $monthId, $year, $reportType);
+                $unfiltered = $this->transformUsers($users, $monthId, $year, $reportType);
+                $transformed = $this->filterReportAmounts($unfiltered, $amountFilters);
 
                 return response()->json([
                     'data' => $transformed,
-                    'total' => $users->count(),
+                    'total' => $amountFilters ? $transformed->count() : $users->count(),
                     'summary' => $this->calculateSummary($transformed),
+                    'amount_ranges' => $this->reportAmountRanges($unfiltered),
+                ]);
+            }
+
+            // The Basic amount can be embedded in a historical JSON snapshot;
+            // filtering AFTER the existing report transformation preserves its
+            // exact report-specific values and keeps totals/pagination consistent.
+            if (count($amountFilters) > 0) {
+                $allRows = $this->transformUsers($query->get(), $monthId, $year, $reportType);
+                $filteredRows = $this->filterReportAmounts($allRows, $amountFilters);
+                $perPage = max(1, min(100, (int) $request->input('perPage', 15)));
+                $page = max(1, (int) $request->input('page', 1));
+                $total = $filteredRows->count();
+                return response()->json([
+                    'data' => $filteredRows->slice(($page - 1) * $perPage, $perPage)->values(),
+                    'current_page' => $page,
+                    'last_page' => max(1, (int) ceil($total / $perPage)),
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'summary' => $this->calculateSummary($filteredRows),
+                    'amount_ranges' => $this->reportAmountRanges($allRows),
                 ]);
             }
 
@@ -95,6 +134,7 @@ class SalaryReportController extends Controller
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
                 'summary' => $summary,
+                'amount_ranges' => $this->reportAmountRanges($allTransformed),
             ]);
         }
 
@@ -922,6 +962,45 @@ class SalaryReportController extends Controller
                 'deduction_items' => $deductions,
             ];
         })->filter(fn ($row) => $row !== null)->values();
+    }
+
+    /**
+     * Bound the values already used by the report templates, not profile defaults.
+     * Missing/unknown monetary values are excluded rather than treated as zero.
+     */
+    private function reportAmountRanges($rows): array
+    {
+        $fields = ['basic' => 'basic_pay', 'gross' => 'total_allowance', 'net' => 'salary_total'];
+        $ranges = [];
+        foreach ($fields as $label => $field) {
+            $values = $rows->pluck($field)->filter(fn ($value) => is_numeric($value)
+                && is_finite((float) $value))->map(fn ($value) => (float) $value);
+            $ranges[$label] = [
+                'min' => $values->isEmpty() ? 0 : $values->min(),
+                'max' => $values->isEmpty() ? 0 : $values->max(),
+                'available' => $values->count(),
+            ];
+        }
+        return $ranges;
+    }
+
+    /** Inclusive server-side amount filtering for page totals and all exports. */
+    private function filterReportAmounts($rows, array $amountFilters)
+    {
+        if (!$amountFilters) return $rows;
+        $fields = ['basic' => 'basic_pay', 'gross' => 'total_allowance', 'net' => 'salary_total'];
+        return $rows->filter(function ($row) use ($fields, $amountFilters) {
+            foreach ($fields as $label => $field) {
+                $min = $amountFilters[$label.'Min'] ?? null;
+                $max = $amountFilters[$label.'Max'] ?? null;
+                if ($min === null && $max === null) continue;
+                $value = $row[$field] ?? null;
+                if (!is_numeric($value) || !is_finite((float) $value)) return false;
+                if ($min !== null && (float) $value < (float) $min) return false;
+                if ($max !== null && (float) $value > (float) $max) return false;
+            }
+            return true;
+        })->values();
     }
 
     /**

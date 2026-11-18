@@ -81,6 +81,11 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 total_tax: 0,
                 total_gpf: 0,
             },
+            amountRanges: {
+                basic: { min: 0, max: 0, available: 0 },
+                gross: { min: 0, max: 0, available: 0 },
+                net: { min: 0, max: 0, available: 0 },
+            },
             loading: false,
             exportingExcel: false,
             generatingPdf: false,
@@ -105,6 +110,12 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 search: '',
                 employeeCode: '',
                 fixationUserIds: '',
+                basicMin: '',
+                basicMax: '',
+                grossMin: '',
+                grossMax: '',
+                netMin: '',
+                netMax: '',
             },
             sort: {
                 field: 'id',
@@ -245,6 +256,9 @@ export const useSalaryReportStore = defineStore('salaryReport', {
             if (f.isActive !== '' && f.isActive !== 'true') count++;
             if (f.jobStatus) count++;
             if (f.gender) count++;
+            if (f.basicMin !== '' || f.basicMax !== '') count++;
+            if (f.grossMin !== '' || f.grossMax !== '') count++;
+            if (f.netMin !== '' || f.netMax !== '') count++;
             return count;
         },
 
@@ -292,6 +306,9 @@ export const useSalaryReportStore = defineStore('salaryReport', {
 
                 if (response.data.summary) {
                     this.summary = response.data.summary;
+                }
+                if (response.data.amount_ranges) {
+                    this.amountRanges = response.data.amount_ranges;
                 }
             } catch (error) {
                 console.error('Failed to fetch salary report data:', error);
@@ -367,6 +384,12 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 search: '',
                 employeeCode: '',
                 fixationUserIds: '',
+                basicMin: '',
+                basicMax: '',
+                grossMin: '',
+                grossMax: '',
+                netMin: '',
+                netMax: '',
             };
             this.allFilteredRecords = [];
             return this.fetchReportData(1);

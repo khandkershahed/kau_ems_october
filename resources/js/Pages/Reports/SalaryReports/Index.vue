@@ -123,6 +123,35 @@ const handleReportTypeChange = async (type) => {
     previewPage.value = 1;
 };
 
+// Reuse the same report data values for Basic, Gross (allowances), and Net.
+// Slider changes only affect report selection; no financial source is written.
+const amountFilterControls = [
+    { key: 'basic', label: 'Basic Pay', minKey: 'basicMin', maxKey: 'basicMax' },
+    { key: 'gross', label: 'Gross Salary', minKey: 'grossMin', maxKey: 'grossMax' },
+    { key: 'net', label: 'Net Salary', minKey: 'netMin', maxKey: 'netMax' },
+];
+const amountRangeMinimum = (setting) => Math.floor(Number(store.amountRanges[setting.key]?.min || 0));
+const amountRangeMaximum = (setting) => Math.ceil(Number(store.amountRanges[setting.key]?.max || 0));
+const amountRangeValue = (setting, field) => {
+    const saved = store.filters[field === 'min' ? setting.minKey : setting.maxKey];
+    return saved === '' ? (field === 'min' ? amountRangeMinimum(setting) : amountRangeMaximum(setting)) : Number(saved);
+};
+const changeAmountBound = async (setting, field, rawValue) => {
+    const selectedKey = field === 'min' ? setting.minKey : setting.maxKey;
+    store.filters[selectedKey] = rawValue === '' ? '' : String(rawValue);
+    const minimum = store.filters[setting.minKey];
+    const maximum = store.filters[setting.maxKey];
+    if (minimum !== '' && maximum !== '' && Number(minimum) > Number(maximum)) {
+        store.filters[field === 'min' ? setting.maxKey : setting.minKey] = String(rawValue);
+    }
+    await applyFilters();
+};
+const clearAmountBound = async (setting) => {
+    store.filters[setting.minKey] = '';
+    store.filters[setting.maxKey] = '';
+    await applyFilters();
+};
+
 // Apply filters
 const applyFilters = async () => {
     await store.fetchReportData(1);
@@ -1165,6 +1194,36 @@ const handlePrintPdf = () => {
                                             <option value="no_gpf">Without GPF</option>
                                         </select>
                                     </div>
+                                </div>
+
+                                <!-- Read-only amount sliders use the SAME values as report output. -->
+                                <div class="space-y-3 border-t border-gray-100 dark:border-gray-700/60 pt-3">
+                                    <div v-for="setting in amountFilterControls" :key="setting.key" class="space-y-1.5">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{{ setting.label }}</label>
+                                            <button v-if="store.filters[setting.minKey] !== '' || store.filters[setting.maxKey] !== ''"
+                                                type="button" @click="clearAmountBound(setting)"
+                                                class="text-[11px] text-rose-600 dark:text-rose-400 hover:underline">Clear</button>
+                                        </div>
+                                        <div v-if="store.amountRanges[setting.key]?.available" class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">Minimum: ৳{{ formatMoney(amountRangeValue(setting, 'min')) }}</label>
+                                                <input type="range" :min="amountRangeMinimum(setting)" :max="amountRangeMaximum(setting)"
+                                                    step="1" :value="amountRangeValue(setting, 'min')"
+                                                    @change="changeAmountBound(setting, 'min', $event.target.value)"
+                                                    class="w-full accent-emerald-600" :disabled="amountRangeMinimum(setting) === amountRangeMaximum(setting)" />
+                                            </div>
+                                            <div>
+                                                <label class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">Maximum: ৳{{ formatMoney(amountRangeValue(setting, 'max')) }}</label>
+                                                <input type="range" :min="amountRangeMinimum(setting)" :max="amountRangeMaximum(setting)"
+                                                    step="1" :value="amountRangeValue(setting, 'max')"
+                                                    @change="changeAmountBound(setting, 'max', $event.target.value)"
+                                                    class="w-full accent-emerald-600" :disabled="amountRangeMinimum(setting) === amountRangeMaximum(setting)" />
+                                            </div>
+                                        </div>
+                                        <p v-else class="text-[10px] text-gray-400">No available amount for this report and period.</p>
+                                    </div>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">Amount ranges include their endpoints and filter the selected report's available values.</p>
                                 </div>
 
                                 <div class="flex justify-end pt-1">
