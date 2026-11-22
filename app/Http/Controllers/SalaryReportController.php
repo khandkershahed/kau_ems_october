@@ -84,58 +84,43 @@ class SalaryReportController extends Controller
 
             $isExportAll = filter_var($request->input('all', false), FILTER_VALIDATE_BOOLEAN);
 
+            // Apply report eligibility before counting or paginating. A directory
+            // match is not necessarily a report-ready financial payment row.
+            $matchedUsers = $query->get();
+            $exclusions = [];
+            $reportRows = $this->transformUsers($matchedUsers, $monthId, $year, $reportType, $exclusions);
+            $filteredRows = $this->filterReportAmounts($reportRows, $amountFilters);
+            $counts = [
+                'matching_employees' => $matchedUsers->count(),
+                'report_ready_employees' => $filteredRows->count(),
+                'excluded_employees' => count($exclusions),
+                'filtered_by_amount' => $reportRows->count() - $filteredRows->count(),
+                'exclusions' => $exclusions,
+            ];
+            $summary = $this->calculateSummary($filteredRows);
+            $ranges = $this->reportAmountRanges($reportRows);
+
             if ($isExportAll) {
-                $users = $query->get();
-                $unfiltered = $this->transformUsers($users, $monthId, $year, $reportType);
-                $transformed = $this->filterReportAmounts($unfiltered, $amountFilters);
-
-                return response()->json([
-                    'data' => $transformed,
-                    'total' => $amountFilters ? $transformed->count() : $users->count(),
-                    'summary' => $this->calculateSummary($transformed),
-                    'amount_ranges' => $this->reportAmountRanges($unfiltered),
-                ]);
+                return response()->json(array_merge([
+                    'data' => $filteredRows,
+                    'total' => $filteredRows->count(),
+                    'summary' => $summary,
+                    'amount_ranges' => $ranges,
+                ], $counts));
             }
 
-            // The Basic amount can be embedded in a historical JSON snapshot;
-            // filtering AFTER the existing report transformation preserves its
-            // exact report-specific values and keeps totals/pagination consistent.
-            if (count($amountFilters) > 0) {
-                $allRows = $this->transformUsers($query->get(), $monthId, $year, $reportType);
-                $filteredRows = $this->filterReportAmounts($allRows, $amountFilters);
-                $perPage = max(1, min(100, (int) $request->input('perPage', 15)));
-                $page = max(1, (int) $request->input('page', 1));
-                $total = $filteredRows->count();
-                return response()->json([
-                    'data' => $filteredRows->slice(($page - 1) * $perPage, $perPage)->values(),
-                    'current_page' => $page,
-                    'last_page' => max(1, (int) ceil($total / $perPage)),
-                    'per_page' => $perPage,
-                    'total' => $total,
-                    'summary' => $this->calculateSummary($filteredRows),
-                    'amount_ranges' => $this->reportAmountRanges($allRows),
-                ]);
-            }
-
-            $perPage = (int) $request->input('perPage', 15);
-            $baseQuery = clone $query;
-            $paginator = $query->paginate($perPage);
-            $transformed = $this->transformUsers($paginator->getCollection(), $monthId, $year, $reportType);
-
-            // Calculate overall summary stats across all matching rows
-            $allMatchingUsers = $baseQuery->get();
-            $allTransformed = $this->transformUsers($allMatchingUsers, $monthId, $year, $reportType);
-            $summary = $this->calculateSummary($allTransformed);
-
-            return response()->json([
-                'data' => $transformed,
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
+            $perPage = max(1, min(100, (int) $request->input('perPage', 15)));
+            $page = max(1, (int) $request->input('page', 1));
+            $total = $filteredRows->count();
+            return response()->json(array_merge([
+                'data' => $filteredRows->slice(($page - 1) * $perPage, $perPage)->values(),
+                'current_page' => $page,
+                'last_page' => max(1, (int) ceil($total / $perPage)),
+                'per_page' => $perPage,
+                'total' => $total,
                 'summary' => $summary,
-                'amount_ranges' => $this->reportAmountRanges($allTransformed),
-            ]);
+                'amount_ranges' => $ranges,
+            ], $counts));
         }
 
         // Return Inertia page with reference data for dropdowns
@@ -143,6 +128,7 @@ class SalaryReportController extends Controller
             'reportTypes' => [
                 'Bank Advice',
                 'Provisional Bank Advice',
+                'Salary Certificate',
                 'Salary Bill',
                 'Salary Fixation Report',
                 'Arrear & Deduction Statement',
@@ -190,6 +176,9 @@ class SalaryReportController extends Controller
         // EmployeeInfo profile; older Report Factory types keep their legacy
         // role scoping without modification.
         $query = User::whereHas('employeeInfo');
+        if ($reportType === 'Salary Certificate') {
+            $query->where('users.isActive', true);
+        }
         if ($reportType !== 'Salary Fixation Report') {
             $query->whereHas('roles', function ($q) {
                 $q->where('role_name', 'user');
@@ -455,11 +444,11 @@ class SalaryReportController extends Controller
     /**
      * Transform user collection into structured report items.
      */
-    private function transformUsers($users, int $monthId, int $year, string $reportType = 'Bank Advice')
+    private function transformUsers($users, int $monthId, int $year, string $reportType = 'Bank Advice', ?array &$exclusions = null)
     {
         $isBonusReport = in_array(strtolower(trim($reportType)), ['bonus bill', 'bonus report', 'bonus repot', 'bonus bank advice'], true);
 
-        return $users->values()->map(function ($user, $index) use ($monthId, $year, $isBonusReport, $reportType) {
+        return $users->values()->map(function ($user, $index) use ($monthId, $year, $isBonusReport, $reportType, &$exclusions) {
             $employeeInfo = $user->employeeInfo;
             $dept = $employeeInfo?->departmentOffice?->name
                 ?? $user->departmentOffices->first()?->name
@@ -469,8 +458,19 @@ class SalaryReportController extends Controller
             $scaleName = $employeeInfo?->payScale?->scale_name ?? 'N/A';
             $gradeName = $employeeInfo?->payrollGroup?->grade?->grade_name ?? 'N/A';
 
-            $bankAccount = $user->bankAccounts->where('isSalaryAccount', true)->first()
-                ?? $user->bankAccounts->first();
+            // Match SalaryGenerateController: prefer the explicit employee-linked
+            // owned bank account, not the first salary-flagged import row.
+            $bankSelection = \App\Services\SalaryBankAccountResolver::resolve(
+                (int) $user->id,
+                $employeeInfo?->bank_account_id === null ? null : (int) $employeeInfo->bank_account_id,
+                $user->bankAccounts->all()
+            );
+            $bankAccount = $user->bankAccounts->firstWhere('id', $bankSelection['selected_id']);
+            if ($reportType === 'Provisional Bank Advice' && $bankSelection['errors']) {
+                return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                    'BANK_ACCOUNT_LINK_INVALID', 'employee_infos.bank_account_id',
+                    implode(', ', $bankSelection['errors']), 'Review employee-linked bank account');
+            }
             $bankAccountNo = $bankAccount?->account_no ?? 'N/A';
             $bankAddress = $bankAccount?->address ?? ($bankAccount?->bank_name ?? 'N/A');
             $phone = $user->phoneNumbers->first()?->phoneNumber ?? 'N/A';
@@ -618,7 +618,7 @@ class SalaryReportController extends Controller
 
             // October review reports must use persisted monthly calculator amounts,
             // not the employee profile's unrelated designation defaults.
-            if ($reportType === 'Salary Summary' && !$user->salaryGenerates->count()) {
+            if (in_array($reportType, ['Salary Summary', 'Salary Certificate'], true) && !$user->salaryGenerates->count()) {
                 $snapshot = \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
                     ->where('user_id', $user->id)->where('salary_year', $year)
                     ->where('salary_month', $monthId)->orderByDesc('version')->orderByDesc('id')->first();
@@ -679,6 +679,13 @@ class SalaryReportController extends Controller
                 }
             }
 
+            if ($reportType === 'Salary Certificate' && !$user->salaryGenerates->count()) {
+                return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                    'MISSING_SAVED_CALCULATION', 'salary_calculation_versions',
+                    'Salary Certificate requires a saved salary calculation for the selected month.',
+                    'Save the calculation in Salary Calculator');
+            }
+
             // Regular Salary Report transformation
             // A Bank Advice line must correspond to exactly one frozen bill.
             // Never show estimated/profile salary for an ungenerated employee.
@@ -692,6 +699,11 @@ class SalaryReportController extends Controller
                 $provisionalVersion = \Illuminate\Support\Facades\DB::table('salary_calculation_versions')
                     ->where('user_id', $user->id)->where('salary_year', $year)->where('salary_month', $monthId)
                     ->orderByDesc('version')->orderByDesc('id')->first();
+                if (!$provisionalVersion) {
+                    return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                        'MISSING_SAVED_CALCULATION', 'salary_calculation_versions',
+                        'No saved monthly calculation was found.', 'Review saved salary calculation');
+                }
                 $provisionalResult = json_decode((string) ($provisionalVersion->calculated_result ?? ''), true);
                 $provisionalArrear = json_decode((string) ($provisionalVersion->arrear_snapshot ?? ''), true);
             }
@@ -807,16 +819,31 @@ class SalaryReportController extends Controller
             if ($reportType === 'Provisional Bank Advice') {
                 $regularNet = $provisionalResult['net_salary'] ?? null;
                 $arrearNet = $provisionalArrear['net_arrear'] ?? null;
-                if (!empty($provisionalArrear['unknown_lines']) || !is_numeric($regularNet) || !is_numeric($arrearNet)
-                    || !is_finite((float) $regularNet) || !is_finite((float) $arrearNet)) {
-                    return null;
+                if (!empty($provisionalArrear['unknown_lines'])) {
+                    return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                        'UNVERIFIED_ARREAR', 'salary_calculation_versions.arrear_snapshot.unknown_lines',
+                        'Arrear has unresolved source entries.', 'Review arrear source in Salary Calculator');
+                }
+                if (!is_numeric($regularNet) || !is_finite((float) $regularNet)) {
+                    return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                        'INVALID_REGULAR_NET', 'salary_calculation_versions.calculated_result.net_salary',
+                        'Saved regular net salary is missing or invalid.', 'Review saved salary calculation');
+                }
+                if (!is_numeric($arrearNet) || !is_finite((float) $arrearNet)) {
+                    return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                        'INVALID_ARREAR_NET', 'salary_calculation_versions.arrear_snapshot.net_arrear',
+                        'Saved net arrear is missing or invalid.', 'Review arrear source in Salary Calculator');
                 }
                 if (!$bankAccountNo || in_array(strtoupper(trim((string) $bankAccountNo)), ['N/A', 'STAMP', 'PENDING ACCOUNT'], true)) {
-                    return null;
+                    return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                        'INVALID_SALARY_BANK_ACCOUNT', 'employee_infos.bank_account_id',
+                        'The linked salary bank account is missing or a placeholder.', 'Review employee-linked bank account');
                 }
                 $salaryTotal = round((float) $regularNet + (float) $arrearNet, 2);
                 if ($salaryTotal < 0 || !is_finite($salaryTotal)) {
-                    return null;
+                    return $this->excludeProvisionalRow($user, $employeeInfo, $exclusions,
+                        'INVALID_FINAL_NET', 'calculated_result.net_salary + arrear_snapshot.net_arrear',
+                        'Final net salary is negative or invalid.', 'Review salary calculation');
                 }
                 $totalDeduction = (float) ($provisionalResult['total_deduction'] ?? 0)
                     + (float) ($provisionalArrear['known_deduction'] ?? 0);
@@ -929,6 +956,7 @@ class SalaryReportController extends Controller
                 'grade' => $gradeName,
                 'bank_account_no' => $bankAccountNo,
                 'bank_address' => $bankAddress,
+                'bank_warnings' => $bankSelection['warnings'],
                 'phone' => $phone,
                 'joining_date' => $user->joiningDate?->joining_date ?? 'N/A',
                 'month_id' => $monthId,
@@ -962,6 +990,26 @@ class SalaryReportController extends Controller
                 'deduction_items' => $deductions,
             ];
         })->filter(fn ($row) => $row !== null)->values();
+    }
+
+
+    /** Store a readable exclusion without inventing any missing salary amount. */
+    private function excludeProvisionalRow($user, $employeeInfo, ?array &$exclusions,
+        string $code, string $field, string $reason, string $action): ?array
+    {
+        $exclusions[] = [
+            'user_id' => (int) $user->id,
+            'employee_code' => (string) ($employeeInfo?->employeeCode ?? ''),
+            'name' => (string) $user->name,
+            'reason_code' => $code,
+            'source_field' => $field,
+            'reason' => $reason,
+            'correction_action' => $action,
+            'correction_url' => str_starts_with($code, 'INVALID_SALARY_BANK') || $code === 'BANK_ACCOUNT_LINK_INVALID'
+                ? route('employees.edit', ['search' => (string) ($employeeInfo?->employeeCode ?? '')])
+                : route('salary-calculator.show', ['user' => $user->id]),
+        ];
+        return null;
     }
 
     /**

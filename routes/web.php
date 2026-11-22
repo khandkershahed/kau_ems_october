@@ -100,6 +100,7 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     // Reports Routes
     Route::get('/reports/blank-forms', [\App\Http\Controllers\ReportController::class, 'blankForms'])->name('reports.blank-forms.index');
     Route::get('/reports/salary-reports', [\App\Http\Controllers\SalaryReportController::class, 'index'])->name('reports.salary-reports.index');
+    Route::post('/reports/salary-certificates', [\App\Http\Controllers\SalaryCertificateController::class, 'export'])->name('reports.salary-certificates.export');
     // Step 07: read-only canonical posted salary/arrear print reports.
     Route::get('/reports/salary-official', [\App\Http\Controllers\SalaryOfficialReportController::class, 'index'])->name('reports.salary-official.index');
 
@@ -259,7 +260,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__ . '/auth.php';
 
 
-Route::get("/test", [EmployeeAttributeController::class, "createDynamicEmployeeTest"]);
+// Route::get("/test", [EmployeeAttributeController::class, "createDynamicEmployeeTest"]);
 
 
 

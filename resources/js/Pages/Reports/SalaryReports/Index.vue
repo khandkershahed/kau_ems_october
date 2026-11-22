@@ -10,7 +10,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import UniversalSearchInput from '@/Components/UniversalSearchInput.vue';
 import { useSalaryReportStore } from '@/stores/salaryReport';
 import { useSalarySummaryStore } from '@/stores/salarySummary';
-import { getReportTemplate } from '@/Pages/Reports/reportTemplates';
+import { getReportTemplate, SalaryCertificate } from '@/Pages/Reports/reportTemplates';
 import { formatMoney, MONTH_NAMES } from '@/Pages/Reports/reportTemplates/utils';
 
 const props = defineProps({
@@ -114,7 +114,8 @@ const handleSearchImmediate = async () => {
 
 // Handle report type change
 const handleReportTypeChange = async (type) => {
-    if (type === 'Provisional Bank Advice') store.filters.salaryGeneratedStatus = 'all';
+    if (type === 'Provisional Bank Advice' || type === 'Salary Certificate') store.filters.salaryGeneratedStatus = 'all';
+    if (type === 'Salary Certificate') isContinuousView.value = false;
     if (type !== 'Salary Fixation Report') store.filters.fixationUserIds = '';
     if (type === 'Bonus report' || type === 'Bonus repot' || type === 'Bonus Bank Advice' || type === 'Bonus Bill') {
         store.filters.salaryGeneratedStatus = 'generated';
@@ -204,6 +205,14 @@ const bankAdviceRowsPerPage = ref(30);
 const fixationRowsPerPage = ref(15);
 const fixationExporting = ref(false);
 const isFixationReport = computed(() => store.reportType === 'Salary Fixation Report');
+const isSalaryCertificate = computed(() => store.reportType === 'Salary Certificate');
+const certificatePreview = ref(null);
+const certificateError = ref('');
+const certificateBusy = ref(false);
+const pdfCertificate = ref(null);
+const certificateExportSheet = ref(null);
+let certificatePreviewRequest = 0;
+
 const isSingleFixation = computed(() => isFixationReport.value && selectedRecords.value.length === 1);
 const originalSingleFixationUrl = computed(() => selectedRecords.value[0]?.fixation_report?.original_pdf_url ||
     (selectedRecords.value[0]?.user_id ? route('salary-fixation.preview', selectedRecords.value[0].user_id) : null));
@@ -237,7 +246,7 @@ const totalPreviewPages = computed(() => {
     const totalSelected = selectedRecords.value.length;
     if (totalSelected === 0) return 1;
 
-    if (['Salary Bill','Arrear & Deduction Statement'].includes(store.reportType) || store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill') {
+    if (['Salary Bill','Arrear & Deduction Statement','Salary Certificate'].includes(store.reportType) || store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill') {
         // 1 employee bill per A4 sheet
         return totalSelected;
     }
@@ -274,7 +283,7 @@ const currentPageData = computed(() => {
     const records = selectedRecords.value;
     if (records.length === 0) return [];
 
-    if (['Salary Bill','Arrear & Deduction Statement'].includes(store.reportType) || store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill') {
+    if (['Salary Bill','Arrear & Deduction Statement','Salary Certificate'].includes(store.reportType) || store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill') {
         const activeRecord = records[previewPage.value - 1] || null;
         return activeRecord ? [activeRecord] : [];
     }
@@ -287,6 +296,109 @@ const currentPageData = computed(() => {
     const start = (previewPage.value - 1) * rowsPerPage;
     return records.slice(start, start + rowsPerPage);
 });
+
+// Preview reads one selected employee from the same read-only source as both exports.
+watch(() => [store.reportType, currentPageData.value[0]?.user_id,
+    store.filters.monthId, store.filters.salaryGenerationYear], async ([type, userId, month, year]) => {
+    const requestNumber = ++certificatePreviewRequest;
+    certificatePreview.value = null;
+    certificateError.value = '';
+    if (type !== 'Salary Certificate' || !userId) return;
+    certificateBusy.value = true;
+    try {
+        const response = await axios.post(route('reports.salary-certificates.export'), {
+            ids: [userId], month: Number(month), year: Number(year), format: 'json',
+        });
+        if (requestNumber !== certificatePreviewRequest) return;
+        certificatePreview.value = response.data.certificates?.[0] || null;
+        certificateError.value = response.data.rejections?.[0]?.reason || '';
+    } catch (error) {
+        if (requestNumber !== certificatePreviewRequest) return;
+        certificateError.value = error.response?.data?.message || 'Certificate source could not be read.';
+    } finally {
+        if (requestNumber === certificatePreviewRequest) certificateBusy.value = false;
+    }
+}, { immediate: true });
+
+const certificateSelectionIds = () => [...new Set(selectedRecords.value.map(r => Number(r.user_id)))]
+    .filter(id => Number.isInteger(id) && id > 0);
+
+const certificatePayload = (format) => ({
+    ids: certificateSelectionIds(),
+    month: Number(store.filters.monthId),
+    year: Number(store.filters.salaryGenerationYear),
+    format,
+});
+
+const certificateRejectionMessage = (rejected) => rejected.slice(0, 12)
+    .map(r => `${r.employee_code || r.user_id}: ${r.reason}`).join('\n');
+
+const handleCertificateWord = async () => {
+    if (certificateBusy.value || !certificateSelectionIds().length) return;
+    certificateBusy.value = true;
+    try {
+        const response = await axios.post(route('reports.salary-certificates.export'),
+            certificatePayload('docx'), { responseType: 'blob' });
+        const url = URL.createObjectURL(new Blob([response.data], {
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `KAU_Salary_Certificate_${store.filters.salaryGenerationYear}_${store.filters.monthId}_${certificateSelectionIds().length}.docx`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (error) {
+        let message = 'Word export could not be completed. Please review the specific employee source errors.';
+        if (error.response?.data instanceof Blob) {
+            try {
+                const raw = JSON.parse(await error.response.data.text());
+                message = raw?.errors?.ids?.[0] || raw?.message || message;
+            } catch (_) { /* Keep the safe default error. */ }
+        }
+        alert(message);
+    } finally {
+        certificateBusy.value = false;
+    }
+};
+
+const handleCertificatePdf = async (isPrint = false) => {
+    if (certificateBusy.value || !certificateSelectionIds().length) return;
+    certificateBusy.value = true;
+    try {
+        const response = await axios.post(route('reports.salary-certificates.export'), certificatePayload('json'));
+        const rows = response.data.certificates || [];
+        const rejected = response.data.rejections || [];
+        if (rejected.length || rows.length !== certificateSelectionIds().length) {
+            throw new Error(`PDF not created: ${rejected.length} selected employees are not report-ready.\n${certificateRejectionMessage(rejected)}`);
+        }
+        const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4', compress:true});
+        for (let i = 0; i < rows.length; i++) {
+            pdfCertificate.value = rows[i];
+            await nextTick();
+            const element = certificateExportSheet.value?.$el;
+            if (!element) throw new Error('Certificate A4 sheet did not render.');
+            // The existing project's html2canvas is already imported for report PDF export.
+            const canvas = await html2canvas(element, { scale: 1.5, backgroundColor:'#ffffff', useCORS:true,
+                windowWidth: element.scrollWidth, windowHeight: element.scrollHeight, logging:false });
+            if (i) pdf.addPage('a4', 'portrait');
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.93), 'JPEG', 0, 0, 210, 297);
+        }
+        pdfCertificate.value = null;
+        const name = `KAU_Salary_Certificate_${store.filters.salaryGenerationYear}_${store.filters.monthId}_${rows.length}.pdf`;
+        if (isPrint) {
+            const url = URL.createObjectURL(pdf.output('blob'));
+            const tab = window.open(url, '_blank');
+            if (tab) tab.opener = null;
+            else alert('Please enable PDF popups for printing.');
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } else pdf.save(name);
+    } catch (error) {
+        pdfCertificate.value = null;
+        alert(error.message || 'Salary Certificate PDF export failed.');
+    } finally {
+        certificateBusy.value = false;
+    }
+};
 
 // Read-only export of the exact same landscape statement pages shown in Report Factory.
 // Do not use the old autoTable summary path for Fixation Reports.
@@ -819,6 +931,7 @@ const currentTemplateProps = computed(() => {
         pageNumber: previewPage.value,
         totalPages: totalPreviewPages.value,
         reportType: store.reportType,
+        certificate: certificatePreview.value,
         customTitle: headerConfig.value.title,
         customAddress: headerConfig.value.address,
         customSubtitle: effectiveHeaderSubtitle.value,
@@ -836,7 +949,7 @@ const continuousPages = computed(() => {
 
     for (let p = 1; p <= totalPages; p++) {
         let pageData = [];
-        if (['Salary Bill','Arrear & Deduction Statement'].includes(store.reportType) || store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill') {
+        if (['Salary Bill','Arrear & Deduction Statement','Salary Certificate'].includes(store.reportType) || store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill') {
             const r = records[p - 1];
             if (r) pageData = [r];
         } else if (store.reportType === 'Salary Summary') {
@@ -877,6 +990,7 @@ const continuousPages = computed(() => {
 
 // Export handlers
 const handleExportExcel = () => {
+    if (isSalaryCertificate.value) return alert('Salary Certificate has PDF and Word export.');
     if (isOfficialSalaryReport.value) return exportOfficialExcel();
     if (isFixationReport.value) return exportFixationExcel();
     const customHeader = {
@@ -896,6 +1010,7 @@ const handleExportExcel = () => {
 };
 
 const handleDownloadPdf = () => {
+    if (isSalaryCertificate.value) return handleCertificatePdf(false);
     if (isOfficialSalaryReport.value) return openOfficialReport(officialReportKind(), true);
     if (isFixationReport.value) return exportFixationPdf(false);
     const customHeader = {
@@ -925,6 +1040,7 @@ const handleDownloadPdf = () => {
 };
 
 const handlePrintPdf = () => {
+    if (isSalaryCertificate.value) return handleCertificatePdf(true);
     if (isOfficialSalaryReport.value) return openOfficialReport(officialReportKind(), false);
     if (isFixationReport.value) return exportFixationPdf(true);
     const customHeader = {
@@ -1303,7 +1419,30 @@ const handlePrintPdf = () => {
                             </div>
                         </div>
 
-                        <!-- Employee List -->
+                        <!-- Report eligibility is different from directory matching. -->
+                    <div class="p-3 border-b border-gray-100 dark:border-gray-700/60 text-[11px]">
+                        <div class="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-200">
+                            <div>Matching Employees: <strong>{{ store.reportDiagnostics.matching_employees }}</strong></div>
+                            <div>Report-ready Employees: <strong>{{ store.reportDiagnostics.report_ready_employees }}</strong></div>
+                            <div>Excluded Employees: <strong>{{ store.reportDiagnostics.excluded_employees }}</strong></div>
+                            <div>Selected for Export: <strong>{{ selectedRecords.length }}</strong></div>
+                        </div>
+                        <div v-if="store.reportDiagnostics.filtered_by_amount" class="mt-1 text-amber-700 dark:text-amber-300">
+                            {{ store.reportDiagnostics.filtered_by_amount }} matching report rows are outside the selected amount range.
+                        </div>
+                        <div v-if="store.excludedRecords.length" class="mt-2 max-h-32 overflow-y-auto border-t border-amber-200 pt-2 space-y-1">
+                            <div v-for="item in store.excludedRecords" :key="item.user_id" class="text-amber-800 dark:text-amber-300">
+                                <strong>#{{ item.employee_code }} {{ item.name }}</strong> — {{ item.reason_code }}:
+                                {{ item.reason }} ({{ item.source_field }}).
+                                <a :href="item.correction_url" class="underline font-semibold">{{ item.correction_action }}</a>
+                            </div>
+                        </div>
+                        <div v-if="store.reportType === 'Provisional Bank Advice'" class="mt-2 text-rose-700 dark:text-rose-300 font-semibold">
+                            PROVISIONAL — NOT FOR BANK PAYMENT. Saved calculator snapshots only.
+                        </div>
+                    </div>
+
+                    <!-- Employee List -->
                         <div class="divide-y divide-gray-100 dark:divide-gray-700/50 max-h-[520px] overflow-y-auto">
                             <div
                                 v-if="store.reports.data.length === 0"
@@ -1344,6 +1483,9 @@ const handlePrintPdf = () => {
                                             <span class="truncate">{{ ((store.reportType === 'Bonus report' || store.reportType === 'Bonus Bill' || store.reportType === 'Bonus Bank Advice') && user.bonus_title) ? user.bonus_title : user.designation }}</span>
                                             <span v-if="user.department && user.department !== 'N/A'">•</span>
                                             <span v-if="user.department && user.department !== 'N/A'" class="truncate text-gray-400 dark:text-gray-500">{{ user.department }}</span>
+                                        </div>
+                                        <div v-if="user.bank_warnings && user.bank_warnings.length" class="mt-1 text-[10px] text-amber-700 dark:text-amber-300" :title="user.bank_warnings.join(', ')">
+                                            Bank review: {{ user.bank_warnings.join(', ') }}
                                         </div>
                                         <div v-if="user.email" class="text-[9.5px] text-gray-500 dark:text-gray-400 truncate flex items-center gap-1 mt-0.5" :title="user.email">
                                             <svg class="w-2.5 h-2.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1485,7 +1627,7 @@ const handlePrintPdf = () => {
 
                             <!-- Continuous view toggle if multi-page -->
                             <button
-                                v-if="totalPreviewPages > 1"
+                                v-if="totalPreviewPages > 1 && !isSalaryCertificate"
                                 type="button"
                                 @click="isContinuousView = !isContinuousView"
                                 :class="isContinuousView ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200' : 'bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-600'"
@@ -1514,6 +1656,7 @@ const handlePrintPdf = () => {
                         <div class="flex items-center gap-2">
                             <!-- Download Excel -->
                             <button
+                                v-if="!isSalaryCertificate"
                                 type="button"
                                 :disabled="selectedRecords.length === 0 || store.exportingExcel"
                                 @click="handleExportExcel"
@@ -1556,10 +1699,17 @@ const handlePrintPdf = () => {
                                 </button>
                             </template>
 
+                            <button v-if="isSalaryCertificate" type="button"
+                                :disabled="!selectedRecords.length || certificateBusy"
+                                @click="handleCertificateWord"
+                                class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-medium disabled:opacity-40">
+                                Word (.docx)
+                            </button>
+
                             <!-- Download PDF -->
                             <button
                                 type="button"
-                                :disabled="selectedRecords.length === 0 || store.generatingPdf"
+                                :disabled="selectedRecords.length === 0 || store.generatingPdf || certificateBusy"
                                 @click="handleDownloadPdf"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium shadow-sm transition disabled:opacity-40"
                             >
@@ -1572,7 +1722,7 @@ const handlePrintPdf = () => {
                             <!-- Print A4 -->
                             <button
                                 type="button"
-                                :disabled="selectedRecords.length === 0 || store.generatingPdf"
+                                :disabled="selectedRecords.length === 0 || store.generatingPdf || certificateBusy"
                                 @click="handlePrintPdf"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium shadow-sm transition disabled:opacity-40"
                             >
@@ -1830,6 +1980,8 @@ const handlePrintPdf = () => {
                                 <p v-else class="p-5 text-rose-700">No employee fixation form URL available.</p>
                             </div>
                             <iframe v-else-if="officialPreviewUrl" :src="officialPreviewUrl" title="Saved Official Salary Report" class="w-full border-0 bg-white" :style="{height: store.reportType === 'Arrear & Deduction Statement' ? '210mm' : '297mm'}"></iframe>
+                            <div v-else-if="isSalaryCertificate && (certificateBusy || certificateError) && !certificatePreview"
+                                class="p-5 bg-white text-rose-700">{{ certificateError || 'Loading Salary Certificate...' }}</div>
                             <component v-else :is="currentTemplate" v-bind="currentTemplateProps" />
                         </div>
 
@@ -1839,6 +1991,10 @@ const handlePrintPdf = () => {
 
             </div>
 
+        </div>
+        <!-- One hidden certificate page at a time: the same component used for preview. -->
+        <div v-if="isSalaryCertificate && pdfCertificate" class="kau-certificate-export" aria-hidden="true">
+            <SalaryCertificate ref="certificateExportSheet" :certificate="pdfCertificate" />
         </div>
         <!-- Off-screen statement pages: the same Vue component as preview, all pages
              rendered for PDF export without changing current page/filters. -->
@@ -1853,6 +2009,7 @@ const handlePrintPdf = () => {
 </template>
 
 <style>
+.kau-certificate-export { position:fixed; left:-20000px; top:0; width:210mm; z-index:-1; pointer-events:none; }
 .kau-fixation-export { position:fixed; left:-20000px; top:0; width:297mm; z-index:-1; pointer-events:none; }
 @media print {
     body * {

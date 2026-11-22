@@ -108,12 +108,53 @@ const phase5LoadedCount = ref(0);
 const phase5AlreadyGeneratedCount = ref(0);
 const phase5PreviewComplete = ref(false);
 const phase5ResumeToken = ref("");
-const phase5ReadyCount = computed(
+// Posting readiness is distinct from a successful read-only financial preview.
+// The final, authoritative checks still run inside SalaryBillPostingService::post().
+const phase5IsPostingReady = (row) =>
+    isReady(row) && row?.workflow_status === "READY_FOR_GENERATION";
+const phase5CalculationReadyCount = computed(
     () => phase5PreviewRows.value.filter(isReady).length,
 );
-const phase5ExceptionCount = computed(
-    () => phase5PreviewRows.value.filter((r) => !isReady(r)).length,
+const phase5ReadyCount = computed(
+    () => phase5PreviewRows.value.filter(phase5IsPostingReady).length,
 );
+const phase5ExceptionCount = computed(
+    () =>
+        phase5PreviewRows.value.filter((row) => !phase5IsPostingReady(row))
+            .length,
+);
+const phase5View = ref("attention");
+const phase5Search = ref("");
+const phase5ExpandedId = ref(null);
+const phase5ReadyIds = () =>
+    phase5PreviewRows.value
+        .filter(phase5IsPostingReady)
+        .map((row) => Number(row.user_id));
+const phase5VisibleRows = computed(() => {
+    const query = phase5Search.value.trim().toLowerCase();
+    return phase5PreviewRows.value.filter((row) => {
+        if (phase5View.value === "ready" && !phase5IsPostingReady(row))
+            return false;
+        if (phase5View.value === "attention" && phase5IsPostingReady(row))
+            return false;
+        return (
+            !query ||
+            [
+                row.name,
+                row.employee_code,
+                row.user_id,
+                row.reason,
+                row.workflow_status,
+                row.approval_blocking_reasons,
+                row.approval_error,
+            ].some((value) =>
+                String(value ?? "")
+                    .toLowerCase()
+                    .includes(query),
+            )
+        );
+    });
+});
 const phase5PreviewTotals = computed(() => {
     const selected = new Set(phase5SelectedIds.value.map(Number));
     return phase5PreviewRows.value
@@ -144,6 +185,9 @@ const openPhase5Preview = async () => {
     phase5Error.value = "";
     phase5PreviewRows.value = [];
     phase5SelectedIds.value = [];
+    phase5View.value = "attention";
+    phase5Search.value = "";
+    phase5ExpandedId.value = null;
     phase5CandidateIds.value = [];
     phase5LoadedCount.value = 0;
     phase5AlreadyGeneratedCount.value = 0;
@@ -178,7 +222,7 @@ const openPhase5Preview = async () => {
             throw new Error(
                 "Candidate preview was incomplete; refresh before generation.",
             );
-        phase5SelectedIds.value = readyIds(phase5PreviewRows.value);
+        phase5SelectedIds.value = phase5ReadyIds();
         phase5PreviewComplete.value = true;
     } catch (e) {
         phase5Error.value =
@@ -210,7 +254,7 @@ const recalculatePhase5Row = async (row) => {
         const updated = data.preview?.[0];
         if (!updated) throw new Error("No refreshed preview returned.");
         phase5PreviewRows.value.splice(index, 1, updated);
-        if (isReady(updated))
+        if (phase5IsPostingReady(updated))
             phase5SelectedIds.value.push(Number(updated.user_id));
     } catch (e) {
         phase5Error.value = e.response?.data?.message || e.message;
@@ -245,7 +289,7 @@ const recalculatePhase5Selected = async () => {
             const row = phase5PreviewRows.value.find(
                 (r) => Number(r.user_id) === id,
             );
-            return isReady(row);
+            return phase5IsPostingReady(row);
         });
         phase5PreviewComplete.value = true;
     } catch (e) {
@@ -258,7 +302,10 @@ const recalculatePhase5Selected = async () => {
     }
 };
 const exportPhase5Preview = (exceptionsOnly = false) => {
-    const content = previewCsv(phase5PreviewRows.value, exceptionsOnly);
+    const rows = exceptionsOnly
+        ? phase5PreviewRows.value.filter((row) => !phase5IsPostingReady(row))
+        : phase5PreviewRows.value;
+    const content = previewCsv(rows, false);
     const url = URL.createObjectURL(
         new Blob(["\ufeff", content], { type: "text/csv;charset=utf-8" }),
     );
@@ -654,7 +701,7 @@ const removeFilter = (key) => {
         <div class="py-6 sm:py-8 px-4 sm:px-6 lg:px-8 mx-auto space-y-6">
             <!-- Top Header & Primary Actions -->
             <div
-                class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-md shadow-sm border border-gray-100 dark:border-gray-700/60 transition-colors"
+                class="flex flex-row md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-md shadow-sm border border-gray-100 dark:border-gray-700/60 transition-colors"
             >
                 <div>
                     <div class="flex items-center gap-3">
@@ -681,12 +728,6 @@ const removeFilter = (key) => {
                             >
                                 Review & Generate Salary Bills
                             </h1>
-                            <p
-                                class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5"
-                            >
-                                Directory of staff members, payroll
-                                configuration & monthly salary bills generation
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -699,7 +740,7 @@ const removeFilter = (key) => {
                         <select
                             v-model="store.filters.monthId"
                             @change="applyFilters"
-                            class="text-xs rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-1.5 px-2.5 shadow-sm transition"
+                            class="text-xs rounded-md min-w-40 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-1.5 px-2.5 shadow-sm transition"
                         >
                             <option
                                 v-for="m in months"
@@ -712,7 +753,7 @@ const removeFilter = (key) => {
                         <select
                             v-model="store.filters.salaryGenerationYear"
                             @change="applyFilters"
-                            class="text-xs rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-1.5 px-2.5 shadow-sm transition"
+                            class="text-xs rounded-md min-w-20 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-emerald-500 focus:ring-emerald-500 py-1.5 px-2.5 shadow-sm transition"
                         >
                             <option v-for="y in years" :key="y" :value="y">
                                 {{ y }}
@@ -2410,67 +2451,131 @@ const removeFilter = (key) => {
             </div>
         </Modal>
 
-        <!-- Step 06: full read-only preview, existing modal component and page styling retained. -->
+        <!-- Read-only payroll preview; finance and posting APIs are unchanged. -->
         <Modal
             :show="phase5PreviewOpen"
             @close="phase5PreviewOpen = false"
-            max-width="2xl"
+            max-width="7xl"
         >
             <div
-                class="p-5 space-y-3 bg-white dark:bg-gray-900 dark:text-gray-100"
+                class="p-5 space-y-4 bg-white dark:bg-gray-900 dark:text-gray-100"
             >
-                <h2 class="font-bold text-lg">
-                    Bulk Salary Calculation — Current / Arrear / Total
-                </h2>
-                <p class="text-sm text-gray-600 dark:text-gray-300">
-                    {{ phase5LoadedCount }} /
-                    {{ phase5CandidateIds.length }} unbilled employee(s)
-                    calculated.
-                    {{
-                        phase5PreviewLoading
-                            ? "Read-only calculation in progress."
-                            : "No salary bill or GPF transaction was created by preview."
-                    }}
-                </p>
-                <div class="flex gap-3 flex-wrap text-xs">
-                    <span>Calculated: {{ phase5ReadyCount }}</span>
-                    <span
-                        >Already generated:
-                        {{ phase5AlreadyGeneratedCount }}</span
-                    >
-                    <span
-                        >Manual overrides:
-                        {{
-                            phase5PreviewRows.filter((r) => r.manual_override)
-                                .length
-                        }}</span
-                    >
-                    <span class="text-red-600"
-                        >Needs attention: {{ phase5ExceptionCount }}</span
-                    >
-                    <span>Selected: {{ phase5SelectedIds.length }}</span>
-                    <span
-                        >Selected Net: ৳{{
-                            formatMoney(phase5PreviewTotals)
-                        }}</span
-                    >
-                </div>
-                <p v-if="phase5Error" class="text-sm text-red-600">
-                    {{ phase5Error }}
-                </p>
-                <div class="flex gap-2 text-xs flex-wrap">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold">
+                            Salary Generation — Review & Select
+                        </h2>
+                        <p
+                            class="text-xs mt-1 text-gray-500 dark:text-gray-300"
+                        >
+                            {{ getMonthName(store.filters.monthId) }}
+                            {{ store.filters.salaryGenerationYear }} ·
+                            {{ phase5LoadedCount }} of
+                            {{ phase5CandidateIds.length }} employees checked
+                            <span v-if="phase5PreviewLoading">
+                                · Preview loading…</span
+                            >
+                        </p>
+                    </div>
                     <button
                         type="button"
-                        @click="phase5SelectedIds = readyIds(phase5PreviewRows)"
-                        :disabled="!phase5PreviewComplete"
-                        class="border rounded px-2 py-1"
+                        aria-label="Close preview"
+                        @click="phase5PreviewOpen = false"
+                        class="border rounded-lg px-3 py-1.5 text-sm"
                     >
-                        Select all calculated
+                        Close
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    <div class="rounded-lg border p-3">
+                        <div class="text-xs text-gray-500">Calculated</div>
+                        <div class="font-bold text-lg">
+                            {{ phase5CalculationReadyCount }}
+                        </div>
+                    </div>
+                    <div class="rounded-lg border p-3">
+                        <div class="text-xs text-gray-500">
+                            Approved to post
+                        </div>
+                        <div class="font-bold text-lg text-emerald-700">
+                            {{ phase5ReadyCount }}
+                        </div>
+                    </div>
+                    <div class="rounded-lg border p-3">
+                        <div class="text-xs text-gray-500">Needs attention</div>
+                        <div class="font-bold text-lg text-red-600">
+                            {{ phase5ExceptionCount }}
+                        </div>
+                    </div>
+                    <div class="rounded-lg border p-3">
+                        <div class="text-xs text-gray-500">
+                            Already generated
+                        </div>
+                        <div class="font-bold text-lg">
+                            {{ phase5AlreadyGeneratedCount }}
+                        </div>
+                    </div>
+                </div>
+
+                <p
+                    class="text-xs text-amber-800 dark:text-amber-200 rounded-lg border border-amber-200 dark:border-amber-900 p-2"
+                >
+                    A calculated salary is not automatically approved for
+                    posting. Only employees with READY_FOR_GENERATION approval
+                    can be selected. Preview does not create a bill or GPF
+                    entry.
+                </p>
+                <p v-if="phase5Error" role="alert" class="text-sm text-red-600">
+                    {{ phase5Error }}
+                </p>
+
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div
+                        class="flex flex-wrap gap-1"
+                        aria-label="Preview status filter"
+                    >
+                        <button
+                            v-for="item in [
+                                { key: 'attention', label: 'Needs attention' },
+                                { key: 'ready', label: 'Ready to generate' },
+                                { key: 'all', label: 'All employees' },
+                            ]"
+                            :key="item.key"
+                            type="button"
+                            @click="phase5View = item.key"
+                            :aria-pressed="phase5View === item.key"
+                            :class="
+                                phase5View === item.key
+                                    ? 'bg-emerald-700 text-white border-emerald-700'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            "
+                            class="border rounded-lg px-3 py-2 text-xs font-medium"
+                        >
+                            {{ item.label }}
+                        </button>
+                    </div>
+                    <input
+                        v-model="phase5Search"
+                        type="search"
+                        placeholder="Search employee code, name or error"
+                        aria-label="Search salary preview"
+                        class="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-600 text-sm w-full sm:w-64"
+                    />
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <button
+                        type="button"
+                        @click="phase5SelectedIds = phase5ReadyIds()"
+                        :disabled="!phase5PreviewComplete"
+                        class="border rounded-lg px-3 py-2 disabled:opacity-50"
+                    >
+                        Select all approved ({{ phase5ReadyCount }})
                     </button>
                     <button
                         type="button"
                         @click="phase5SelectedIds = []"
-                        class="border rounded px-2 py-1"
+                        class="border rounded-lg px-3 py-2"
                     >
                         Clear selection
                     </button>
@@ -2482,192 +2587,313 @@ const removeFilter = (key) => {
                             !phase5SelectedIds.length ||
                             phase5PreviewLoading
                         "
-                        class="border rounded px-2 py-1"
+                        class="border rounded-lg px-3 py-2 disabled:opacity-50"
                     >
-                        Calculate / Recalculate Selected
-                    </button>
-                    <button
-                        type="button"
-                        @click="exportPhase5Preview(false)"
-                        :disabled="!phase5PreviewRows.length"
-                        class="border rounded px-2 py-1"
-                    >
-                        Export Preview CSV
+                        Refresh selected
                     </button>
                     <button
                         type="button"
                         @click="exportPhase5Preview(true)"
                         :disabled="!phase5PreviewRows.length"
-                        class="border rounded px-2 py-1"
+                        class="border rounded-lg px-3 py-2 disabled:opacity-50"
                     >
-                        Export Exceptions CSV
+                        Export blockers CSV
+                    </button>
+                    <button
+                        type="button"
+                        @click="exportPhase5Preview(false)"
+                        :disabled="!phase5PreviewRows.length"
+                        class="border rounded-lg px-3 py-2 disabled:opacity-50"
+                    >
+                        Export full CSV
                     </button>
                 </div>
-                <div class="max-h-[55vh] overflow-auto border rounded">
-                    <table
-                        class="min-w-[1200px] w-full text-xs text-left border-collapse"
-                    >
+
+                <div class="border rounded-lg overflow-y-auto max-h-[52vh]">
+                    <table class="w-full text-xs text-left border-collapse">
                         <thead
-                            class="sticky top-0 bg-gray-100 dark:bg-gray-800"
+                            class="sticky top-0 bg-gray-100 dark:bg-gray-800 z-10"
                         >
                             <tr>
-                                <th class="p-2">Select</th>
-                                <th>Employee / Code</th>
-                                <th>Grade / Designation</th>
-                                <th>Basic</th>
-                                <th>Current Gross</th>
-                                <th>Current Deduction</th>
-                                <th>Current Net</th>
-                                <th>Arrear (+)</th>
-                                <th>Arrear (−)</th>
-                                <th>Final Net</th>
-                                <th>Status / Warnings</th>
-                                <th>Action</th>
+                                <th class="p-2 w-8">Select</th>
+                                <th class="p-2">Employee</th>
+                                <th class="p-2 text-right">Net (৳)</th>
+                                <th class="p-2">Approval / blocker</th>
+                                <th class="p-2">Details</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr
-                                v-for="r in phase5PreviewRows"
+                            <template
+                                v-for="r in phase5VisibleRows"
                                 :key="r.user_id"
-                                class="border-t dark:border-gray-700"
                             >
-                                <td class="p-2">
-                                    <input
-                                        type="checkbox"
-                                        :disabled="
-                                            !isReady(r) ||
-                                            !phase5PreviewComplete
-                                        "
-                                        :value="r.user_id"
-                                        v-model="phase5SelectedIds"
-                                    />
-                                </td>
-                                <td class="p-2">
-                                    {{ r.name || "Employee" }}
-                                    <div class="text-gray-500">
-                                        {{ r.employee_code || r.user_id }}
-                                    </div>
-                                </td>
-                                <td class="p-2">
-                                    {{ r.grade || "—" }}
-                                    <div>{{ r.designation || "—" }}</div>
-                                </td>
-                                <td>
-                                    {{
-                                        r.basic == null
-                                            ? "—"
-                                            : formatMoney(r.basic)
-                                    }}
-                                </td>
-                                <td>
-                                    {{
-                                        r.regular_gross == null
-                                            ? "—"
-                                            : formatMoney(r.regular_gross)
-                                    }}
-                                </td>
-                                <td>
-                                    {{
-                                        r.regular_deductions == null
-                                            ? "—"
-                                            : formatMoney(r.regular_deductions)
-                                    }}
-                                </td>
-                                <td>
-                                    {{
-                                        r.regular_net == null
-                                            ? "—"
-                                            : formatMoney(r.regular_net)
-                                    }}
-                                </td>
-                                <td>
-                                    {{
-                                        r.arrear_payable == null
-                                            ? "0.00 (unverified)"
-                                            : formatMoney(r.arrear_payable)
-                                    }}
-                                </td>
-                                <td>
-                                    {{
-                                        r.arrear_deductions == null
-                                            ? "0.00 (unverified)"
-                                            : formatMoney(r.arrear_deductions)
-                                    }}
-                                </td>
-                                <td class="font-semibold">
-                                    {{
-                                        r.net_payable == null
-                                            ? "UNKNOWN"
-                                            : formatMoney(r.net_payable)
-                                    }}
-                                </td>
-                                <td class="p-2">
-                                    <span
-                                        :class="
-                                            isReady(r)
-                                                ? 'text-emerald-700'
-                                                : 'text-red-600'
-                                        "
-                                        >{{
-                                            r.calculation_status || r.status
-                                        }}</span
+                                <tr
+                                    class="border-t dark:border-gray-700 align-top"
+                                >
+                                    <td class="p-2">
+                                        <input
+                                            type="checkbox"
+                                            :disabled="
+                                                !phase5IsPostingReady(r) ||
+                                                !phase5PreviewComplete
+                                            "
+                                            :value="r.user_id"
+                                            v-model="phase5SelectedIds"
+                                            :aria-label="
+                                                'Select ' +
+                                                (r.employee_code || r.user_id)
+                                            "
+                                        />
+                                    </td>
+                                    <td class="p-2 min-w-0">
+                                        <div class="font-medium break-words">
+                                            {{ r.name || "Employee" }}
+                                        </div>
+                                        <div class="text-gray-500">
+                                            {{ r.employee_code || r.user_id }}
+                                        </div>
+                                        <div class="text-gray-500 break-words">
+                                            {{ r.designation || "—" }}
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="p-2 text-right whitespace-nowrap font-semibold"
                                     >
-                                    <div
-                                        v-if="r.reason"
-                                        class="max-w-xs break-words"
-                                    >
-                                        {{ r.reason }}
-                                    </div>
-                                </td>
-                                <td class="p-2 whitespace-nowrap">
-                                    <a
-                                        :href="
-                                            route(
-                                                'salary-calculator.show',
-                                                r.user_id,
-                                            ) +
-                                            '?salary_year=' +
-                                            store.filters.salaryGenerationYear +
-                                            '&salary_month=' +
-                                            store.filters.monthId
-                                        "
-                                        target="_blank"
-                                        rel="noopener"
-                                        class="text-blue-700 underline"
-                                        >Edit</a
-                                    >
-                                    <button
-                                        type="button"
-                                        @click="recalculatePhase5Row(r)"
-                                        :disabled="phase5PreviewLoading"
-                                        class="ml-2 text-emerald-700 underline"
-                                    >
-                                        Recalculate
-                                    </button>
+                                        {{
+                                            r.net_payable == null
+                                                ? "—"
+                                                : formatMoney(r.net_payable)
+                                        }}
+                                    </td>
+                                    <td class="p-2 min-w-0">
+                                        <span
+                                            :class="
+                                                phase5IsPostingReady(r)
+                                                    ? 'text-emerald-700 dark:text-emerald-400'
+                                                    : 'text-red-700 dark:text-red-400'
+                                            "
+                                            class="font-semibold break-words"
+                                            >{{
+                                                phase5IsPostingReady(r)
+                                                    ? "Ready"
+                                                    : r.workflow_status ===
+                                                        "READY_FOR_GENERATION"
+                                                      ? "Financial review required"
+                                                      : "Approval required"
+                                            }}</span
+                                        >
+                                        <div class="text-gray-500 break-words">
+                                            Workflow:
+                                            {{
+                                                r.workflow_status ||
+                                                "Not initialized"
+                                            }}
+                                        </div>
+                                        <div
+                                            v-if="r.reason"
+                                            class="text-red-700 dark:text-red-300 break-words mt-1"
+                                        >
+                                            {{ r.reason }}
+                                        </div>
+                                        <div
+                                            v-if="r.approval_blocking_reasons"
+                                            class="text-amber-700 dark:text-amber-300 break-words mt-1"
+                                        >
+                                            {{ r.approval_blocking_reasons }}
+                                        </div>
+                                        <div
+                                            v-if="r.approval_error"
+                                            class="text-red-700 dark:text-red-300 break-words mt-1"
+                                        >
+                                            {{ r.approval_error }}
+                                        </div>
+                                        <div
+                                            v-if="
+                                                !phase5IsPostingReady(r) &&
+                                                !r.reason &&
+                                                !r.approval_blocking_reasons &&
+                                                !r.approval_error
+                                            "
+                                            class="text-amber-700 dark:text-amber-300 mt-1"
+                                        >
+                                            {{
+                                                isReady(r)
+                                                    ? "Two-stage salary approval is not complete."
+                                                    : "Calculation preview is incomplete."
+                                            }}
+                                        </div>
+                                    </td>
+                                    <td class="p-2 whitespace-nowrap">
+                                        <button
+                                            type="button"
+                                            @click="
+                                                phase5ExpandedId =
+                                                    phase5ExpandedId ===
+                                                    r.user_id
+                                                        ? null
+                                                        : r.user_id
+                                            "
+                                            class="text-emerald-700 dark:text-emerald-400 underline"
+                                        >
+                                            {{
+                                                phase5ExpandedId === r.user_id
+                                                    ? "Hide"
+                                                    : "View"
+                                            }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr
+                                    v-if="phase5ExpandedId === r.user_id"
+                                    class="bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700"
+                                >
+                                    <td colspan="5" class="p-3">
+                                        <div
+                                            class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-xs"
+                                        >
+                                            <div>
+                                                Basic:
+                                                <strong>{{
+                                                    r.basic == null
+                                                        ? "—"
+                                                        : formatMoney(r.basic)
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Gross:
+                                                <strong>{{
+                                                    r.regular_gross == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.regular_gross,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Regular deduction:
+                                                <strong>{{
+                                                    r.regular_deductions == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.regular_deductions,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Regular net:
+                                                <strong>{{
+                                                    r.regular_net == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.regular_net,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Arrear (+):
+                                                <strong>{{
+                                                    r.arrear_payable == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.arrear_payable,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Arrear (−):
+                                                <strong>{{
+                                                    r.arrear_deductions == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.arrear_deductions,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Arrear net:
+                                                <strong>{{
+                                                    r.arrear_net == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.arrear_net,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                            <div>
+                                                Total net:
+                                                <strong>{{
+                                                    r.net_payable == null
+                                                        ? "—"
+                                                        : formatMoney(
+                                                              r.net_payable,
+                                                          )
+                                                }}</strong>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-wrap gap-4 mt-3">
+                                            <a
+                                                :href="
+                                                    route(
+                                                        'salary-calculator.show',
+                                                        r.user_id,
+                                                    ) +
+                                                    '?salary_year=' +
+                                                    store.filters
+                                                        .salaryGenerationYear +
+                                                    '&salary_month=' +
+                                                    store.filters.monthId
+                                                "
+                                                target="_blank"
+                                                rel="noopener"
+                                                class="text-blue-700 dark:text-blue-300 underline"
+                                                >Review calculation</a
+                                            >
+                                            <button
+                                                type="button"
+                                                @click="recalculatePhase5Row(r)"
+                                                :disabled="phase5PreviewLoading"
+                                                class="text-emerald-700 dark:text-emerald-300 underline disabled:opacity-50"
+                                            >
+                                                Refresh this employee
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr v-if="!phase5VisibleRows.length">
+                                <td
+                                    colspan="5"
+                                    class="p-5 text-center text-gray-500"
+                                >
+                                    {{
+                                        phase5PreviewLoading
+                                            ? "Loading salary previews…"
+                                            : "No employees match this view."
+                                    }}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="flex gap-2 justify-end">
-                    <button
-                        type="button"
-                        @click="phase5PreviewOpen = false"
-                        class="px-4 py-2 border rounded"
+                <div
+                    class="flex flex-wrap gap-2 items-center justify-between text-sm"
+                >
+                    <span
+                        >{{ phase5SelectedIds.length }} selected · Net ৳{{
+                            formatMoney(phase5PreviewTotals)
+                        }}</span
                     >
-                        Close
-                    </button>
                     <button
                         type="button"
                         :disabled="
                             !phase5PreviewComplete ||
-                            phase5SelectedIds.length === 0 ||
+                            !phase5SelectedIds.length ||
                             store.bulkGenerating
                         "
                         @click="generatePhase5Selected"
-                        class="px-4 py-2 text-white bg-emerald-700 rounded disabled:opacity-50"
+                        class="px-4 py-2 text-white bg-emerald-700 rounded-lg disabled:opacity-50"
                     >
-                        Generate Selected ({{ phase5SelectedIds.length }})
+                        Generate approved ({{ phase5SelectedIds.length }})
                     </button>
                 </div>
             </div>

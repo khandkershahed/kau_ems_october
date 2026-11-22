@@ -86,6 +86,13 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 gross: { min: 0, max: 0, available: 0 },
                 net: { min: 0, max: 0, available: 0 },
             },
+            reportDiagnostics: {
+                matching_employees: 0,
+                report_ready_employees: 0,
+                excluded_employees: 0,
+                filtered_by_amount: 0,
+            },
+            excludedRecords: [],
             loading: false,
             exportingExcel: false,
             generatingPdf: false,
@@ -310,6 +317,13 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 if (response.data.amount_ranges) {
                     this.amountRanges = response.data.amount_ranges;
                 }
+                this.reportDiagnostics = {
+                    matching_employees: response.data.matching_employees ?? records.length,
+                    report_ready_employees: response.data.report_ready_employees ?? records.length,
+                    excluded_employees: response.data.excluded_employees ?? 0,
+                    filtered_by_amount: response.data.filtered_by_amount ?? 0,
+                };
+                this.excludedRecords = response.data.exclusions || [];
             } catch (error) {
                 console.error('Failed to fetch salary report data:', error);
                 this.reports = {
@@ -319,6 +333,13 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                     total: 0,
                     per_page: 15,
                 };
+                this.reportDiagnostics = {
+                    matching_employees: 0,
+                    report_ready_employees: 0,
+                    excluded_employees: 0,
+                    filtered_by_amount: 0,
+                };
+                this.excludedRecords = [];
             } finally {
                 this.loading = false;
             }
@@ -346,6 +367,16 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 });
 
                 const records = response.data.data || [];
+                if (records.length !== response.data.total) {
+                    throw new Error('Incomplete report response: received rows differ from report-ready count.');
+                }
+                this.reportDiagnostics = {
+                    matching_employees: response.data.matching_employees ?? records.length,
+                    report_ready_employees: response.data.report_ready_employees ?? records.length,
+                    excluded_employees: response.data.excluded_employees ?? 0,
+                    filtered_by_amount: response.data.filtered_by_amount ?? 0,
+                };
+                this.excludedRecords = response.data.exclusions || [];
                 this.allFilteredRecords = records;
                 records.forEach(r => {
                     this.recordsCache[r.user_id] = r;
@@ -353,6 +384,10 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 return records;
             } catch (e) {
                 console.error('Failed to fetch all report records:', e);
+                this.allFilteredRecords = [];
+                if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(this.reportType)) {
+                    throw e; // Never silently export one page as the complete bank schedule.
+                }
                 return this.reports.data;
             }
         },
@@ -403,6 +438,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
             this.selectedUserIds = [];
             this.recordsCache = {};
             this.allFilteredRecords = [];
+            this.excludedRecords = [];
             return this.fetchReportData(1);
         },
 
@@ -461,9 +497,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
             // (Excel export logic remains identical)
             this.exportingExcel = true;
             try {
-                const records = (customRecords && customRecords.length > 0)
-                    ? customRecords
-                    : await this.fetchAllRecords();
+                const records = customRecords !== null ? customRecords : await this.fetchAllRecords();
                 const monthYearStr = this.formattedMonthYear;
 
                 if (this.reportType === 'Salary Summary') {
@@ -486,17 +520,25 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                 if (headerConfig?.date) {
                     headerRows.push([`Date: ${headerConfig.date}`]);
                 }
+                if (this.reportType === 'Provisional Bank Advice') {
+                    headerRows.push(['PROVISIONAL - NOT FOR BANK PAYMENT (saved calculator snapshots only)']);
+                    headerRows.push([`Matching: ${this.reportDiagnostics.matching_employees}; Report-ready: ${this.reportDiagnostics.report_ready_employees}; Excluded: ${this.reportDiagnostics.excluded_employees}`]);
+                }
                 headerRows.push([]); // blank line
 
                 let dataTable = [];
                 let totalRow = [];
 
                 if (['Bank Advice', 'Provisional Bank Advice', 'Bonus Bank Advice'].includes(this.reportType)) {
+                    if (!records.length || records.some(r => r.salary_total === null || r.salary_total === undefined
+                        || r.salary_total === '' || !Number.isFinite(Number(r.salary_total)))) {
+                        throw new Error('Bank Advice export requires at least one row with verified salary amounts.');
+                    }
                     dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Bank A/C No', 'Bank Address', 'Amount (Taka)']);
-                    let sum = 0;
+                    let sumPaisa = 0;
                     records.forEach((r, idx) => {
-                        const amt = Number(r.salary_total) || 0;
-                        sum += amt;
+                        const amt = Number(r.salary_total);
+                        sumPaisa += Math.round(amt * 100);
                         dataTable.push([
                             idx + 1,
                             r.employee_code,
@@ -508,7 +550,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                             amt,
                         ]);
                     });
-                    totalRow = ['', '', '', '', '', '', 'Sub Total', sum];
+                    totalRow = ['', '', '', '', '', '', 'Sub Total', sumPaisa / 100];
                 } else if (this.reportType === 'Earn Deduction') {
                     dataTable.push(['SL #', 'ID #', 'Name', 'Designation', 'Department', 'Basic Pay', 'Total Allowance', 'Tax Deduction', 'GPF Deduction', 'Total Deduction', 'Net Payable']);
                     let sumBasic = 0, sumAllow = 0, sumTax = 0, sumGpf = 0, sumDeduct = 0, sumNet = 0;
@@ -599,9 +641,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
         async generatePdf({ records: customRecords = null, isPrint = false, rowsPerPage: customRowsPerPage = 25, headerConfig = null } = {}) {
             this.generatingPdf = true;
             try {
-                const records = (customRecords && customRecords.length > 0)
-                    ? customRecords
-                    : await this.fetchAllRecords();
+                const records = customRecords !== null ? customRecords : await this.fetchAllRecords();
                 const monthYearStr = this.formattedMonthYear;
 
                 if (this.reportType === 'Salary Summary') {
@@ -677,6 +717,13 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                         // } else {
                             currentY = 16;
                         // }
+                        if (provisionalAdvice) {
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(8);
+                            doc.setTextColor(153, 27, 27);
+                            doc.text('PROVISIONAL - NOT FOR BANK PAYMENT', pageWidth / 2, currentY + 11, { align: 'center' });
+                            doc.setTextColor(15, 23, 42);
+                        }
 
                         // 2. Header and Logo implementation
                         if (logoBase64) {
@@ -735,7 +782,7 @@ export const useSalaryReportStore = defineStore('salaryReport', {
                             body,
                             foot,
                             showFoot: 'lastPage',
-                            startY: currentY + 12,
+                            startY: currentY + (provisionalAdvice ? 17 : 12),
                             margin: { left: 14, right: 14, bottom: 42 },
                             tableWidth: pageWidth - 28,
                             theme: 'grid',

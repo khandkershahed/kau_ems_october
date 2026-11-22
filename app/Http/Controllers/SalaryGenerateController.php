@@ -686,6 +686,11 @@ class SalaryGenerateController extends Controller
         if (count($ids)>1000) return response()->json(['message'=>'More than 1000 employees match; narrow filters.'],422);
         $requested = isset($data['preview_ids']) ? array_map('intval',$data['preview_ids']) : array_slice($ids,0,25);
         $eligible=array_fill_keys($ids,true);
+        $workflowStates=\Illuminate\Support\Facades\DB::table('salary_monthly_workflows')
+            ->where('salary_year',$year)->where('salary_month',$month)
+            ->whereIn('user_id',$requested)
+            ->get(['user_id','workflow_status','blocking_reasons','posting_error'])
+            ->keyBy('user_id');
         $preview=[];
         $posting=app(\App\Services\SalaryBillPostingService::class);
         foreach ($requested as $id) {
@@ -703,6 +708,15 @@ class SalaryGenerateController extends Controller
                 $preview[]=\App\Services\SalaryBulkPreviewPresenter::failure($id,'Unexpected financial preview error; inspect Laravel logs.');
             }
         }
+        foreach ($preview as &$row) {
+            $workflow = $workflowStates->get((int) ($row['user_id'] ?? 0));
+            $reasons = json_decode((string) ($workflow?->blocking_reasons ?? '[]'), true);
+            $row['workflow_status'] = (string) ($workflow?->workflow_status ?? 'NOT_INITIALIZED');
+            $row['approval_blocking_reasons'] = is_array($reasons)
+                ? implode(' | ', array_map('strval', $reasons)) : '';
+            $row['approval_error'] = (string) ($workflow?->posting_error ?? '');
+        }
+        unset($row);
         return response()->json(['user_ids'=>$ids,'total'=>count($ids),
             'already_generated_count'=>$alreadyGenerated,'preview'=>$preview,'preview_count'=>count($preview),
             'preview_truncated'=>count($ids)>count($preview)]);
@@ -978,7 +992,7 @@ class SalaryGenerateController extends Controller
     {
         $query = User::whereHas('roles', function ($q) {
             $q->where('role_name', 'user');
-        })->whereHas('employeeInfo');
+        })->whereHas('employeeInfo')->where('users.isActive', true);
 
         // 1. Exact Employee Code
         if ($request->filled('employeeCode')) {

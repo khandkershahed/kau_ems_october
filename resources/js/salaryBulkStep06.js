@@ -21,7 +21,7 @@ const safeCsvCell = (v) => {
 
 export function previewCsv(rows, exceptionsOnly = false) {
     const columns = ['user_id','employee_code','name','grade','designation','status',
-        'calculation_status','basic','regular_gross','regular_deductions','regular_net',
+        'calculation_status','workflow_status','approval_blocking_reasons','approval_error','basic','regular_gross','regular_deductions','regular_net',
         'arrear_payable','arrear_deductions','arrear_net','net_payable','reason','source_hash'];
     const data = exceptionsOnly ? rows.filter(row => row.status !== 'ready') : rows;
     return [columns.map(safeCsvCell).join(','), ...data.map(row =>

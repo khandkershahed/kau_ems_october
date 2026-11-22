@@ -88,11 +88,11 @@ const totalInWords = computed(() => {
                 </div>
             </div>
 
-            <!-- <div v-if="reportType === 'Provisional Bank Advice'"
+            <div v-if="reportType === 'Provisional Bank Advice'"
                  class="kau-bank-provisional-notice mt-3 mb-3 border border-amber-600 bg-amber-50 px-3 py-2 text-center font-bold text-amber-900">
                 <div>PROVISIONAL — NOT FOR BANK PAYMENT</div>
-                <div class="font-normal">Saved calculator snapshots only. No salary bill has been posted.</div>
-            </div> -->
+                <div class="font-normal">Saved calculator snapshots only. This report does not certify a posted salary bill or bank settlement.</div>
+            </div>
 
             <!-- Graceful empty error notice -->
             <div v-if="records.length === 0" class="my-16 p-8 text-center border-2 border-dashed border-slate-300 rounded-md bg-slate-50">
@@ -106,6 +106,14 @@ const totalInWords = computed(() => {
             <!-- Tabular Schedule -->
             <div v-else class="kau-bank-advice-table mt-4">
                 <table class="w-full border-collapse border border-slate-400 text-[10px]">
+                    <colgroup>
+                        <col style="width: 7%" />
+                        <col style="width: 10%" />
+                        <col style="width: 23%" />
+                        <col style="width: 26%" />
+                        <col style="width: 18%" />
+                        <col style="width: 16%" />
+                    </colgroup>
                     <thead>
                         <tr class="bg-slate-100 text-slate-900 font-bold border-b border-slate-400">
                             <th class="border border-slate-400 px-2 py-1.5 text-center w-10">SL #</th>
@@ -206,7 +214,9 @@ const totalInWords = computed(() => {
 .kau-bank-advice-content { display: block; width: 100%; }
 .kau-bank-advice-table { width: 100%; overflow: visible; }
 .kau-bank-advice-table table { width: 100%; table-layout: fixed; border-collapse: collapse; }
-.kau-bank-advice-table th, .kau-bank-advice-table td { overflow-wrap: anywhere; vertical-align: middle; }
+.kau-bank-advice-table th, .kau-bank-advice-table td { overflow-wrap: normal; word-break: normal; vertical-align: middle; }
+.kau-bank-advice-table td:nth-child(3), .kau-bank-advice-table td:nth-child(4) { white-space: normal; }
+.kau-bank-advice-table td:nth-child(5) { white-space: nowrap; font-size: 9px; }
 .kau-bank-provisional-notice { position: static !important; clear: both; line-height: 1.5; }
 .kau-bank-advice-footer { margin-top: 32px; }
 @media print {

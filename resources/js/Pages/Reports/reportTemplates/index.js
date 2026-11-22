@@ -1,4 +1,5 @@
 import FixationStatement from './FixationStatement.vue';
+import SalaryCertificate from './SalaryCertificate.vue';
 import SalaryBill from './SalaryBill.vue';
 import BankAdvice from './BankAdvice.vue';
 import SalarySummary from './SalarySummary.vue';
@@ -16,6 +17,7 @@ export {
     BonusReport,
     BonusBankAdvice,
     FixationStatement,
+    SalaryCertificate,
 };
 
 /**
@@ -30,6 +32,8 @@ export function getReportTemplate(reportType) {
         case 'Bonus Report':
         case 'Bonus repot':
             return BonusReport;
+        case 'Salary Certificate':
+            return SalaryCertificate;
         case 'Salary Bill':
         case 'Arrear & Deduction Statement':
             return SalaryBill;
