@@ -681,6 +681,12 @@ class EmployeeController extends Controller
                     }
                 }
             }
+            // When saving other profile details, do not silently replace the
+            // employee's linked salary bank with the first legacy account row.
+            $previousBankAccountId = (int) ($user->employeeInfo?->bank_account_id ?? 0);
+            if ($previousBankAccountId > 0 && in_array($previousBankAccountId, $keptBankAccountIds, true)) {
+                $primaryBankAccountId = $previousBankAccountId;
+            }
             if (!$primaryBankAccountId) {
                 $first = $user->bankAccounts()->first();
                 if ($first) {

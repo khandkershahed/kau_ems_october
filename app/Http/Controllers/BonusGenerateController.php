@@ -461,8 +461,17 @@ class BonusGenerateController extends Controller
         $employeeInfo = $calcData['employeeInfo'];
         $targetBonusGroup = $calcData['targetBonusGroup'];
 
-        $bankAccount = $user->bankAccounts->where('isSalaryAccount', true)->first() 
-            ?? $user->bankAccounts->first();
+        $bankSelection = \App\Services\SalaryBankAccountResolver::resolve(
+            (int) $user->id,
+            $employeeInfo?->bank_account_id === null ? null : (int) $employeeInfo->bank_account_id,
+            $user->bankAccounts->all()
+        );
+        if (!empty($bankSelection['errors']) || !$bankSelection['selected_id']) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'bank_account_id' => 'Employee bank account link must be reviewed before bonus generation.',
+            ]);
+        }
+        $bankAccount = $user->bankAccounts->firstWhere('id', $bankSelection['selected_id']);
         $phoneNumber = $user->phoneNumbers->first()?->phoneNumber ?? 'N/A';
         $religionName = $user->religion?->religion ?? 'N/A';
 
@@ -612,8 +621,17 @@ class BonusGenerateController extends Controller
                 $employeeInfo = $calcData['employeeInfo'];
                 $targetBonusGroup = $calcData['targetBonusGroup'];
 
-                $bankAccount = $user->bankAccounts->where('isSalaryAccount', true)->first() 
-                    ?? $user->bankAccounts->first();
+                $bankSelection = \App\Services\SalaryBankAccountResolver::resolve(
+                    (int) $user->id,
+                    $employeeInfo?->bank_account_id === null ? null : (int) $employeeInfo->bank_account_id,
+                    $user->bankAccounts->all()
+                );
+                if (!empty($bankSelection['errors']) || !$bankSelection['selected_id']) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'bank_account_id' => 'Employee bank account link must be reviewed before bonus generation.',
+                    ]);
+                }
+                $bankAccount = $user->bankAccounts->firstWhere('id', $bankSelection['selected_id']);
                 $phoneNumber = $user->phoneNumbers->first()?->phoneNumber ?? 'N/A';
                 $religionName = $user->religion?->religion ?? 'N/A';
 

@@ -21,28 +21,45 @@ const showMoney = (row, column) => rowMoney(row, column).toLocaleString('en-US',
 
 <template>
     <article class="kau-salary-certificate" v-if="c">
-        <header class="certificate-header">
-            <img src="/logo.png" alt="Khulna Agricultural University" class="certificate-logo" />
-            <div class="certificate-institution">
-                <strong>Khulna Agricultural University</strong>
-                <span>Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000</span>
-            </div>
-        </header>
+        <!-- 1. Header Table (Bulletproof for PDF) -->
+        <table style="width: 100%; border-collapse: collapse; border: none; margin: 0; padding: 0;">
+            <tbody>
+                <tr>
+                    <td style="width: 22mm; border: none; padding: 0; vertical-align: middle;">
+                        <img src="/logo.png" alt="KAU" class="certificate-logo" style="width: 12.5mm; height: 14.5mm; display: block; object-fit: contain;" />
+                    </td>
+                    <td style="border: none; padding: 0; text-align: center; vertical-align: middle;">
+                        <div style="font-size: 14pt; font-weight: bold; line-height: 1.2;">Khulna Agricultural University</div>
+                        <div style="font-size: 10pt; line-height: 1.2; margin-top: 2px;">
+                            Temporary Office: 327, Jessore Road, North Mujgunni, Khalishpur, Khulna-9000
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-        <table class="certificate-metadata"><tbody><tr>
-            <td>
-                <div><b>Name:</b> {{ c.name }}</div>
-                <div><b>Designation:</b> {{ c.designation }}</div>
-                <div><b>Pay Scale:</b> {{ c.pay_scale }}</div>
-                <div><b>Approved Basic:</b> {{ c.approved_basic }}</div>
-            </td>
-            <td>
-                <div><b>Service ID:</b> {{ c.employee_code }}</div>
-                <div><b>Bank A/C:</b> {{ c.bank_account }}</div>
-                <div><b>Month:</b> {{ c.month }}</div>
-                <div><b>Fixation:</b> {{ c.fixation }}</div>
-            </td>
-        </tr></tbody></table>
+        <!-- 2. Physical Spacer (Replaces CSS margins which html2canvas ignores) -->
+        <div style="height: 6mm; font-size: 1pt; line-height: 6mm;">&nbsp;</div>
+
+        <!-- 3. Metadata Table -->
+        <table class="certificate-metadata">
+            <tbody>
+                <tr>
+                    <td>
+                        <div><b>Name:</b> {{ c.name }}</div>
+                        <div><b>Designation:</b> {{ c.designation }}</div>
+                        <div><b>Pay Scale:</b> {{ c.pay_scale }}</div>
+                        <div><b>Approved Basic:</b> {{ c.approved_basic }}</div>
+                    </td>
+                    <td>
+                        <div><b>Service ID:</b> {{ c.employee_code }}</div>
+                        <div><b>Bank A/C:</b> {{ c.bank_account }}</div>
+                        <div><b>Month:</b> {{ c.month }}</div>
+                        <div><b>Fixation:</b> {{ c.fixation }}</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <h2 class="certificate-title">Salary Certificate</h2>
         <div class="certificate-introduction">
@@ -52,6 +69,7 @@ const showMoney = (row, column) => rowMoney(row, column).toLocaleString('en-US',
             Currently, {{ c.possessive }} salary is fixed under <b>{{ c.grade_range }}</b> of the Government National Pay Scale {{ c.pay_scale_year }}. The detailed salary statement, including perquisites and allowances, is presented below:
         </p>
 
+        <!-- 4. Financial Table -->
         <table class="certificate-financial">
             <colgroup><col class="col-serial"/><col class="col-particulars"/><col class="col-amount"/><col class="col-amount"/><col class="col-amount"/></colgroup>
             <tbody>
@@ -72,6 +90,8 @@ const showMoney = (row, column) => rowMoney(row, column).toLocaleString('en-US',
         </table>
         <p class="certificate-words"><b>In words:</b> {{ c.in_words }}.</p>
         <p class="certificate-courtesy">I wish {{ c.object_pronoun }} continued success, good health, and prosperity in {{ c.possessive }} future endeavors.</p>
+
+        <!-- 5. Signatures -->
         <footer class="certificate-signatures">
             <div></div>
             <div></div>
@@ -83,41 +103,48 @@ const showMoney = (row, column) => rowMoney(row, column).toLocaleString('en-US',
 
 <style scoped>
 .kau-salary-certificate {
-    width: 210mm; height: 297mm; min-height: 297mm; max-height: 297mm;
-    padding: 11.1mm 25.4mm 25.4mm;
-    margin: 0 auto; box-sizing: border-box; overflow: hidden;
-    background: #fff !important; color: #000 !important;
-    font-family: 'Times New Roman', Times, serif; font-size: 12pt;
-    position: relative; text-align: left;
-    display: flex; flex-direction: column;
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    padding: 15mm 25.4mm 15mm 25.4mm;
+    margin: 0 auto;
+    box-sizing: border-box;
+    /* REMOVED overflow: hidden, position: relative, and display: flex */
+    background: #fff !important;
+    color: #000 !important;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    text-align: left;
 }
-.certificate-header { position: relative; height: 24mm; text-align: center; }
-.certificate-logo { position: absolute; width: 12.5mm; height: 14.5mm; object-fit: contain; top: -1mm; left: 0; }
-.certificate-institution { display: flex; flex-direction: column; margin-left: 19mm; }
-.certificate-institution strong { font-size: 14pt; }
-.certificate-institution span { font-size: 10pt; white-space: nowrap; }
-.certificate-metadata { border: 1px dashed #ddd; width: 100%; margin-top: 3mm; font-size: 9pt; table-layout: fixed; border-collapse: collapse; }
-.certificate-metadata td { border: 1px dashed #ddd; width: 50%; padding: 2mm 2.5mm; vertical-align: top; line-height: 1.08; }
+
+.certificate-logo {
+    width: 12.5mm; height: 14.5mm; object-fit: contain; display: block;
+}
+
+.certificate-metadata {
+    border: 1px dashed #ddd; width: 100%;
+    margin: 0 0 6mm 0;
+    font-size: 9pt; table-layout: fixed; border-collapse: collapse;
+}
+.certificate-metadata td { border: 1px dashed #ddd; width: 50%; padding: 2mm 2.5mm; vertical-align: top; line-height: 1.2; }
 .certificate-metadata td:last-child { text-align: right; }
-.certificate-title { font-size: 14pt; font-weight: bold; text-align: center; margin: 7mm 0 3.5mm; }
+.certificate-title { font-size: 14pt; font-weight: bold; text-align: center; margin: 0 0 3.5mm 0; }
 .certificate-introduction, .certificate-grade { font-size: 12pt; line-height: 1.2; text-align: justify; margin: 0; }
 .certificate-grade { margin-top: 4mm; margin-bottom: 4mm; }
-.certificate-financial { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 10pt; line-height: 1.08; }
+.certificate-financial { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 10pt; line-height: 1.35; }
 .certificate-financial .col-serial { width: 9%; }
 .certificate-financial .col-particulars { width: 31%; }
 .certificate-financial .col-amount { width: 20%; }
-.certificate-financial th, .certificate-financial td { border: 0.55pt solid #000; padding: 0.45mm 1mm; }
+.certificate-financial th, .certificate-financial td { border: 0.55pt solid #000; padding: 1mm 1mm; line-height: 1.35; vertical-align: middle; }
 .certificate-financial th:nth-child(n+3), .certificate-financial td:nth-child(n+3) { text-align: right; }
 .certificate-financial td:first-child { text-align: center; }
 .certificate-financial .table-head th:first-child, .certificate-financial .table-head th:nth-child(2) { text-align: left; }
-.certificate-financial .section-title th { text-align: left; font-size: 10.5pt; padding: 0.3mm 1mm; }
+.certificate-financial .section-title th { text-align: left; font-size: 10.5pt; padding: 0.8mm 1mm; line-height: 1.35; }
 .certificate-financial .total-row { font-weight: bold; }
 .certificate-words { font-size: 10.5pt; margin: 1mm 0 0; }
 .certificate-courtesy { font-size: 12pt; margin-top: 9mm; }
-.certificate-signatures { margin-top: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-    width: 100%; height: 19mm; flex: 0 0 19mm; }
+.certificate-signatures { margin-top: 15mm; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; height: 19mm; }
 .certificate-signatures > div { border: 1px dashed #ddd; min-width: 0; }
 .certificate-unavailable { padding: 2rem; text-align: center; color: #666; }
-@page { size: A4 portrait; margin: 0; }
-@media print { .kau-salary-certificate { page-break-after: always; break-after: page; } }
 </style>
