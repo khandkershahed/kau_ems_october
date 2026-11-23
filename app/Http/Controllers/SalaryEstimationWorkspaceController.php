@@ -75,6 +75,7 @@ final class SalaryEstimationWorkspaceController extends Controller
             ->groupBy('user_id');
         $query = DB::query()->fromSub($profiles, 'ep')
             ->join('users as u', 'u.id', '=', 'ep.user_id')
+            ->where('u.isActive', 1)
             ->leftJoin('employee_infos as ei', 'ei.id', '=', 'ep.profile_id')
             ->leftJoin('department_offices as dep', 'dep.id', '=', 'ei.department_office_id')
             ->leftJoin('pay_scales as ps', 'ps.id', '=', 'ei.pay_scale_id')

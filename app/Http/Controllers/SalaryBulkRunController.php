@@ -29,8 +29,8 @@ final class SalaryBulkRunController extends Controller
         ]);
         if (!Schema::hasTable('salary_bulk_runs')) return response()->json(['message'=>'Phase 5 migration is required.'],422);
         $ids=array_values(array_unique(array_map('intval',$input['user_ids'])));
-        $existing=User::whereIn('id',$ids)->pluck('id')->map(fn($v)=>(int)$v)->all();
-        if (count($existing)!==count($ids)) return response()->json(['message'=>'An employee selection does not exist.'],422);
+        $existing=User::whereIn('id',$ids)->where('isActive', 1)->pluck('id')->map(fn($v)=>(int)$v)->all();
+        if (count($existing)!==count($ids)) return response()->json(['message'=>'An employee selection is inactive or does not exist.'],422);
         $hashes=$input['preview_hashes'];
         foreach ($ids as $id) {
             $hash=$hashes[$id] ?? null;
@@ -84,6 +84,9 @@ final class SalaryBulkRunController extends Controller
                 $item=DB::table('salary_bulk_run_items')->where('id',$id)->first();
                 $processed++;
                 try {
+                    if (!User::whereKey((int) $item->user_id)->where('isActive', 1)->exists()) {
+                        throw new DomainException('Inactive employee excluded from salary generation.');
+                    }
                     $saved=$service->post((int)$item->user_id,(int)$run->salary_year,(int)$run->salary_month,(int)$run->created_by,null,
                         $item->source_hash ? (string)$item->source_hash : null);
                     DB::table('salary_bulk_run_items')->where('id',$id)->update([

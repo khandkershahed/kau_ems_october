@@ -27,15 +27,18 @@ final class SalaryReadyGenerationWorkspaceController extends Controller
         $status = $data['status'] ?? 'READY_FOR_GENERATION';
         $rows = DB::table('salary_monthly_workflows as w')
             ->join('users as u', 'u.id', '=', 'w.user_id')
+            ->where('u.isActive', 1)
             ->where('w.salary_year', $year)->where('w.salary_month', $month)
             ->where('w.workflow_status', $status)
             ->select('w.user_id', 'u.name', 'w.workflow_status', 'w.revision',
                 'w.posted_salary_generate_id', 'w.posting_error')
             ->orderBy('w.user_id')->paginate(50)->withQueryString();
-        $counts = DB::table('salary_monthly_workflows')
-            ->where('salary_year', $year)->where('salary_month', $month)
-            ->whereIn('workflow_status', ['READY_FOR_GENERATION', 'GENERATED'])
-            ->selectRaw('workflow_status, COUNT(*) as total')->groupBy('workflow_status')
+        $counts = DB::table('salary_monthly_workflows as w')
+            ->join('users as u', 'u.id', '=', 'w.user_id')
+            ->where('u.isActive', 1)
+            ->where('w.salary_year', $year)->where('w.salary_month', $month)
+            ->whereIn('w.workflow_status', ['READY_FOR_GENERATION', 'GENERATED'])
+            ->selectRaw('w.workflow_status, COUNT(*) as total')->groupBy('w.workflow_status')
             ->pluck('total', 'workflow_status');
         return Inertia::render('Salary/Generation/Workspace', compact('rows', 'counts', 'year', 'month', 'status'));
     }
@@ -56,9 +59,12 @@ final class SalaryReadyGenerationWorkspaceController extends Controller
         $year = (int) $data['year']; $month = (int) $data['month'];
         $ids = isset($data['user_ids'])
             ? array_map('intval', $data['user_ids'])
-            : DB::table('salary_monthly_workflows')->where('salary_year', $year)
-                ->where('salary_month', $month)->where('workflow_status', 'READY_FOR_GENERATION')
-                ->orderBy('user_id')->limit(50)->pluck('user_id')->map(fn ($v) => (int) $v)->all();
+            : DB::table('salary_monthly_workflows as w')
+                ->join('users as u', 'u.id', '=', 'w.user_id')
+                ->where('u.isActive', 1)
+                ->where('w.salary_year', $year)
+                ->where('w.salary_month', $month)->where('w.workflow_status', 'READY_FOR_GENERATION')
+                ->orderBy('w.user_id')->limit(50)->pluck('w.user_id')->map(fn ($v) => (int) $v)->all();
         if (!$ids || count($ids) > 50) {
             throw ValidationException::withMessages(['user_ids' => 'Select between 1 and 50 READY employees.']);
         }
@@ -69,8 +75,10 @@ final class SalaryReadyGenerationWorkspaceController extends Controller
             $token = DB::transaction(function () use ($ids, $year, $month, $request, $guard, $posting) {
                 $hashes = [];
                 foreach ($ids as $userId) {
-                    $employee = DB::table('users')->where('id', $userId)->lockForUpdate()->first(['id']);
-                    if (!$employee) throw new DomainException('Employee not found: '.$userId);
+                    $employee = DB::table('users')->where('id', $userId)->lockForUpdate()->first(['id', 'isActive']);
+                    if (!$employee || !(bool) $employee->isActive) {
+                        throw new DomainException('Employee missing or inactive: '.$userId);
+                    }
                     $guard->assertReady($userId, $year, $month);
                     // Full arrear-inclusive preview and posting-feasibility checks.
                     $preview = $posting->previewForPosting($userId, $year, $month);

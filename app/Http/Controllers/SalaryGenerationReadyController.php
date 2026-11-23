@@ -17,6 +17,7 @@ final class SalaryGenerationReadyController extends Controller
         $status=$filters['status'] ?? 'READY_FOR_GENERATION';
         $query=DB::table('salary_monthly_workflows as w')
             ->join('users as u','u.id','=','w.user_id')
+            ->where('u.isActive', 1)
             ->where('w.salary_year',$year)->where('w.salary_month',$month)
             ->where('w.workflow_status',$status)
             ->select('w.user_id','u.name','w.salary_year','w.salary_month','w.workflow_status',

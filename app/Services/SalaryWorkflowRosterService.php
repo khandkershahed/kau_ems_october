@@ -17,13 +17,15 @@ final class SalaryWorkflowRosterService
         if ($userIds !== null && (count($userIds) > 1000 || count($userIds) !== count(array_unique($userIds)))) {
             throw new DomainException('Select at most 1000 distinct employees.');
         }
-        $users = DB::table('employee_infos')->select('user_id')->distinct()->orderBy('user_id');
+        $users = DB::table('employee_infos as e')
+            ->join('users as u', 'u.id', '=', 'e.user_id')
+            ->where('u.isActive', 1)->select('e.user_id')->distinct()->orderBy('e.user_id');
         if ($userIds !== null) {
             if (!$userIds) return ['examined' => 0, 'initialized' => 0, 'existing' => 0, 'ambiguous' => 0, 'posted' => 0, 'blocked' => 0];
             foreach ($userIds as $id) if (!is_int($id) || $id < 1) throw new DomainException('Invalid employee identifier.');
-            $users->whereIn('user_id', $userIds);
+            $users->whereIn('e.user_id', $userIds);
         }
-        $ids = $users->limit($limit)->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+        $ids = $users->limit($limit)->pluck('e.user_id')->map(fn ($id) => (int) $id)->all();
         $stats = ['examined' => 0, 'initialized' => 0, 'existing' => 0, 'ambiguous' => 0, 'posted' => 0, 'blocked' => 0];
         foreach ($ids as $userId) {
             DB::transaction(function () use ($userId, $year, $month, &$stats): void {

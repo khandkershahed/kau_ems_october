@@ -910,7 +910,7 @@ class BonusGenerateController extends Controller
     {
         $query = User::whereHas('roles', function ($q) {
             $q->where('role_name', 'user');
-        })->whereHas('employeeInfo');
+        })->whereHas('employeeInfo')->where('users.isActive', true);
 
         // 1. Exact Employee Code
         if ($request->filled('employeeCode')) {

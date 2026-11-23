@@ -37,6 +37,9 @@ final class SalaryBulkCalculationPersistenceController extends Controller
                     throw new DomainException('Multiple profiles for this user require reconciliation.');
                 }
                 $user=User::findOrFail($userId);
+                if (!(bool) $user->isActive) {
+                    throw new DomainException('Inactive employee is excluded from salary calculation workflows.');
+                }
                 // Roster initialization only; NEVER modifies source salary/ledger.
                 $roster->reconcile($year,$month,[$userId],1);
                 $workflow=DB::table('salary_monthly_workflows')->where('user_id',$userId)

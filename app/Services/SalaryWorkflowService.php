@@ -28,6 +28,9 @@ final class SalaryWorkflowService
             throw new DomainException('Audit reason is required.');
         }
         return DB::transaction(function () use ($userId, $year, $month, $action, $actorId, $reason, $calculationVersionId, $postedBillId, $postingError, $expectedRevision) {
+            if (!DB::table('users')->where('id', $userId)->where('isActive', 1)->exists()) {
+                throw new DomainException('Inactive employee is excluded from operational salary workflows.');
+            }
             $row = DB::table('salary_monthly_workflows')->where('user_id', $userId)
                 ->where('salary_year', $year)->where('salary_month', $month)
                 ->lockForUpdate()->first();

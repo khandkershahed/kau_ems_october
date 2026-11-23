@@ -27,9 +27,11 @@ final class SalaryEstimationBulkOperatorController extends Controller
             return response()->json(['message'=>'Payroll workflow migrations are required.'],409);
         }
         $cursor=(int)($d['cursor']??0); $size=(int)($d['batch_size']??10);
-        $profiles=DB::table('employee_infos')->select('user_id')
-            ->selectRaw('MIN(employeeCode) AS code, COUNT(*) AS profiles')
-            ->groupBy('user_id');
+        $profiles=DB::table('employee_infos as e')
+            ->join('users as u', 'u.id', '=', 'e.user_id')
+            ->where('u.isActive', 1)->select('e.user_id')
+            ->selectRaw('MIN(e.employeeCode) AS code, COUNT(*) AS profiles')
+            ->groupBy('e.user_id');
         $candidates=DB::query()->fromSub($profiles,'p')
             ->leftJoin('salary_monthly_workflows as w',function($j){
                 $j->on('w.user_id','=','p.user_id')->where('w.salary_year','=',2026)->where('w.salary_month','=',10);
