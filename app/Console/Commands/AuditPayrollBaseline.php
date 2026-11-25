@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
 final class AuditPayrollBaseline extends Command
 {
     protected $signature = 'kau:audit-payroll-baseline
-        {--output= : Absolute path of the CSV file to write (required)}';
+        {--output= : Absolute path of the CSV file to write (defaults to storage/app/audit/payroll_baseline_audit.csv)}';
 
     protected $description = 'Read-only baseline audit of employee payroll configuration (writes a CSV only)';
 
@@ -22,15 +22,39 @@ final class AuditPayrollBaseline extends Command
         'missing_component_names', 'special_benefit_eligible', 'expected_sb_rate', 'gpf_eligible',
         'revenue_stamp_count', 'flags'];
 
-    /** Policy evidence in review.md item 10: Special Benefit is 15% of Basic. Not an approved rule. */
-    private const EXPECTED_SB_RATE = '15';
+    /**
+     * Verified Special Benefit policy rate:
+     * - 2026 PayScale => 0
+     * - 2015 PayScale & Grade 1-9 => 10
+     * - 2015 PayScale & Grade 10-20 => 15
+     */
+    public static function resolveExpectedSbRate(?string $scaleName, ?string $gradeName): ?int
+    {
+        if ($scaleName === null || $scaleName === '') {
+            return null;
+        }
+        if (str_contains($scaleName, '2026')) {
+            return 0;
+        }
+        if (str_contains($scaleName, '2015')) {
+            if ($gradeName !== null && preg_match('/\b(\d{1,2})\b/', $gradeName, $m)) {
+                $grade = (int) $m[1];
+                if ($grade >= 1 && $grade <= 9) {
+                    return 10;
+                }
+                if ($grade >= 10 && $grade <= 20) {
+                    return 15;
+                }
+            }
+        }
+        return null;
+    }
 
     public function handle(): int
     {
         $output = (string) $this->option('output');
         if ($output === '') {
-            $this->error('--output="<absolute csv path>" is required.');
-            return self::FAILURE;
+            $output = storage_path('app/audit/payroll_baseline_audit.csv');
         }
         foreach (['users', 'employee_infos', 'user_user_categories', 'salary_generates', 'payroll_component_types'] as $table) {
             if (!Schema::hasTable($table)) {
@@ -57,8 +81,16 @@ final class AuditPayrollBaseline extends Command
         foreach (DB::table('joining_dates')->orderBy('id')->get(['user_id', 'joining_date']) as $row) {
             $joiningByUser[$row->user_id] ??= $row->joining_date;
         }
-        $grades = DB::table('payroll_groups as pg')->join('grades as g', 'g.id', '=', 'pg.grade_id')
-            ->pluck('g.grade_name', 'pg.id')->all();
+        $payScales = Schema::hasTable('pay_scales')
+            ? DB::table('pay_scales')->pluck('scale_name', 'id')->all()
+            : [];
+        $grades = [];
+        $gradePayScaleIds = [];
+        foreach (DB::table('payroll_groups as pg')->join('grades as g', 'g.id', '=', 'pg.grade_id')
+            ->get(['pg.id', 'g.grade_name', 'g.pay_scale_id']) as $gRow) {
+            $grades[$gRow->id] = $gRow->grade_name;
+            $gradePayScaleIds[$gRow->id] = $gRow->pay_scale_id;
+        }
         $octBills = [];
         foreach (DB::table('salary_generates')->where('salaryGenerationYear', 2026)->where('monthId', 10)
             ->orderBy('id')->get(['user_id', 'salaryAllowanceCalcObject', 'salaryDeductionCalcObject']) as $bill) {
@@ -121,12 +153,19 @@ final class AuditPayrollBaseline extends Command
                 $flags[] = sprintf('TAX_REVIEW_10028(profile=%.2f;oct=%.2f)', $tax, $octTax);
             }
 
+            $gradeName = $grades[$p->payroll_group_id] ?? '';
+            $scaleId = $p->pay_scale_id ?? ($gradePayScaleIds[$p->payroll_group_id] ?? null);
+            $scaleName = $scaleId !== null ? ($payScales[$scaleId] ?? null) : null;
+            $expectedSbRate = self::resolveExpectedSbRate($scaleName, $gradeName);
+
             $sb = array_values(array_filter(array_merge($addRows, $octAdds),
                 fn ($r) => preg_match('/special\s*benefit/i', $r['name']) && !preg_match('/recovery/i', $r['name'])));
             $sbEligible = $sb !== [];
-            if ($sbEligible && $octBasic > 0) {
+            if ($sbEligible && $octBasic > 0 && $expectedSbRate !== null) {
                 $octSb = array_values(array_filter($octAdds, fn ($r) => preg_match('/special\s*benefit/i', $r['name']) && !preg_match('/recovery/i', $r['name'])));
-                if ($octSb && abs($octSb[0]['amount'] / $octBasic * 100 - (float) self::EXPECTED_SB_RATE) > 0.01) $flags[] = 'SB_OCT_NOT_15PCT';
+                if ($octSb && abs($octSb[0]['amount'] / $octBasic * 100 - (float) $expectedSbRate) > 0.01) {
+                    $flags[] = 'SB_OCT_RATE_MISMATCH';
+                }
             }
 
             $gpfConfigured = count(array_filter($dedRows, fn ($r) => preg_match('/gpf|provident/i', $r['name']))) > 0;
@@ -135,12 +174,12 @@ final class AuditPayrollBaseline extends Command
             $joining = $joiningById[$p->joining_date_id] ?? $joiningByUser[$p->user_id] ?? '';
             fputcsv($handle, [
                 $p->employeeCode, $p->user_id, $user->name ?? '', $category ? 'yes' : 'no',
-                $active === null ? '' : $active, $joining, $p->jobStatus, $grades[$p->payroll_group_id] ?? '',
+                $active === null ? '' : $active, $joining, $p->jobStatus, $gradeName,
                 (int) $p->holdIncrement, $profileBasic !== null ? 'profile_json' : 'unresolved',
                 $octBasic !== null ? number_format($octBasic, 2, '.', '') : '',
                 $profileBasic !== null ? number_format($profileBasic, 2, '.', '') : '',
                 $jsonStatus, implode('; ', $missing), $sbEligible ? 'yes' : 'no',
-                $sbEligible ? self::EXPECTED_SB_RATE : '', $gpfConfigured ? 'yes' : 'no',
+                $expectedSbRate !== null ? (string) $expectedSbRate : '', $gpfConfigured ? 'yes' : 'no',
                 $stamps, implode('|', $flags),
             ]);
             $summary['rows']++;
