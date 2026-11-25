@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, nextTick } from "vue";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { createSalaryCertificatesPdf } from "@/Pages/Reports/reportTemplates/SalaryCertificatePdf";
+import { createHorizontalBillPdf } from "@/Pages/Reports/reportTemplates/HorizontalBillPdf";
 import * as XLSX from "xlsx";
 import { Head } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
@@ -865,7 +866,7 @@ async function exportOfficialExcel() {
 }
 
 // Horizontal layout for the same server-side records used by Report Factory PDF.
-// The backend returns these records in its verified dynamic category/grade order.
+// Uses separate individual component columns and exact 2-decimal precision (#,##0.00).
 async function exportHorizontalOfficialExcel() {
     try {
         const response = await fetch(officialReportUrl("bulk", "json"), {
@@ -877,135 +878,128 @@ async function exportHorizontalOfficialExcel() {
         const payload = await response.json();
         if (!Array.isArray(payload.records) || !payload.records.length)
             throw new Error("No horizontal report records.");
-        const codes = [
-            "BASIC_ARREAR_GROSS",
-            "BASIC_INCREMENT_ADJUSTMENT",
-            "SPECIAL_BENEFIT_RECOVERY",
-            "HOUSE_RENT_RECOVERY",
-            "ADDITIONAL_GPF",
-        ];
+
+        const activeColumns =
+            Array.isArray(payload.horizontal_columns) &&
+            payload.horizontal_columns.length
+                ? payload.horizontal_columns
+                : [
+                      { key: "basic", label: "Basic" },
+                      { key: "hra", label: "HRA" },
+                      { key: "medical", label: "MA" },
+                      { key: "special_benefit", label: "S. Benefit" },
+                      { key: "education", label: "Edu" },
+                      { key: "gross", label: "Gross" },
+                      { key: "gpf", label: "GPF" },
+                      { key: "income_tax", label: "Income Tax" },
+                      { key: "revenue_stamp", label: "Rev. Stamp" },
+                      { key: "total_deduction", label: "Tot. Ded." },
+                      { key: "net_arrear", label: "Net Arrear" },
+                      { key: "net_payable", label: "Net Payable" },
+                  ];
+
         const headers = [
             "SL",
             "ID",
             "Name",
             "Designation",
             "Grade",
-            "Basic",
-            "HRA",
-            "MA",
-            "S Benefit",
-            "Edu",
-            "Other A",
-            "Reg Gross",
-            "GPF",
-            "Income T",
-            "Other D",
-            "Reg Ded",
-            "Basic Arrear",
-            "Basic Adj.",
-            "SB Recovery",
-            "HRA Recovery",
-            "Addl. GPF",
-            "Net",
+            ...activeColumns.map((c) => c.label),
             "Source",
             "Signature",
         ];
-        const money = (v) =>
-            v === null || v === undefined || v === "" ? "N/R" : Number(v);
-        const groupedAmount = (items, pattern) => {
-            const matched = (items || []).filter((x) =>
-                pattern.test(String(x.title || "")),
-            );
-            if (!matched.length) return 0;
-            return matched.some(
-                (x) => x.current === null || x.current === undefined,
-            )
-                ? "N/R"
-                : matched.reduce((total, x) => total + Number(x.current), 0);
+
+        const moneyNum = (v) => {
+            if (v === null || v === undefined || v === "") return "N/R";
+            const n = Number(v);
+            return Number.isFinite(n) ? Math.round(n * 100) / 100 : "N/R";
         };
-        const numericSum = (values) =>
-            values.some((x) => typeof x !== "number" || !Number.isFinite(x))
-                ? "N/R"
-                : Math.round(values.reduce((a, b) => a + b, 0) * 100) / 100;
+
         const body = payload.records.map((r, i) => {
-            const additions = r.allowances || [];
-            const deductions = r.deductions || [];
-            const known = (x) =>
-                /\bbasic(?:\s+pay|\s+salary)?\b/i.test(String(x.title || ""));
-            const hra = groupedAmount(additions, /house\s*rent|\bhra\b/i);
-            const medical = groupedAmount(additions, /medical/i);
-            const benefit = groupedAmount(additions, /special benefit/i);
-            const education = groupedAmount(additions, /education/i);
-            const otherLines = additions.filter(
-                (x) =>
-                    !known(x) &&
-                    !/house\s*rent|\bhra\b|medical|special benefit|education/i.test(
-                        String(x.title || ""),
-                    ),
-            );
-            const other = numericSum(otherLines.map((x) => money(x.current)));
-            const gpf = groupedAmount(deductions, /\bgpf\b|provident fund/i);
-            const tax = groupedAmount(deductions, /income\s*tax|\btax\b/i);
-            const otherD = numericSum(
-                deductions
-                    .filter(
-                        (x) =>
-                            !/\bgpf\b|provident fund|income\s*tax|\btax\b/i.test(
-                                String(x.title || ""),
-                            ),
-                    )
-                    .map((x) => money(x.current)),
-            );
-            const arrears = codes.map((code) => {
-                const items = (r.arrear_rows || []).filter(
-                    (x) => String(x.code || "").toUpperCase() === code,
-                );
-                return items.length
-                    ? numericSum(
-                          items.map((x) => money(x.final_amount ?? x.total)),
-                      )
-                    : "N/R";
-            });
+            const hCols = r.horizontal_columns || {};
             return [
                 i + 1,
                 String(r.employee_code),
                 r.name,
                 r.designation,
                 r.grade,
-                money(r.basic),
-                hra,
-                medical,
-                benefit,
-                education,
-                other,
-                money(r.current_gross),
-                gpf,
-                tax,
-                otherD,
-                money(r.current_deductions),
-                ...arrears,
-                money(r.net),
+                ...activeColumns.map((col) => moneyNum(hCols[col.key])),
                 r.source,
                 "",
             ];
         });
-        const totals = headers.map((_, col) =>
-            col >= 5 && col <= 21
-                ? numericSum(body.map((row) => row[col]))
-                : "",
-        );
-        totals[2] = `GRAND TOTAL (${body.length} employees)`;
+
+        const serverTotals = payload.horizontal_totals || {};
+        const totalsRow = [
+            "",
+            "",
+            `GRAND TOTAL (${body.length} employees)`,
+            "",
+            "",
+            ...activeColumns.map((col) => moneyNum(serverTotals[col.key])),
+            "",
+            "",
+        ];
+
         const workbook = XLSX.utils.book_new();
-        const sheet = XLSX.utils.aoa_to_sheet([headers, ...body, totals]);
+        const sheet = XLSX.utils.aoa_to_sheet([headers, ...body, totalsRow]);
+
+        // Enforce exact 2-decimal display format (#,##0.00) on all monetary cells & grand totals.
+        const firstMoneyCol = 5;
+        const lastMoneyCol = firstMoneyCol + activeColumns.length - 1;
+        for (let rowIdx = 1; rowIdx <= body.length + 1; rowIdx++) {
+            for (let colIdx = firstMoneyCol; colIdx <= lastMoneyCol; colIdx++) {
+                const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
+                const cell = sheet[cellRef];
+                if (cell && typeof cell.v === "number") {
+                    cell.t = "n";
+                    cell.z = "#,##0.00";
+                }
+            }
+        }
+
         sheet["!cols"] = headers.map((_, i) => ({
-            wch: i === 2 ? 35 : i === 3 ? 32 : 17,
+            wch: i === 2 ? 32 : i === 3 ? 28 : i === 0 ? 6 : 14,
         }));
-        sheet["!autofilter"] = { ref: `A1:X${body.length + 1}` };
+        const lastColLetter = XLSX.utils.encode_col(headers.length - 1);
+        sheet["!autofilter"] = { ref: `A1:${lastColLetter}${body.length + 1}` };
         XLSX.utils.book_append_sheet(workbook, sheet, "Horizontal Bill");
         XLSX.writeFile(
             workbook,
             `KAU_Horizontal_Bill_${store.filters.salaryGenerationYear}_${store.filters.monthId}.xlsx`,
         );
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+    }
+}
+
+async function exportHorizontalOfficialPdf(isPrint = false) {
+    try {
+        const response = await fetch(officialReportUrl("bulk", "json"), {
+            credentials: "same-origin",
+            headers: { Accept: "application/json" },
+        });
+        if (!response.ok)
+            throw new Error(`Horizontal PDF source failed (${response.status}).`);
+        const payload = await response.json();
+        if (!Array.isArray(payload.records) || !payload.records.length)
+            throw new Error("No horizontal report records.");
+
+        await createHorizontalBillPdf({
+            records: payload.records,
+            columns: payload.horizontal_columns || [],
+            totals: payload.horizontal_totals || {},
+            year: store.filters.salaryGenerationYear,
+            month: store.filters.monthId,
+            headerConfig: {
+                title: headerConfig.value.title,
+                address: headerConfig.value.address,
+                subtitle: effectiveHeaderSubtitle.value,
+            },
+            rowsPerPage: officialRowsPerPage.value,
+            isPrint,
+        });
     } catch (error) {
         console.error(error);
         alert(error.message);
@@ -2741,7 +2735,7 @@ const handlePrintPdf = () => {
                                 <button
                                     type="button"
                                     :disabled="!selectedRecords.length"
-                                    @click="openOfficialReport('bulk', true)"
+                                    @click="exportHorizontalOfficialPdf(false)"
                                     class="px-3 py-1.5 text-xs text-white bg-rose-700 hover:bg-rose-800 rounded disabled:opacity-40"
                                 >
                                     Bulk PDF

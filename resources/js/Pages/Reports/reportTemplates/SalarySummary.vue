@@ -116,7 +116,11 @@ const totals = computed(() => {
                         </div>
                         <div class="flex">
                             <span class="w-28 font-bold text-slate-800">Employees</span>
-                            <span class="text-slate-800">: <strong class="text-emerald-700 font-bold">{{ totals.totalEmployees }}</strong> Employee(s) Selected</span>
+                            <span class="text-slate-800">: <strong class="text-emerald-700 font-bold">{{ totals.totalEmployees }}</strong> Selected (<strong class="font-bold">{{ totals.payableBillCount }}</strong> Payable)</span>
+                        </div>
+                        <div class="flex">
+                            <span class="w-28 font-bold text-slate-800">Revenue Stamp</span>
+                            <span class="text-slate-800">: <strong :class="totals.revenueStampMismatch ? 'text-rose-700' : 'text-emerald-700'">{{ totals.revenueStampCount }}</strong> stamp(s) = Tk. {{ formatMoney(totals.revenueStampTotal) }}</span>
                         </div>
                     </div>
 
@@ -169,8 +173,8 @@ const totals = computed(() => {
                             <tr class="bg-slate-50 font-bold border-t-2 border-slate-400 text-slate-900">
                                 <td class="border border-slate-300 px-2 py-1 text-center"></td>
                                 <td class="border border-slate-300 px-2 py-1 text-left uppercase text-[9.5px] tracking-wider">Gross Salary / Total Allowances</td>
-                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.grossAllowance) }}</td>
-                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">0.00</td>
+                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.totalAllowanceCurrent) }}</td>
+                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.totalAllowanceArrear) }}</td>
                                 <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.grossAllowance) }}</td>
                             </tr>
                         </tfoot>
@@ -213,8 +217,8 @@ const totals = computed(() => {
                             <tr class="bg-slate-50 font-bold border-t-2 border-slate-400 text-slate-900">
                                 <td class="border border-slate-300 px-2 py-1 text-center"></td>
                                 <td class="border border-slate-300 px-2 py-1 text-left uppercase text-[9.5px] tracking-wider">Total Deductions</td>
-                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.totalDeductions) }}</td>
-                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">0.00</td>
+                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.totalDeductionCurrent) }}</td>
+                                <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.totalDeductionArrear) }}</td>
                                 <td class="border border-slate-300 px-2 py-1 text-right tabular-nums">{{ formatMoney(totals.totalDeductions) }}</td>
                             </tr>
                         </tfoot>

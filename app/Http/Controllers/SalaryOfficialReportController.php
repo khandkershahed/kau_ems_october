@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\SalaryGenerate;
+use App\Services\MonthlySalarySetupService;
 use App\Services\SalaryBillCompositionService;
+use App\Services\SalaryGenerationGuards;
 use App\Services\SalaryOfficialReportSource;
 use DomainException;
 use Illuminate\Http\Request;
@@ -53,27 +55,103 @@ final class SalaryOfficialReportController extends Controller
             abort(422, 'Single salary bill requires exactly one employee.');
         }
         if (!Schema::hasTable('salary_generates')) abort(503, 'Salary Bill source not installed.');
+        $year = (int) $validated['year'];
+        $month = (int) $validated['month'];
+        $isNov2026Plus = !SalaryGenerationGuards::isMonthLocked($year, $month);
         $bills = SalaryGenerate::query()->with(['user.employeeInfo.departmentOffice'])
             ->whereIn('user_id', $ids)
-            ->where('salaryGenerationYear', (int) $validated['year'])
-            ->where('monthId', (int) $validated['month'])->get()->groupBy('user_id');
+            ->where('salaryGenerationYear', $year)
+            ->where('monthId', $month)->get()->groupBy('user_id');
         $draftPreview = ($validated['mode'] ?? null) === 'preview';
         $rows = [];
         // BUG-002: a preview never lists employees who joined after the salary month ended.
-        $joiningByUser = $draftPreview
+        $joiningByUser = ($draftPreview || $isNov2026Plus) && Schema::hasTable('joining_dates')
             ? \App\Models\JoiningDate::query()->whereIn('user_id', $ids)->orderBy('id')->get()->unique('user_id')->pluck('joining_date', 'user_id')
             : collect();
+
+        $novPreviewSummaries = [];
+        $novProfilesByUser = collect();
+        $novUsersById = collect();
+        if ($isNov2026Plus && $draftPreview) {
+            $ungeneratedIds = [];
+            foreach ($ids as $id) {
+                if (SalaryGenerationGuards::joinedAfterPeriodEnd($joiningByUser->get($id), $year, $month)) {
+                    continue;
+                }
+                $group = $bills->get($id);
+                if (!$group || $group->count() !== 1) {
+                    $ungeneratedIds[] = $id;
+                }
+            }
+            if ($ungeneratedIds !== []) {
+                $novPreviewSummaries = app(MonthlySalarySetupService::class)
+                    ->getSummariesForUsers($ungeneratedIds, $year, $month);
+                $profileRelations = [];
+                if (Schema::hasTable('payroll_groups') && Schema::hasTable('grades')) {
+                    $profileRelations[] = 'payrollGroup.grade';
+                }
+                if (Schema::hasTable('payroll_groups') && Schema::hasTable('payroll_group_types')) {
+                    $profileRelations[] = 'payrollGroup.payrollGroupType';
+                }
+                if (Schema::hasTable('department_offices')) {
+                    $profileRelations[] = 'departmentOffice';
+                }
+                $novProfilesByUser = EmployeeInfo::query()
+                    ->with($profileRelations)
+                    ->whereIn('user_id', $ungeneratedIds)
+                    ->orderBy('id')
+                    ->get()
+                    ->unique('user_id')
+                    ->keyBy('user_id');
+                $novUsersById = User::query()
+                    ->whereIn('id', $ungeneratedIds)
+                    ->get()
+                    ->keyBy('id');
+            }
+        }
+
         foreach ($ids as $id) {
-            if ($draftPreview && \App\Services\SalaryGenerationGuards::joinedAfterPeriodEnd(
-                $joiningByUser->get($id), (int) $validated['year'], (int) $validated['month'])) {
+            if (($draftPreview || $isNov2026Plus) && SalaryGenerationGuards::joinedAfterPeriodEnd(
+                $joiningByUser->get($id), $year, $month)) {
                 continue;
             }
-            // In preview mode the operator explicitly requests the values LAST
+            // November 2026+: read from salary_generates when generated, or
+            // MonthlySalarySetupService in preview mode (never DRAFT_REGULAR_ONLY_PREVIEW).
+            if ($isNov2026Plus) {
+                $group = $bills->get($id);
+                if ($group && $group->count() === 1) {
+                    try {
+                        $rows[] = $source->fromPostedBill($group->first());
+                        continue;
+                    } catch (DomainException $exception) {
+                        Log::warning('Official payroll report source inconsistency', [
+                            'employee_id' => $id, 'year' => $year,
+                            'month' => $month, 'reason' => $exception->getMessage(),
+                        ]);
+                        return $this->reportError('Employee '.$id.' saved bill cannot be reconciled: '.$exception->getMessage());
+                    }
+                }
+                if ($draftPreview) {
+                    if (isset($novPreviewSummaries[$id])) {
+                        $rows[] = $this->monthlySetupRow(
+                            $id,
+                            $year,
+                            $month,
+                            $novPreviewSummaries[$id],
+                            $novProfilesByUser->get($id),
+                            $novUsersById->get($id)
+                        );
+                    }
+                    continue;
+                }
+                return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
+            }
+            // In preview mode (<= 2026-10) the operator explicitly requests the values LAST
             // SAVED in Salary Calculator, even if an older regular-only bill
             // exists. This NEVER mutates or replaces the posted salary bill.
             // An official (non-preview) report still reads posted bills only.
             if ($draftPreview) {
-                $savedRow = $this->savedCalculatorRow($id, (int) $validated['year'], (int) $validated['month']);
+                $savedRow = $this->savedCalculatorRow($id, $year, $month);
                 if (($savedRow['source'] ?? 'NOT_SAVED') !== 'NOT_SAVED') {
                     $rows[] = $savedRow;
                     continue;
@@ -86,8 +164,8 @@ final class SalaryOfficialReportController extends Controller
                     continue;
                 } catch (DomainException $exception) {
                     Log::warning('Official payroll report source inconsistency', [
-                        'employee_id' => $id, 'year' => $validated['year'],
-                        'month' => $validated['month'], 'reason' => $exception->getMessage(),
+                        'employee_id' => $id, 'year' => $year,
+                        'month' => $month, 'reason' => $exception->getMessage(),
                     ]);
                     return $this->reportError('Employee '.$id.' saved bill cannot be reconciled: '.$exception->getMessage());
                 }
@@ -98,7 +176,7 @@ final class SalaryOfficialReportController extends Controller
             if ($draftPreview) {
                 // No saved calculator and no posted bill. Keep a regular-only
                 // read-only estimate, but DO NOT invent the missing arrear.
-                $rows[] = $this->draftRow($id, (int) $validated['year'], (int) $validated['month']);
+                $rows[] = $this->draftRow($id, $year, $month);
                 continue;
             }
             return $this->reportError('Employee ID '.$id.' has no unique saved bill for the requested month/year. Generate or reconcile that employee first.');
@@ -158,7 +236,8 @@ final class SalaryOfficialReportController extends Controller
         // Consistent display-only grouping for Report Factory PDF and JSON exports.
         // Ranking is based on the best grade among the selected category's staff,
         // not on category label, category ID, or insertion order.
-        if (count($rows) > 1) {
+        if (count($rows) > 1 && Schema::hasTable('user_user_categories')
+            && Schema::hasTable('payroll_groups') && Schema::hasTable('grades')) {
             $reportIds = array_column($rows, 'user_id');
             $catData = DB::table('user_user_categories')
                 ->whereIn('user_id', $reportIds)
@@ -198,6 +277,8 @@ final class SalaryOfficialReportController extends Controller
                     ?: strnatcasecmp((string) $a['employee_code'], (string) $b['employee_code']);
             });
         }
+        $horizontal = $this->buildHorizontalPayload($rows);
+        $rows = $horizontal['rows'];
         $kind = $validated['kind'];
         $perPage = (int) ($validated['per_page'] ?? 15);
         $pages = $kind === 'bulk' ? array_chunk($rows, $perPage) : array_map(static fn ($row) => [$row], $rows);
@@ -205,47 +286,409 @@ final class SalaryOfficialReportController extends Controller
         $totalNet = count(array_filter($rows, static fn (array $r): bool => !is_numeric($r['net'] ?? null))) > 0
             ? null : round(array_sum(array_column($rows, 'net')), 2);
         if (($validated['format'] ?? 'html') === 'json') {
-            return response()->json(['records' => $rows, 'summary' => ['total_records' => count($rows),
-                'grand_net' => $totalNet], 'source' => $draftPreview ? 'CALCULATOR_FIRST_PREVIEW' : 'SAVED_POSTED_BILL_ONLY'])
-                ->header('Cache-Control', 'no-store, private');
+            return response()->json([
+                'records' => $rows,
+                'horizontal_columns' => $horizontal['columns'],
+                'horizontal_totals' => $horizontal['totals'],
+                'horizontal_totals_formatted' => $horizontal['totals_formatted'],
+                'summary' => [
+                    'total_records' => count($rows),
+                    'grand_net' => $totalNet,
+                    'grand_net_formatted' => $totalNet === null ? null : number_format($totalNet, 2, '.', ''),
+                ],
+                'source' => $draftPreview
+                    ? ($isNov2026Plus ? 'MONTHLY_SETUP_OR_POSTED_BILL' : 'CALCULATOR_FIRST_PREVIEW')
+                    : 'SAVED_POSTED_BILL_ONLY',
+            ])->header('Cache-Control', 'no-store, private');
         }
         if (($validated['format'] ?? 'html') === 'csv') {
-            $headers = ['Code','Employee','Designation','Grade','Basic','Current Gross','Current Deductions',
-                'Current Net','Arrear Payable','Arrear Deductions','Net Arrear','Final Net','Source'];
             $csv = "\xEF\xBB\xBF";
             $escape = static function ($value): string {
                 $string = $value === null ? 'UNKNOWN' : (string) $value;
                 if (preg_match('/^[=+@-]/u', $string) && !is_numeric($string)) $string = "'".$string;
                 return '"'.str_replace('"', '""', $string).'"';
             };
-            $csv .= implode(',', array_map($escape, $headers))."\r\n";
-            foreach ($rows as $r) {
-                $csv .= implode(',', array_map($escape, [
-                    $r['employee_code'], $r['name'], $r['designation'], $r['grade'],
-                    $r['basic'], $r['current_gross'], $r['current_deductions'],
-                    $r['current_net'], $r['arrear_payable'], $r['arrear_deductions'],
-                    $r['net_arrear'], $r['net'], $r['source'],
-                ]))."\r\n";
+            $fmt2 = static fn ($v): ?string => is_numeric($v) && is_finite((float) $v)
+                ? number_format((float) $v, 2, '.', '') : null;
+            if ($kind === 'bulk') {
+                $headers = array_merge(
+                    ['SL', 'ID', 'Name', 'Designation', 'Grade'],
+                    array_column($horizontal['columns'], 'label'),
+                    ['Source']
+                );
+                $csv .= implode(',', array_map($escape, $headers))."\r\n";
+                foreach ($rows as $idx => $r) {
+                    $line = [$idx + 1, $r['employee_code'], $r['name'], $r['designation'], $r['grade']];
+                    foreach ($horizontal['columns'] as $col) {
+                        $line[] = $fmt2($r['horizontal_columns'][$col['key']] ?? null);
+                    }
+                    $line[] = $r['source'];
+                    $csv .= implode(',', array_map($escape, $line))."\r\n";
+                }
+                $totalLine = ['', '', 'GRAND TOTAL ('.count($rows).')', '', ''];
+                foreach ($horizontal['columns'] as $col) {
+                    $totalLine[] = $fmt2($horizontal['totals'][$col['key']] ?? null);
+                }
+                $totalLine[] = '';
+                $csv .= implode(',', array_map($escape, $totalLine))."\r\n";
+            } else {
+                $headers = ['Code','Employee','Designation','Grade','Basic','Current Gross','Current Deductions',
+                    'Current Net','Arrear Payable','Arrear Deductions','Net Arrear','Final Net','Source'];
+                $csv .= implode(',', array_map($escape, $headers))."\r\n";
+                foreach ($rows as $r) {
+                    $csv .= implode(',', array_map($escape, [
+                        $r['employee_code'], $r['name'], $r['designation'], $r['grade'],
+                        $fmt2($r['basic']), $fmt2($r['current_gross']), $fmt2($r['current_deductions']),
+                        $fmt2($r['current_net']), $fmt2($r['arrear_payable']), $fmt2($r['arrear_deductions']),
+                        $fmt2($r['net_arrear']), $fmt2($r['net']), $r['source'],
+                    ]))."\r\n";
+                }
             }
             return response($csv, 200, [
                 'Content-Type' => 'text/csv; charset=UTF-8',
-                'Content-Disposition' => 'attachment; filename="KAU_Official_'.strtoupper($kind).'_'.$validated['year'].'_'.$validated['month'].'.csv"',
+                'Content-Disposition' => 'attachment; filename="KAU_Official_'.strtoupper($kind).'_'.$year.'_'.$month.'.csv"',
                 'Cache-Control' => 'no-store, private', 'X-Content-Type-Options' => 'nosniff',
             ]);
         }
         $html = view('salary.official-report', [
             'rows' => $rows, 'pages' => $pages, 'kind' => $kind,
-            'year' => (int) $validated['year'], 'month' => (int) $validated['month'],
+            'year' => $year, 'month' => $month,
             'grandTotal' => $totalNet, 'perPage' => $perPage,
+            'horizontalColumns' => $horizontal['columns'],
+            'horizontalTotals' => $horizontal['totals'],
             'pdfAvailable' => filled(config('kau_official_reports.chromium_binary')),
             'logoData' => $this->embeddedLogo(),
             'embed' => ($validated['embed'] ?? '0') === '1',
         ])->render();
         if (($validated['format'] ?? 'html') === 'pdf') {
-            return $this->renderPdf($html, $kind, (int) $validated['year'], (int) $validated['month']);
+            return $this->renderPdf($html, $kind, $year, $month);
         }
         return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8',
             'Cache-Control' => 'no-store, private']);
+    }
+
+    private const HORIZONTAL_COLUMN_DEFINITIONS = [
+        ['key' => 'basic', 'label' => 'Basic', 'name' => 'Basic Pay', 'always' => true],
+        ['key' => 'hra', 'label' => 'HRA', 'name' => 'House Rent Allowance', 'always' => true],
+        ['key' => 'medical', 'label' => 'MA', 'name' => 'Medical Allowance', 'always' => true],
+        ['key' => 'special_benefit', 'label' => 'S. Benefit', 'name' => 'Special Benefit', 'always' => true],
+        ['key' => 'education', 'label' => 'Edu', 'name' => 'Education Allowance', 'always' => true],
+        ['key' => 'charge_allowance', 'label' => 'Charge A.', 'name' => 'Charge Allowance', 'always' => false],
+        ['key' => 'mobile', 'label' => 'Mobile', 'name' => 'Mobile Allowance', 'always' => false],
+        ['key' => 'telephone', 'label' => 'Tel.', 'name' => 'Telephone Allowance', 'always' => false],
+        ['key' => 'tiffin', 'label' => 'Tiffin', 'name' => 'Tiffin Allowance', 'always' => false],
+        ['key' => 'travel', 'label' => 'Travel', 'name' => 'Travel Allowance', 'always' => false],
+        ['key' => 'others_allowance', 'label' => 'Others A.', 'name' => 'Others Allowance', 'always' => false],
+        ['key' => 'gross', 'label' => 'Gross', 'name' => 'Gross Salary', 'always' => true],
+        ['key' => 'gpf', 'label' => 'GPF', 'name' => 'General Provident Fund', 'always' => true],
+        ['key' => 'income_tax', 'label' => 'Income Tax', 'name' => 'Income Tax', 'always' => true],
+        ['key' => 'vehicle_deduction', 'label' => 'Veh. Ded.', 'name' => 'Vehicle Deduction', 'always' => false],
+        ['key' => 'others_deduction', 'label' => 'Others D.', 'name' => 'Others Deduction', 'always' => false],
+        ['key' => 'revenue_stamp', 'label' => 'Rev. Stamp', 'name' => 'Revenue Stamp', 'always' => true],
+        ['key' => 'total_deduction', 'label' => 'Tot. Ded.', 'name' => 'Total Deduction', 'always' => true],
+        ['key' => 'net_arrear', 'label' => 'Net Arrear', 'name' => 'Net Arrear', 'always' => true],
+        ['key' => 'net_payable', 'label' => 'Net Payable', 'name' => 'Net Payable', 'always' => true],
+    ];
+
+    /**
+     * Build a November 2026+ preview row from MonthlySalarySetupService without
+     * falling back to DRAFT_REGULAR_ONLY_PREVIEW.
+     *
+     * @param array<string, mixed> $summary
+     * @return array<string, mixed>
+     */
+    private function monthlySetupRow(
+        int $userId,
+        int $year,
+        int $month,
+        array $summary,
+        ?EmployeeInfo $profile,
+        ?User $employee
+    ): array {
+        $allowances = [];
+        $deductions = [];
+        $arrearRows = [];
+
+        foreach (($summary['allowances'] ?? []) as $item) {
+            $current = round((float) ($item['current_amount'] ?? 0.0), 2);
+            $arrear = round((float) ($item['arrear_amount'] ?? 0.0), 2);
+            $total = round((float) ($item['total_amount'] ?? ($current + $arrear)), 2);
+            if (abs($current) < 0.005 && abs($arrear) < 0.005) {
+                continue;
+            }
+            $allowances[] = [
+                'title' => (string) ($item['name'] ?? ''),
+                'direction' => 'allowance',
+                'current' => $current,
+                'arrear' => $arrear,
+                'total' => $total,
+                'code' => null,
+                'months' => [],
+                'evidence' => $item['comment'] ?? null,
+                'unverified' => false,
+            ];
+            if (abs($arrear) >= 0.005) {
+                $arrearRows[] = [
+                    'title' => (string) ($item['name'] ?? '').' (Arrear)',
+                    'code' => 'MONTHLY_COMPONENT_ARREAR',
+                    'direction' => 'payable',
+                    'final_amount' => $arrear,
+                    'amount' => $arrear,
+                    'total' => $arrear,
+                    'months' => [sprintf('%04d-%02d', $year, $month)],
+                    'evidence' => (string) ($item['comment'] ?? ''),
+                    'source_state' => 'MONTHLY_SALARY_SETUP_PREVIEW',
+                    'month_amounts' => null,
+                ];
+            }
+        }
+
+        foreach (($summary['deductions'] ?? []) as $item) {
+            $current = round((float) ($item['current_amount'] ?? 0.0), 2);
+            $arrear = round((float) ($item['arrear_amount'] ?? 0.0), 2);
+            $total = round((float) ($item['total_amount'] ?? ($current + $arrear)), 2);
+            if (abs($current) < 0.005 && abs($arrear) < 0.005) {
+                continue;
+            }
+            $deductions[] = [
+                'title' => (string) ($item['name'] ?? ''),
+                'direction' => 'deduction',
+                'current' => $current,
+                'arrear' => $arrear,
+                'total' => $total,
+                'code' => null,
+                'months' => [],
+                'evidence' => $item['comment'] ?? null,
+                'unverified' => false,
+            ];
+            if (abs($arrear) >= 0.005) {
+                $arrearRows[] = [
+                    'title' => (string) ($item['name'] ?? '').' (Arrear)',
+                    'code' => 'MONTHLY_COMPONENT_ARREAR',
+                    'direction' => 'deduction',
+                    'final_amount' => $arrear,
+                    'amount' => $arrear,
+                    'total' => $arrear,
+                    'months' => [sprintf('%04d-%02d', $year, $month)],
+                    'evidence' => (string) ($item['comment'] ?? ''),
+                    'source_state' => 'MONTHLY_SALARY_SETUP_PREVIEW',
+                    'month_amounts' => null,
+                ];
+            }
+        }
+
+        return [
+            'id' => null,
+            'user_id' => $userId,
+            'employee_code' => (string) ($profile?->employeeCode ?: ('USER-'.$userId)),
+            'name' => (string) ($employee?->name ?: 'EMPLOYEE NAME NOT RECORDED'),
+            'designation' => (string) ($profile?->payrollGroup?->payrollGroupType?->group_name ?: 'NOT RECORDED'),
+            'department' => (string) ($profile?->departmentOffice?->name ?? 'NOT RECORDED'),
+            'department_is_current' => true,
+            'grade' => (string) ($summary['grade'] ?? $profile?->payrollGroup?->grade?->grade_name ?? 'NOT RECORDED'),
+            'pay_scale' => (string) ($summary['pay_scale'] ?? 'NOT RECORDED'),
+            'bank_account_no' => '—',
+            'bank_address' => '—',
+            'year' => $year,
+            'month' => $month,
+            'basic' => round((float) ($summary['basic_pay'] ?? 0.0), 2),
+            'allowances' => $allowances,
+            'deductions' => $deductions,
+            'arrear_rows' => $arrearRows,
+            'current_gross' => round((float) ($summary['regular_allowances'] ?? 0.0), 2),
+            'current_deductions' => round((float) ($summary['regular_deductions'] ?? 0.0), 2),
+            'current_net' => round((float) ($summary['regular_net'] ?? 0.0), 2),
+            'arrear_payable' => round((float) ($summary['arrear_allowances'] ?? 0.0), 2),
+            'arrear_deductions' => round((float) ($summary['arrear_deductions'] ?? 0.0), 2),
+            'net_arrear' => round((float) ($summary['net_arrear'] ?? 0.0), 2),
+            'gross' => round((float) ($summary['total_allowances'] ?? 0.0), 2),
+            'total_deductions' => round((float) ($summary['total_deductions'] ?? 0.0), 2),
+            'net' => round((float) ($summary['net_payable'] ?? 0.0), 2),
+            'source' => 'MONTHLY_SALARY_SETUP_PREVIEW',
+            'source_hash' => null,
+            'details_complete' => true,
+            'remarks' => 'Monthly Salary Setup preview (not yet posted to salary_generates).',
+        ];
+    }
+
+    /**
+     * Classify each row's allowances and deductions into separate canonical
+     * horizontal columns (never lumping Charge Allowance into Others A. or
+     * Revenue Stamp into Others D.) and preserve exact 2-decimal outputs.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array{
+     *     rows: array<int, array<string, mixed>>,
+     *     columns: array<int, array{key: string, label: string, name: string}>,
+     *     totals: array<string, float|null>,
+     *     totals_formatted: array<string, string|null>
+     * }
+     */
+    private function buildHorizontalPayload(array $rows): array
+    {
+        $allKeys = array_column(self::HORIZONTAL_COLUMN_DEFINITIONS, 'key');
+        $totals = array_fill_keys($allKeys, 0.0);
+        $missingTotals = array_fill_keys($allKeys, false);
+        $hasNonZero = array_fill_keys($allKeys, false);
+
+        $classifyAllowance = static function (string $title): string {
+            $lower = strtolower(trim($title));
+            if (preg_match('/^basic(?:\s+pay|\s+salary|\s+wage)?$/i', $lower)) {
+                return 'basic';
+            }
+            if (preg_match('/house\s*rent|\bhra\b/i', $lower)) {
+                return 'hra';
+            }
+            if (str_contains($lower, 'medical')) {
+                return 'medical';
+            }
+            if (str_contains($lower, 'special benefit')) {
+                return 'special_benefit';
+            }
+            if (str_contains($lower, 'education')) {
+                return 'education';
+            }
+            if (preg_match('/charge\s*allowance|\bcharge\b/i', $lower)) {
+                return 'charge_allowance';
+            }
+            if (str_contains($lower, 'mobile')) {
+                return 'mobile';
+            }
+            if (preg_match('/telephone|\btel\.?\b/i', $lower)) {
+                return 'telephone';
+            }
+            if (str_contains($lower, 'tiffin')) {
+                return 'tiffin';
+            }
+            if (preg_match('/travel|conveyance/i', $lower)) {
+                return 'travel';
+            }
+            return 'others_allowance';
+        };
+
+        $classifyDeduction = static function (string $title): string {
+            $lower = strtolower(trim($title));
+            if (preg_match('/\bgpf\b|provident\s*fund/i', $lower)) {
+                return 'gpf';
+            }
+            if (preg_match('/income\s*tax|\btax\b/i', $lower)) {
+                return 'income_tax';
+            }
+            if (preg_match('/vehicle|office\s*vehicle/i', $lower)) {
+                return 'vehicle_deduction';
+            }
+            if (preg_match('/revenue\s*stamp|\bstamp\b/i', $lower)) {
+                return 'revenue_stamp';
+            }
+            return 'others_deduction';
+        };
+
+        foreach ($rows as &$row) {
+            $vals = [
+                'basic' => is_numeric($row['basic'] ?? null) ? round((float) $row['basic'], 2) : null,
+                'hra' => 0.0,
+                'medical' => 0.0,
+                'special_benefit' => 0.0,
+                'education' => 0.0,
+                'charge_allowance' => 0.0,
+                'mobile' => 0.0,
+                'telephone' => 0.0,
+                'tiffin' => 0.0,
+                'travel' => 0.0,
+                'others_allowance' => 0.0,
+                'gross' => is_numeric($row['current_gross'] ?? null) ? round((float) $row['current_gross'], 2) : null,
+                'gpf' => 0.0,
+                'income_tax' => 0.0,
+                'vehicle_deduction' => 0.0,
+                'others_deduction' => 0.0,
+                'revenue_stamp' => 0.0,
+                'total_deduction' => is_numeric($row['current_deductions'] ?? null) ? round((float) $row['current_deductions'], 2) : null,
+                'net_arrear' => is_numeric($row['net_arrear'] ?? null) ? round((float) $row['net_arrear'], 2) : null,
+                'net_payable' => is_numeric($row['net'] ?? null) ? round((float) $row['net'], 2) : null,
+            ];
+
+            foreach (($row['allowances'] ?? []) as $item) {
+                if (!is_array($item)) continue;
+                $bucket = $classifyAllowance((string) ($item['title'] ?? ''));
+                if ($bucket === 'basic') {
+                    if ($vals['basic'] === null && is_numeric($item['current'] ?? null)) {
+                        $vals['basic'] = round((float) $item['current'], 2);
+                    }
+                    continue;
+                }
+                if ($item['current'] === null) {
+                    $vals[$bucket] = null;
+                    continue;
+                }
+                if ($vals[$bucket] !== null) {
+                    $vals[$bucket] = round((float) $vals[$bucket] + (float) $item['current'], 2);
+                }
+            }
+
+            foreach (($row['deductions'] ?? []) as $item) {
+                if (!is_array($item)) continue;
+                $bucket = $classifyDeduction((string) ($item['title'] ?? ''));
+                if ($item['current'] === null) {
+                    $vals[$bucket] = null;
+                    continue;
+                }
+                if ($vals[$bucket] !== null) {
+                    $vals[$bucket] = round((float) $vals[$bucket] + (float) $item['current'], 2);
+                }
+            }
+
+            $formatted = [];
+            foreach ($allKeys as $key) {
+                $val = $vals[$key];
+                if ($val === null || !is_numeric($val) || !is_finite((float) $val)) {
+                    $missingTotals[$key] = true;
+                    $formatted[$key] = null;
+                } else {
+                    $rounded = round((float) $val, 2);
+                    $vals[$key] = $rounded;
+                    $formatted[$key] = number_format($rounded, 2, '.', '');
+                    $totals[$key] = round($totals[$key] + $rounded, 2);
+                    if (abs($rounded) >= 0.005) {
+                        $hasNonZero[$key] = true;
+                    }
+                }
+            }
+
+            $row['horizontal_columns'] = $vals;
+            $row['horizontal_formatted'] = $formatted;
+        }
+        unset($row);
+
+        $activeColumns = [];
+        foreach (self::HORIZONTAL_COLUMN_DEFINITIONS as $def) {
+            if ($def['always'] || $hasNonZero[$def['key']]) {
+                $activeColumns[] = [
+                    'key' => $def['key'],
+                    'label' => $def['label'],
+                    'name' => $def['name'],
+                ];
+            }
+        }
+
+        $finalTotals = [];
+        $finalTotalsFormatted = [];
+        foreach ($allKeys as $key) {
+            if ($missingTotals[$key]) {
+                $finalTotals[$key] = null;
+                $finalTotalsFormatted[$key] = null;
+            } else {
+                $rounded = round($totals[$key], 2);
+                $finalTotals[$key] = $rounded;
+                $finalTotalsFormatted[$key] = number_format($rounded, 2, '.', '');
+            }
+        }
+
+        return [
+            'rows' => $rows,
+            'columns' => $activeColumns,
+            'totals' => $finalTotals,
+            'totals_formatted' => $finalTotalsFormatted,
+        ];
     }
 
     /** Human-readable response while preserving HTTP 422 and financial source checks. */

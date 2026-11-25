@@ -165,28 +165,12 @@ export const useNavigationStore = defineStore('navigation', () => {
                 //     description: 'Evidence-based read-only arrear reconciliation with manual corrections'
                 // },
                 {
-                    title: 'Arrear & component settings',
-                    routeName: 'salary-arrear-settings.index',
-                    activePattern: 'salary-arrear-settings.*',
-                    category: 'Salary & Bonus Management',
-                    keywords: ['arrear settings', 'payable', 'deduction', 'formula', 'published payroll components'],
-                    description: 'Configure published arrear formulas and payroll components'
-                },
-                {
                     title: 'Salary estimations',
                     routeName: 'salary-estimation.index',
                     activePattern: 'salary-estimation.*',
                     category: 'Salary & Bonus Management',
                     keywords: ['salary setup', 'estimation', 'override', 'rule over', 'allowance customization', 'tailor salary'],
                     description: 'Personalize employee salary components & review estimations'
-                },
-                {
-                    title: 'Bulk Component Grid',
-                    routeName: 'salary-estimation.bulk-components',
-                    activePattern: 'salary-estimation.bulk-components',
-                    category: 'Salary & Bonus Management',
-                    keywords: ['bulk component grid', 'bulk components', 'salary corrections'],
-                    description: 'Edit selected component rules across multiple employees with audit tracking'
                 },
                 {
                     title: 'Bonus estimation',

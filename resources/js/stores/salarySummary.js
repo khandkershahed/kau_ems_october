@@ -101,11 +101,19 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 return {
                     allowanceRows: [],
                     deductionRows: [],
+                    totalAllowanceCurrent: 0,
+                    totalAllowanceArrear: 0,
                     grossAllowance: 0,
+                    totalDeductionCurrent: 0,
+                    totalDeductionArrear: 0,
                     totalDeductions: 0,
                     netPayable: 0,
                     inWords: 'Zero Taka only.',
                     totalEmployees: 0,
+                    payableBillCount: 0,
+                    revenueStampCount: 0,
+                    revenueStampTotal: 0,
+                    revenueStampMismatch: false,
                     isGeneratedAll: true,
                     hasProvisional: false,
                 };
@@ -113,10 +121,14 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
 
             const allowanceMap = new Map(); // particulars -> { current, arrear }
             const deductionMap = new Map(); // particulars -> { current, arrear }
+            const round2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
 
             // Track standard Basic Pay and Basic Arrear separately (Step 3B-FIX).
             let totalBasicPay = 0;
             let totalBasicArrear = 0;
+            let payableBillCount = 0;
+            let revenueStampCount = 0;
+            let revenueStampTotal = 0;
 
             // Canonical component identity helpers:
             // - Arrear items are detected via reliable source metadata first
@@ -131,63 +143,77 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 const lower = rawName.toLowerCase();
                 return /\bbasic\b/.test(lower) && !isArrearItem(null, rawName);
             };
+            const isRevenueStampName = (rawName) => {
+                const lower = rawName.toLowerCase();
+                return lower.includes('revenue stamp') || /\bstamp\b/.test(lower);
+            };
 
             records.forEach((record) => {
                 const allowances = record.allowance_items || [];
                 const deductions = record.deduction_items || [];
                 const basicVal = Number(record.basic_pay) || 0;
+                const netVal = Number(record.salary_total);
+                if (Number.isFinite(netVal) && netVal > 0) {
+                    payableBillCount++;
+                }
 
                 // Process Allowances
                 if (allowances.length > 0) {
                     let recordHasBasicInItems = false;
                     allowances.forEach((item) => {
                         const rawName = (item.name || item.payroll_component_type?.name || 'Allowance').trim();
-                        const amt = Number(item.amount ?? item.calculated_amount ?? 0);
+                        const amt = Number(item.calculated_amount ?? item.amount ?? 0);
 
                         if (isArrearItem(item, rawName)) {
                             // Basic arrear keeps its own row; never counted as Basic Pay.
                             const key = /\bbasic\b/.test(rawName.toLowerCase()) ? 'Basic Arrear' : rawName;
                             const cur = allowanceMap.get(key) || { current: 0, arrear: 0 };
-                            cur.arrear += amt;
+                            cur.arrear = round2(cur.arrear + amt);
                             allowanceMap.set(key, cur);
                         } else if (isBasicPayName(rawName)) {
                             recordHasBasicInItems = true;
-                            totalBasicPay += amt;
+                            totalBasicPay = round2(totalBasicPay + amt);
                         } else {
                             const cur = allowanceMap.get(rawName) || { current: 0, arrear: 0 };
-                            cur.current += amt;
+                            cur.current = round2(cur.current + amt);
                             allowanceMap.set(rawName, cur);
                         }
                     });
 
                     // If basic pay exists on record but wasn't in allowance_items
                     if (!recordHasBasicInItems && basicVal > 0) {
-                        totalBasicPay += basicVal;
+                        totalBasicPay = round2(totalBasicPay + basicVal);
                     }
                 } else if (basicVal > 0) {
-                    totalBasicPay += basicVal;
-                    const diff = (Number(record.total_allowance) || 0) - basicVal;
+                    totalBasicPay = round2(totalBasicPay + basicVal);
+                    const diff = round2((Number(record.total_allowance) || 0) - basicVal);
                     if (diff > 0) {
                         const cur = allowanceMap.get('Other Allowances') || { current: 0, arrear: 0 };
-                        cur.current += diff;
+                        cur.current = round2(cur.current + diff);
                         allowanceMap.set('Other Allowances', cur);
                     }
                 } else if (Number(record.total_allowance) > 0) {
                     const amt = Number(record.total_allowance);
                     const cur = allowanceMap.get('General Allowances') || { current: 0, arrear: 0 };
-                    cur.current += amt;
+                    cur.current = round2(cur.current + amt);
                     allowanceMap.set('General Allowances', cur);
                 }
 
                 // Process Deductions
+                let billRegularStamp = 0;
                 if (deductions.length > 0) {
                     deductions.forEach((item) => {
                         const rawName = (item.name || item.payroll_component_type?.name || 'Deduction').trim();
-                        const amt = Number(item.amount ?? item.calculated_amount ?? 0);
+                        const amt = Number(item.calculated_amount ?? item.amount ?? 0);
                         const arrear = isArrearItem(item, rawName);
                         const cur = deductionMap.get(rawName) || { current: 0, arrear: 0 };
-                        if (arrear) cur.arrear += amt; else cur.current += amt;
+                        if (arrear) cur.arrear = round2(cur.arrear + amt);
+                        else cur.current = round2(cur.current + amt);
                         deductionMap.set(rawName, cur);
+
+                        if (!arrear && isRevenueStampName(rawName) && amt > 0) {
+                            billRegularStamp = round2(billRegularStamp + amt);
+                        }
                     });
                 } else {
                     const totalDeduct = Number(record.total_deduction) || 0;
@@ -196,20 +222,25 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
 
                     if (taxDeduct > 0) {
                         const cur = deductionMap.get('Income Tax') || { current: 0, arrear: 0 };
-                        cur.current += taxDeduct;
+                        cur.current = round2(cur.current + taxDeduct);
                         deductionMap.set('Income Tax', cur);
                     }
                     if (gpfDeduct > 0) {
                         const cur = deductionMap.get('General Provident Fund (GPF)') || { current: 0, arrear: 0 };
-                        cur.current += gpfDeduct;
+                        cur.current = round2(cur.current + gpfDeduct);
                         deductionMap.set('General Provident Fund (GPF)', cur);
                     }
-                    const otherDeduct = totalDeduct - (taxDeduct + gpfDeduct);
+                    const otherDeduct = round2(totalDeduct - (taxDeduct + gpfDeduct));
                     if (otherDeduct > 0) {
                         const cur = deductionMap.get('Other Deductions') || { current: 0, arrear: 0 };
-                        cur.current += otherDeduct;
+                        cur.current = round2(cur.current + otherDeduct);
                         deductionMap.set('Other Deductions', cur);
                     }
+                }
+
+                if (billRegularStamp > 0) {
+                    revenueStampCount++;
+                    revenueStampTotal = round2(revenueStampTotal + billRegularStamp);
                 }
             });
 
@@ -277,16 +308,19 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                     });
                 });
 
-            const grossAllowance = allowanceRows.reduce((sum, r) => sum + r.total, 0);
-            const totalDeductions = deductionRows.reduce((sum, r) => sum + r.total, 0);
-            const netPayable = grossAllowance - totalDeductions;
+            const totalAllowanceCurrent = round2(allowanceRows.reduce((sum, r) => sum + r.current, 0));
+            const totalAllowanceArrear = round2(allowanceRows.reduce((sum, r) => sum + r.arrear, 0));
+            const grossAllowance = round2(allowanceRows.reduce((sum, r) => sum + r.total, 0));
+            const totalDeductionCurrent = round2(deductionRows.reduce((sum, r) => sum + r.current, 0));
+            const totalDeductionArrear = round2(deductionRows.reduce((sum, r) => sum + r.arrear, 0));
+            const totalDeductions = round2(deductionRows.reduce((sum, r) => sum + r.total, 0));
+            const netPayable = round2(grossAllowance - totalDeductions);
             const inWords = numberToWordsTaka(netPayable);
 
             // Reconciliation against the frozen saved bill totals. A mismatch is
             // surfaced as a warning — never silently absorbed into row amounts.
-            const round2 = (v) => Math.round(v * 100) / 100;
-            const savedAllowanceTotal = records.reduce((s, r) => s + (Number(r.total_allowance) || 0), 0);
-            const savedDeductionTotal = records.reduce((s, r) => s + (Number(r.total_deduction) || 0), 0);
+            const savedAllowanceTotal = round2(records.reduce((s, r) => s + (Number(r.total_allowance) || 0), 0));
+            const savedDeductionTotal = round2(records.reduce((s, r) => s + (Number(r.total_deduction) || 0), 0));
             const discrepancyAllowance = round2(savedAllowanceTotal - grossAllowance);
             const discrepancyDeduction = round2(savedDeductionTotal - totalDeductions);
             const hasDiscrepancy = Math.abs(discrepancyAllowance) > 0.005 || Math.abs(discrepancyDeduction) > 0.005;
@@ -294,11 +328,19 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
             return {
                 allowanceRows,
                 deductionRows,
+                totalAllowanceCurrent,
+                totalAllowanceArrear,
                 grossAllowance,
+                totalDeductionCurrent,
+                totalDeductionArrear,
                 totalDeductions,
                 netPayable,
                 inWords,
                 totalEmployees: records.length,
+                payableBillCount,
+                revenueStampCount,
+                revenueStampTotal,
+                revenueStampMismatch: revenueStampCount !== payableBillCount,
                 isGeneratedAll: records.every(r => r.is_generated),
                 hasProvisional: records.some(r => !r.is_generated),
                 hasDiscrepancy,
@@ -338,7 +380,7 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 totals.allowanceRows.forEach((r) => {
                     sheetData.push([r.sl, r.particulars, r.current, r.arrear, r.total]);
                 });
-                sheetData.push(['', 'Gross Salary / Total Allowances', totals.grossAllowance, 0, totals.grossAllowance]);
+                sheetData.push(['', 'Gross Salary / Total Allowances', totals.totalAllowanceCurrent, totals.totalAllowanceArrear, totals.grossAllowance]);
                 sheetData.push([]); // blank line
 
                 // 2. Deductions Table
@@ -351,7 +393,8 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                         sheetData.push([r.sl, r.particulars, r.current, r.arrear, r.total]);
                     });
                 }
-                sheetData.push(['', 'Total Deductions', totals.totalDeductions, 0, totals.totalDeductions]);
+                sheetData.push(['', 'Total Deductions', totals.totalDeductionCurrent, totals.totalDeductionArrear, totals.totalDeductions]);
+                sheetData.push(['', `Revenue Stamp Count: ${totals.revenueStampCount} / ${totals.payableBillCount} payable bill(s)`, totals.revenueStampTotal, 0, totals.revenueStampTotal]);
                 if (totals.hasDiscrepancy) {
                     sheetData.push(['WARNING: Saved bill totals differ from rendered components by Tk. '
                         + (totals.discrepancyAllowance + totals.discrepancyDeduction).toFixed(2)
@@ -365,10 +408,17 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 sheetData.push([]); // blank line
                 sheetData.push([]); // blank line
 
-                // 4. Signatures
-                // sheetData.push(['Prepared By', 'Checked By', 'Comptroller of Accounts', 'Vice-Chancellor / Registrar']);
-
                 const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+                for (let rIdx = 5; rIdx < sheetData.length; rIdx++) {
+                    for (const cIdx of [2, 3, 4]) {
+                        const ref = XLSX.utils.encode_cell({ r: rIdx, c: cIdx });
+                        const cell = worksheet[ref];
+                        if (cell && typeof cell.v === 'number') {
+                            cell.t = 'n';
+                            cell.z = '#,##0.00';
+                        }
+                    }
+                }
 
                 // Auto-fit column widths
                 worksheet['!cols'] = [
@@ -486,12 +536,13 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                 doc.text('BDT (Taka)', pageWidth - 45, gridY + 10);
 
                 // 3. Allowances Table
+                const fmt2 = (val) => (Number(val) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const allowRows = totals.allowanceRows.map((r) => [
                     r.sl,
                     r.particulars,
-                    r.current.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    '0.00',
-                    r.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    fmt2(r.current),
+                    fmt2(r.arrear),
+                    fmt2(r.total),
                 ]);
 
                 doc.setFont('helvetica', 'bold');
@@ -505,9 +556,9 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                     foot: [[
                         '',
                         'Gross Salary / Total Allowances',
-                        totals.grossAllowance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                        '0.00',
-                        totals.grossAllowance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        fmt2(totals.totalAllowanceCurrent),
+                        fmt2(totals.totalAllowanceArrear),
+                        fmt2(totals.grossAllowance),
                     ]],
                     startY: gridY + gridH + 7,
                     margin: { left: 14, right: 14 },
@@ -531,16 +582,20 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                     ? totals.deductionRows.map((r) => [
                         r.sl,
                         r.particulars,
-                        r.current.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                        '0.00',
-                        r.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                        fmt2(r.current),
+                        fmt2(r.arrear),
+                        fmt2(r.total),
                     ])
                     : [['1', 'No deductions recorded', '0.00', '0.00', '0.00']];
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(8.5);
                 doc.setTextColor(15, 23, 42);
-                doc.text('Deductions', 14, allowFinalY + 5);
+                doc.text(
+                    `Deductions  (Revenue Stamps: ${totals.revenueStampCount} / ${totals.payableBillCount} payable bills — Tk. ${fmt2(totals.revenueStampTotal)})`,
+                    14,
+                    allowFinalY + 5,
+                );
 
                 autoTable(doc, {
                     head: [['Sl.No', 'Particulars', 'Current', 'Arrear', 'Total']],
@@ -548,9 +603,9 @@ export const useSalarySummaryStore = defineStore('salarySummary', {
                     foot: [[
                         '',
                         'Total Deductions',
-                        totals.totalDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                        '0.00',
-                        totals.totalDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        fmt2(totals.totalDeductionCurrent),
+                        fmt2(totals.totalDeductionArrear),
+                        fmt2(totals.totalDeductions),
                     ]],
                     startY: allowFinalY + 7,
                     margin: { left: 14, right: 14 },

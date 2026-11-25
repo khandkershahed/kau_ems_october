@@ -25,27 +25,10 @@ use Throwable;
 /** PATCH 05: resumable, read-only estimation. NEVER creates bill or approves payroll. */
 final class SalaryEstimationWorkspaceController extends Controller
 {
-    private const STANDARD_EMPLOYEE_TYPES = [
-        'Active',
-        'Study Leave With Pay',
-        'Study Leave Without Pay',
-        'Ad Hoc',
-        'Contractual',
-        'Deputation',
-        'Lean',
-        'PRL',
-        'Suspend',
+    private const NON_PAYABLE_EMPLOYEE_TYPES = [
         'Inactive',
-        'Pension Half',
-        'Pension Full',
-    ];
-
-    private const DEFAULT_EMPLOYEE_TYPES = [
-        'Active',
-        'Study Leave With Pay',
-        'Ad Hoc',
-        'Contractual',
-        'Deputation',
+        'Suspend',
+        'Study Leave Without Pay',
     ];
 
     private function hr(Request $request): void
@@ -102,7 +85,8 @@ final class SalaryEstimationWorkspaceController extends Controller
             'inactive' => 'Inactive',
             'pensionhalf' => 'Pension Half',
             'pensionfull' => 'Pension Full',
-            'temporary', 'others' => null,
+            'temporary' => 'Temporary',
+            'others' => 'Others',
             default => $raw,
         };
     }
@@ -110,55 +94,35 @@ final class SalaryEstimationWorkspaceController extends Controller
     /**
      * Resolve canonical Employee Type (Employment Status) label for workspace filtering and badges.
      *
-     * @param array<string, bool> $studyLeaveCodes
-     * @param array<string, bool> $adhocCodes
-     * @param array<int, array{on_leave: bool, is_paid: bool}> $leaveMap
+     * @param array<string, bool|null> $studyLeaveIncrements
+     * @param array<string, string> $adhocCodes
      */
-    private function resolveEmployeeType(object $row, array $studyLeaveCodes, array $adhocCodes, array $leaveMap): string
+    private function resolveEmployeeType(object $row, array $studyLeaveIncrements, array $adhocCodes, ?bool $leavePaid): string
     {
-        if (!(bool) ($row->is_active ?? true)) {
+        if (!(bool) $row->is_active) {
             return 'Inactive';
         }
 
-        $mapped = $this->mapJobStatusToLabel($row->job_status ?? null);
-        if ($mapped !== null && $mapped !== 'Active') {
+        $mapped = $this->mapJobStatusToLabel($row->job_status);
+        if (in_array($mapped, self::NON_PAYABLE_EMPLOYEE_TYPES, true)) {
             return $mapped;
         }
 
-        $code = trim((string) ($row->employee_code ?? ''));
-        if ($code !== '' && isset($studyLeaveCodes[$code])) {
+        if ($leavePaid === false) {
+            return 'Study Leave Without Pay';
+        }
+
+        $code = trim((string) $row->employee_code);
+        $firstIncrementAllowed = $studyLeaveIncrements[$code] ?? null;
+        if ($firstIncrementAllowed === false
+            || ($firstIncrementAllowed !== true && ($leavePaid === true || $mapped === 'Study Leave With Pay'))) {
             return 'Study Leave With Pay';
         }
-        if ($code !== '' && isset($adhocCodes[$code])) {
+        if (isset($adhocCodes[$code])) {
             return 'Ad Hoc';
         }
 
-        $uid = (int) $row->user_id;
-        if (isset($leaveMap[$uid]) && $leaveMap[$uid]['on_leave']) {
-            return $leaveMap[$uid]['is_paid'] ? 'Study Leave With Pay' : 'Study Leave Without Pay';
-        }
-
-        return 'Active';
-    }
-
-    /** @return array<int, string> */
-    private function buildEmployeeTypeOptions(): array
-    {
-        $options = self::STANDARD_EMPLOYEE_TYPES;
-        if (Schema::hasTable('employee_infos') && Schema::hasColumn('employee_infos', 'jobStatus')) {
-            $distinct = DB::table('employee_infos')
-                ->whereNotNull('jobStatus')
-                ->where('jobStatus', '!=', '')
-                ->distinct()
-                ->pluck('jobStatus');
-            foreach ($distinct as $raw) {
-                $label = $this->mapJobStatusToLabel((string) $raw);
-                if ($label !== null && !in_array($label, $options, true)) {
-                    $options[] = $label;
-                }
-            }
-        }
-        return $options;
+        return $mapped === 'Study Leave With Pay' ? 'Active' : ($mapped ?? 'Active');
     }
 
     private function eligibilityCodes(): array
@@ -307,28 +271,50 @@ final class SalaryEstimationWorkspaceController extends Controller
         $designation = trim((string) ($data['designation'] ?? ''));
         $perPage = (int) ($data['per_page'] ?? 50);
 
-        $selectedEmployeeTypes = $request->has('employee_types')
-            ? array_values(array_unique(array_filter(array_map('trim', (array) ($data['employee_types'] ?? [])))))
-            : self::DEFAULT_EMPLOYEE_TYPES;
-        $includeInactive = in_array('Inactive', $selectedEmployeeTypes, true);
-
         $profiles = DB::table('employee_infos')
             ->select('user_id')
             ->selectRaw('MIN(employeeCode) as employee_code, MIN(id) as profile_id, COUNT(*) as profile_count')
             ->groupBy('user_id');
 
-        $query = DB::query()->fromSub($profiles, 'ep')
+        $roster = DB::query()->fromSub($profiles, 'ep')
             ->join('users as u', 'u.id', '=', 'ep.user_id')
-            ->leftJoin('employee_infos as ei', 'ei.id', '=', 'ep.profile_id')
+            ->leftJoin('employee_infos as ei', 'ei.id', '=', 'ep.profile_id');
+
+        $eligibility = config('kau_fixation_eligibility', []);
+        $studyLeaveIncrements = array_map(fn ($entry) => $entry['first_increment_allowed'] ?? null, $eligibility['study_leave'] ?? []);
+        $adhocCodes = $eligibility['adhoc'] ?? [];
+        $leavePaidByUser = Schema::hasTable('leave_statuses')
+            ? DB::table('leave_statuses')->where('onLeave', 1)->where('isActive', 1)
+                ->groupBy('user_id')->selectRaw('user_id, MIN(isPaid) as is_paid')->pluck('is_paid', 'user_id')
+            : collect();
+
+        $employeeTypesByUser = [];
+        $employeeTypeCounts = [];
+        foreach ((clone $roster)->get(['ep.user_id', 'ep.employee_code', 'u.isActive as is_active', 'ei.jobStatus as job_status']) as $row) {
+            $leavePaid = $leavePaidByUser->get($row->user_id);
+            $type = $this->resolveEmployeeType($row, $studyLeaveIncrements, $adhocCodes, $leavePaid === null ? null : (bool) $leavePaid);
+            $employeeTypesByUser[$row->user_id] = $type;
+            $employeeTypeCounts[$type] = ($employeeTypeCounts[$type] ?? 0) + 1;
+        }
+        ksort($employeeTypeCounts, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $defaultEmployeeTypes = array_values(array_diff(array_keys($employeeTypeCounts), self::NON_PAYABLE_EMPLOYEE_TYPES));
+        $selectedEmployeeTypes = $request->has('employee_types')
+            ? array_values(array_unique(array_filter(array_map('trim', (array) ($data['employee_types'] ?? [])))))
+            : $defaultEmployeeTypes;
+        $selectedTypeSet = array_fill_keys($selectedEmployeeTypes, true);
+        $allActiveTypesSelected = $selectedEmployeeTypes === [] && $request->has('employee_types');
+        $selectedUserIds = array_keys(array_filter(
+            $employeeTypesByUser,
+            fn ($type) => $allActiveTypesSelected ? $type !== 'Inactive' : isset($selectedTypeSet[$type])
+        ));
+
+        $query = $roster->whereIntegerInRaw('ep.user_id', $selectedUserIds)
             ->leftJoin('department_offices as dep', 'dep.id', '=', 'ei.department_office_id')
             ->leftJoin('pay_scales as ps', 'ps.id', '=', 'ei.pay_scale_id')
             ->leftJoin('payroll_groups as pg_info', 'pg_info.id', '=', 'ei.payroll_group_id')
             ->leftJoin('grades as gr', 'gr.id', '=', 'pg_info.grade_id')
             ->leftJoin('payroll_group_types as pgt_info', 'pgt_info.id', '=', 'pg_info.payroll_group_type_id');
-
-        if (!$includeInactive) {
-            $query->where('u.isActive', 1);
-        }
 
         if ($departmentId !== null) {
             $query->where('ei.department_office_id', $departmentId);
@@ -356,7 +342,7 @@ final class SalaryEstimationWorkspaceController extends Controller
             });
         }
 
-        $candidateRows = $query->select(
+        $baseRows = $query->select(
             'ep.user_id',
             'ep.employee_code',
             'ep.profile_count',
@@ -376,36 +362,6 @@ final class SalaryEstimationWorkspaceController extends Controller
             ->orderBy('ep.employee_code')
             ->orderBy('ep.user_id')
             ->get();
-
-        $eligibilityConfig = config('kau_fixation_eligibility', []);
-        $studyLeaveCodes = array_fill_keys(array_map('strval', array_keys($eligibilityConfig['study_leave'] ?? [])), true);
-        $adhocCodes = array_fill_keys(array_map('strval', array_keys($eligibilityConfig['adhoc'] ?? [])), true);
-
-        $leaveMap = [];
-        if ($candidateRows->isNotEmpty() && Schema::hasTable('leave_statuses')) {
-            $candIds = $candidateRows->pluck('user_id')->map(fn ($id) => (int) $id)->all();
-            $leaveRows = DB::table('leave_statuses')
-                ->whereIn('user_id', $candIds)
-                ->where('onLeave', 1)
-                ->where('isActive', 1)
-                ->get(['user_id', 'onLeave', 'isPaid']);
-            foreach ($leaveRows as $lr) {
-                $leaveMap[(int) $lr->user_id] = [
-                    'on_leave' => (bool) $lr->onLeave,
-                    'is_paid' => (bool) ($lr->isPaid ?? false),
-                ];
-            }
-        }
-
-        $selectedTypeSet = array_flip($selectedEmployeeTypes);
-        $baseRows = $candidateRows->filter(function ($row) use ($selectedEmployeeTypes, $selectedTypeSet, $studyLeaveCodes, $adhocCodes, $leaveMap) {
-            $empType = $this->resolveEmployeeType($row, $studyLeaveCodes, $adhocCodes, $leaveMap);
-            $row->employee_type = $empType;
-            if ($selectedEmployeeTypes === []) {
-                return true;
-            }
-            return isset($selectedTypeSet[$empType]);
-        })->values();
 
         $allUserIds = $baseRows->pluck('user_id')->map(fn ($id) => (int) $id)->all();
 
@@ -495,7 +451,7 @@ final class SalaryEstimationWorkspaceController extends Controller
                 'email' => $row->email,
                 'is_active' => (bool) $row->is_active,
                 'job_status' => $row->job_status,
-                'employee_type' => (string) ($row->employee_type ?? 'Active'),
+                'employee_type' => $employeeTypesByUser[$uid],
                 'hold_increment' => (bool) ($row->hold_increment ?? false),
                 'department_office_id' => $row->department_office_id ? (int) $row->department_office_id : null,
                 'pay_scale_id' => $row->pay_scale_id ? (int) $row->pay_scale_id : null,
@@ -581,8 +537,10 @@ final class SalaryEstimationWorkspaceController extends Controller
         }
 
         $filterOptions = [
-            'employee_types' => $this->buildEmployeeTypeOptions(),
-            'default_employee_types' => self::DEFAULT_EMPLOYEE_TYPES,
+            'employee_types' => collect($employeeTypeCounts)
+                ->map(fn ($count, $type) => ['value' => $type, 'count' => $count])
+                ->values()->all(),
+            'default_employee_types' => $defaultEmployeeTypes,
             'categories' => Schema::hasTable('user_categories')
                 ? DB::table('user_categories')->orderBy('name')->get(['id', 'name'])
                 : [],

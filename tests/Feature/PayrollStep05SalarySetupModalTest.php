@@ -361,6 +361,79 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $this->assertTrue($octProps['isLocked']);
     }
 
+    public function test_default_employee_types_include_payable_profiles_and_count_the_whole_roster(): void
+    {
+        $profile = (array) DB::table('employee_infos')->where('id', 12)->first();
+        $employees = [
+            37 => ['10037', 'permanent', true],
+            23 => ['20023', 'temporary', true],
+            90 => ['30090', 'temporary', true],
+            91 => ['30091', 'contract', true],
+            92 => ['30092', 'suspend', true],
+            93 => ['30093', 'permanent', false],
+            94 => ['30094', 'permanent', true],
+            95 => ['30095', 'permanent', true],
+        ];
+        foreach ($employees as $id => [$code, $status, $active]) {
+            DB::table('users')->insert(['id' => $id, 'name' => "Employee {$code}", 'isActive' => $active]);
+            DB::table('employee_infos')->insert(array_replace($profile, [
+                'id' => $id,
+                'user_id' => $id,
+                'employeeCode' => $code,
+                'jobStatus' => $status,
+            ]));
+        }
+        Schema::create('leave_statuses', function (Blueprint $t) {
+            $t->unsignedBigInteger('user_id');
+            $t->boolean('onLeave');
+            $t->boolean('isPaid');
+            $t->boolean('isActive');
+        });
+        DB::table('leave_statuses')->insert([
+            ['user_id' => 37, 'onLeave' => true, 'isPaid' => true, 'isActive' => true],
+            ['user_id' => 94, 'onLeave' => true, 'isPaid' => false, 'isActive' => true],
+            ['user_id' => 95, 'onLeave' => true, 'isPaid' => true, 'isActive' => true],
+        ]);
+        DB::table('salary_monthly_component_adjustments')->insert([
+            'user_id' => 23,
+            'year' => 2026,
+            'month' => 11,
+            'payroll_component_type_id' => 11,
+            'arrear_amount' => 2821.50,
+        ]);
+
+        $url = '/dashboard/salary/estimation?year=2026&month=11';
+        $response = $this->actingAs($this->admin)->get($url)->assertOk();
+        $props = $response->viewData('page')['props'];
+        $this->assertSame(
+            ['Active', 'Ad Hoc', 'Contractual', 'Study Leave With Pay', 'Temporary'],
+            $props['filters']['employee_types']
+        );
+        $this->assertSame(6, $props['summary']['active_eligible']);
+        $this->assertEquals(2821.50, $props['summary']['net_arrear_total']);
+        $this->assertSame([
+            10012 => 'Study Leave With Pay',
+            10037 => 'Active',
+            20023 => 'Ad Hoc',
+            30090 => 'Temporary',
+            30091 => 'Contractual',
+            30095 => 'Study Leave With Pay',
+        ], collect($props['exportRows'])->pluck('employee_type', 'employee_code')->all());
+
+        $adHoc = $this->get($url . '&employee_types[]=Ad+Hoc&search=20023')->assertOk()->viewData('page')['props'];
+        $this->assertSame(['20023'], collect($adHoc['exportRows'])->pluck('employee_code')->all());
+        $this->assertEquals([
+            'Active' => 1,
+            'Ad Hoc' => 1,
+            'Contractual' => 1,
+            'Inactive' => 1,
+            'Study Leave With Pay' => 2,
+            'Study Leave Without Pay' => 1,
+            'Suspend' => 1,
+            'Temporary' => 1,
+        ], collect($adHoc['filterOptions']['employee_types'])->pluck('count', 'value')->all());
+    }
+
     public function test_leave_with_pay_10012_keeps_2015_june_basic_and_employee_type_filter_works(): void
     {
         // Create fixation tables and insert an approved 2026 fixation schedule for 10012 (52,208.00)

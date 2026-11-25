@@ -401,51 +401,25 @@
                     <div></div>
                 </header>
                 @if ($kind === 'bulk')
-                    {{-- <div style="font-size:8px;text-align:center;margin:0 0 4px;color:#7c4300">
-                        — in an arrear column = no verified saved value in the selected source (NOT BDT 0).
-                        Calculator snapshots are provisional until a salary bill is posted.
-                    </div> --}}
-                    {{-- <div class="heading">Salary Statement — Page {{ $pageIndex + 1 }} / {{ count($pages) }} · Up to {{ $perPage }} employees per page</div> --}}
                     @php
-                        $component = static function ($r, $group, $words) {
-                            $sum = 0.0;
-                            foreach ($r[$group] ?? [] as $row) {
-                                $name = strtolower((string) ($row['title'] ?? ''));
-                                foreach ($words as $word) {
-                                    if (str_contains($name, $word)) {
-                                        $amount = $row['current'] ?? null;
-                                        if ($amount === null) {
-                                            return null;
-                                        }
-                                        $sum += (float) $amount;
-                                        break;
-                                    }
-                                }
-                            }
-                            return $sum;
-                        };
                         $num = static fn($amount) => $amount === null ? '—' : number_format((float) $amount, 2);
-                        $columns = [
-                            'basic',
-                            'hra',
-                            'medical',
-                            'special',
-                            'education',
-                            'other',
-                            'current_gross',
-                            'gpf',
-                            'tax',
-                            'other_ded',
-                            'current_deductions',
-                            'basic_arrear_gross',
-                            'basic_increment_adjustment',
-                            'special_benefit_recovery',
-                            'house_rent_recovery',
-                            'additional_gpf',
-                            'net',
+                        $activeColumns = $horizontalColumns ?? [
+                            ['key' => 'basic', 'label' => 'Basic'],
+                            ['key' => 'hra', 'label' => 'HRA'],
+                            ['key' => 'medical', 'label' => 'MA'],
+                            ['key' => 'special_benefit', 'label' => 'S. Benefit'],
+                            ['key' => 'education', 'label' => 'Edu'],
+                            ['key' => 'gross', 'label' => 'Gross'],
+                            ['key' => 'gpf', 'label' => 'GPF'],
+                            ['key' => 'income_tax', 'label' => 'Income Tax'],
+                            ['key' => 'revenue_stamp', 'label' => 'Rev. Stamp'],
+                            ['key' => 'total_deduction', 'label' => 'Tot. Ded.'],
+                            ['key' => 'net_arrear', 'label' => 'Net Arrear'],
+                            ['key' => 'net_payable', 'label' => 'Net Payable'],
                         ];
-                        $totals = array_fill_keys($columns, 0.0);
-                        $missingTotals = array_fill_keys($columns, false);
+                        $columnKeys = array_column($activeColumns, 'key');
+                        $totals = array_fill_keys($columnKeys, 0.0);
+                        $missingTotals = array_fill_keys($columnKeys, false);
                     @endphp
                     <table class="summary-table">
                         <thead>
@@ -454,146 +428,20 @@
                                 <th>ID</th>
                                 <th class="person">Name</th>
                                 <th class="person">Designation</th>
-                                <th class="num">Basic</th>
-                                <th class="num">HRA</th>
-                                <th class="num">MA</th>
-                                <th class="num">S Benefit</th>
-                                <th class="num">Edu</th>
-                                <th class="num">Other A</th>
-                                <th class="num">Reg Gross</th>
-                                <th class="num">GPF</th>
-                                <th class="num">Income T</th>
-                                <th class="num">Other D</th>
-                                <th class="num">Reg Ded</th>
-                                <th class="num">Basic Arrear</th>
-                                <th class="num">Basic Adj.</th>
-                                <th class="num">S.B. Recovery</th>
-                                <th class="num">HRA Recovery</th>
-                                <th class="num">Addl. GPF</th>
-                                <th class="num">Net</th>
+                                @foreach ($activeColumns as $col)
+                                    <th class="num">{{ $col['label'] }}</th>
+                                @endforeach
                                 <th>Signature</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($pageRows as $i => $r)
                                 @php
-                                    $hra = $component($r, 'allowances', ['house rent']);
-                                    $medical = $component($r, 'allowances', ['medical']);
-                                    $special = $component($r, 'allowances', ['special benefit']);
-                                    $education = $component($r, 'allowances', ['education']);
-                                    $gpf = $component($r, 'deductions', ['provident fund', 'gpf']);
-                                    $tax = $component($r, 'deductions', ['income tax']);
-                                    $knownAdd = array_sum(
-                                        array_filter([$r['basic'], $hra, $medical, $special, $education], 'is_numeric'),
-                                    );
-                                    $other =
-                                        $r['current_gross'] === null ||
-                                        in_array(null, [$r['basic'], $hra, $medical, $special, $education], true)
-                                            ? null
-                                            : $r['current_gross'] - $knownAdd;
-                                    $otherDed =
-                                        $r['current_deductions'] === null || $gpf === null || $tax === null
-                                            ? null
-                                            : $r['current_deductions'] - $gpf - $tax;
-                                    // Unsaved regular-only previews have no verified arrear statement.
-                                    // Do not turn unknown arrears into numeric zero.
-                                    // A row with no saved arrear component is UNKNOWN,
-                                    // not a verified BDT 0. Do not fabricate an arrear
-                                    // from the regular-only preview or historical rates.
-                                    $arrearValues = [
-                                        'basic_arrear_gross' => null,
-                                        'basic_increment_adjustment' => null,
-                                        'special_benefit_recovery' => null,
-                                        'house_rent_recovery' => null,
-                                        'additional_gpf' => null,
-                                    ];
-                                    $arrearDirections = [
-                                        'basic_arrear_gross' => 'payable',
-                                        'basic_increment_adjustment' => 'deduction',
-                                        'special_benefit_recovery' => 'deduction',
-                                        'house_rent_recovery' => 'deduction',
-                                        'additional_gpf' => 'deduction',
-                                    ];
-                                    $seenArrearKeys = [];
-                                    foreach ($r['arrear_rows'] ?? [] as $arrearItem) {
-                                        if (!is_array($arrearItem)) {
-                                            continue;
-                                        }
-                                        $code = strtolower(trim((string) ($arrearItem['code'] ?? '')));
-                                        $title = strtolower(trim((string) ($arrearItem['title'] ?? '')));
-                                        // Some older calculator snapshots saved only
-                                        // the human-readable title, not the rule code.
-                                        // Map those exact known titles for display only.
-                                        if (!array_key_exists($code, $arrearValues)) {
-                                            if (preg_match('/^(bokeya prapyo|basic arrear)/i', $title)) {
-                                                $code = 'basic_arrear_gross';
-                                            } elseif (preg_match('/^(basic difference|old increment)/i', $title)) {
-                                                $code = 'basic_increment_adjustment';
-                                            } elseif (str_contains($title, 'special benefit recovery')) {
-                                                $code = 'special_benefit_recovery';
-                                            } elseif (
-                                                str_contains($title, 'house rent difference') ||
-                                                str_contains($title, 'house rent recovery')
-                                            ) {
-                                                $code = 'house_rent_recovery';
-                                            } elseif (
-                                                str_contains($title, 'additional provident fund') ||
-                                                str_contains($title, 'additional gpf')
-                                            ) {
-                                                $code = 'additional_gpf';
-                                            }
-                                        }
-                                        if (!array_key_exists($code, $arrearValues)) {
-                                            continue;
-                                        }
-                                        if (
-                                            !in_array(
-                                                strtolower(trim((string) ($arrearItem['direction'] ?? ''))),
-                                                $code === 'basic_arrear_gross'
-                                                    ? ['payable', 'allowance']
-                                                    : ['deduction'],
-                                                true,
-                                            )
-                                        ) {
-                                            continue;
-                                        }
-                                        $raw =
-                                            $arrearItem['final_amount'] ??
-                                            ($arrearItem['amount'] ?? ($arrearItem['total'] ?? null));
-                                        if (!is_numeric($raw) || !is_finite((float) $raw) || (float) $raw < 0) {
-                                            continue;
-                                        }
-                                        // Duplicate canonical components are not
-                                        // summed or guessed; keep the field unknown.
-                                        if (isset($seenArrearKeys[$code])) {
-                                            $arrearValues[$code] = null;
-                                            continue;
-                                        }
-                                        $seenArrearKeys[$code] = true;
-                                        $arrearValues[$code] = (float) $raw;
-                                    }
-                                    $vals = [
-                                        'basic' => $r['basic'],
-                                        'hra' => $hra,
-                                        'medical' => $medical,
-                                        'special' => $special,
-                                        'education' => $education,
-                                        'other' => $other,
-                                        'current_gross' => $r['current_gross'],
-                                        'gpf' => $gpf,
-                                        'tax' => $tax,
-                                        'other_ded' => $otherDed,
-                                        'current_deductions' => $r['current_deductions'],
-                                        'basic_arrear_gross' => $arrearValues['basic_arrear_gross'],
-                                        'basic_increment_adjustment' => $arrearValues['basic_increment_adjustment'],
-                                        'special_benefit_recovery' => $arrearValues['special_benefit_recovery'],
-                                        'house_rent_recovery' => $arrearValues['house_rent_recovery'],
-                                        'additional_gpf' => $arrearValues['additional_gpf'],
-                                        'net' => $r['net'],
-                                    ];
-                                    foreach ($vals as $key => $value) {
+                                    $hCols = $r['horizontal_columns'] ?? [];
+                                    foreach ($columnKeys as $key) {
+                                        $value = $hCols[$key] ?? null;
                                         if (is_numeric($value)) {
-                                            $totals[$key] += (float) $value;
+                                            $totals[$key] = round($totals[$key] + (float) $value, 2);
                                         } else {
                                             $missingTotals[$key] = true;
                                         }
@@ -603,39 +451,21 @@
                                     <td>{{ $pageIndex * $perPage + $i + 1 }}</td>
                                     <td>{{ $r['employee_code'] }} <br>
                                         {{ $r['grade'] }}
-                                        {{-- @dd($r) --}}
-                                        {{-- @if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW')
-                                            <span style="font-weight:bold">DRAFT</span>
-                                        @elseif (($r['source'] ?? '') === 'DRAFT_CALCULATOR_SNAPSHOT')
-                                            <span style="font-weight:bold">SAVED DRAFT</span>
-                                        @elseif (($r['source'] ?? '') === 'APPROVED_CALCULATOR_SNAPSHOT')
-                                            <span style="font-weight:bold">CALC APPROVED</span>
-                                        @endif --}}
                                     </td>
-                                    <td class="person">{{ $r['name'] }}
-                                        {{-- @if (($r['source'] ?? '') === 'DRAFT_REGULAR_ONLY_PREVIEW')
-                                            <span style="font-weight:bold">(DRAFT)</span>
-                                        @elseif (($r['source'] ?? '') === 'DRAFT_CALCULATOR_SNAPSHOT')
-                                            <span style="font-weight:bold">(SAVED DRAFT)</span>
-                                        @elseif (($r['source'] ?? '') === 'APPROVED_CALCULATOR_SNAPSHOT')
-                                            <span style="font-weight:bold">(CALC APPROVED)</span>
-                                        @endif --}}
-                                    </td>
+                                    <td class="person">{{ $r['name'] }}</td>
                                     <td class="person">{{ $r['designation'] }}</td>
-                                    @foreach ($columns as $key)
-                                        <td class="num" style="text-align: center;">{{ $num($vals[$key]) }}</td>
+                                    @foreach ($columnKeys as $key)
+                                        <td class="num" style="text-align: center;">{{ $num($hCols[$key] ?? null) }}</td>
                                     @endforeach
-                                    <td>
-                                    </td>
+                                    <td></td>
                                 </tr>
                             @endforeach
                             <tr class="total-row" style="height:6mm; text-align: center;">
                                 <td colspan="4">PAGE TOTAL</td>
-                                @foreach ($columns as $key)
+                                @foreach ($columnKeys as $key)
                                     <td class="num">{{ $num($missingTotals[$key] ? null : $totals[$key]) }}</td>
                                 @endforeach
-                                <td>
-                                </td>
+                                <td></td>
                             </tr>
                         </tbody>
                     </table>
@@ -644,7 +474,6 @@
                             {{ $grandTotal === null ? 'INCOMPLETE (missing saved net amounts)' : '৳' . number_format($grandTotal, 2) }}
                         </div>
                     @endif
-                    {{-- <div class="signature"><div>Prepared by</div><div>Checked by</div><div>Accounts Officer</div></div> --}}
                 @else
                     @php($r = $pageRows[0])
                     <div class="meta">

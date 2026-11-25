@@ -11,6 +11,8 @@ use App\Models\PayScale;
 use App\Models\SalaryGenerate;
 use App\Models\User;
 use App\Models\UserCategory;
+use App\Services\MonthlySalarySetupService;
+use App\Services\SalaryGenerationGuards;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -447,8 +449,26 @@ class SalaryReportController extends Controller
     private function transformUsers($users, int $monthId, int $year, string $reportType = 'Bank Advice', ?array &$exclusions = null)
     {
         $isBonusReport = in_array(strtolower(trim($reportType)), ['bonus bill', 'bonus report', 'bonus repot', 'bonus bank advice'], true);
+        $isNov2026Plus = !SalaryGenerationGuards::isMonthLocked($year, $monthId);
 
-        return $users->values()->map(function ($user, $index) use ($monthId, $year, $isBonusReport, $reportType, &$exclusions) {
+        $novSummarySetups = [];
+        if (!$isBonusReport && $isNov2026Plus && $reportType === 'Salary Summary') {
+            $ungeneratedIds = [];
+            foreach ($users as $u) {
+                if (SalaryGenerationGuards::joinedAfterPeriodEnd($u->joiningDate?->joining_date, $year, $monthId)) {
+                    continue;
+                }
+                if (!$u->salaryGenerates->count()) {
+                    $ungeneratedIds[] = (int) $u->id;
+                }
+            }
+            if ($ungeneratedIds !== []) {
+                $novSummarySetups = app(MonthlySalarySetupService::class)
+                    ->getSummariesForUsers($ungeneratedIds, $year, $monthId);
+            }
+        }
+
+        return $users->values()->map(function ($user, $index) use ($monthId, $year, $isBonusReport, $reportType, $isNov2026Plus, $novSummarySetups, &$exclusions) {
             $employeeInfo = $user->employeeInfo;
             $dept = $employeeInfo?->departmentOffice?->name
                 ?? $user->departmentOffices->first()?->name
@@ -614,6 +634,96 @@ class SalaryReportController extends Controller
                     'deduction_items' => $deductions,
                     'remarks' => $bonusRecord?->remarks,
                 ];
+            }
+
+            // November 2026+ Salary Summary excludes pre-joining staff and reads
+            // ungenerated previews from MonthlySalarySetupService (including Revenue Stamp).
+            if ($reportType === 'Salary Summary' && $isNov2026Plus) {
+                if (SalaryGenerationGuards::joinedAfterPeriodEnd($user->joiningDate?->joining_date, $year, $monthId)) {
+                    return null;
+                }
+                if (!$user->salaryGenerates->count() && isset($novSummarySetups[$user->id])) {
+                    $setup = $novSummarySetups[$user->id];
+                    $allowances = [];
+                    $deductions = [];
+                    $taxDed = 0.0;
+                    $gpfDed = 0.0;
+
+                    foreach (($setup['allowances'] ?? []) as $a) {
+                        $curAmt = round((float) ($a['current_amount'] ?? 0.0), 2);
+                        $arrAmt = round((float) ($a['arrear_amount'] ?? 0.0), 2);
+                        if (abs($curAmt) >= 0.005) {
+                            $allowances[] = [
+                                'name' => (string) ($a['name'] ?? 'Allowance'),
+                                'amount' => $curAmt,
+                                'calculated_amount' => $curAmt,
+                            ];
+                        }
+                        if (abs($arrAmt) >= 0.005) {
+                            $allowances[] = [
+                                'name' => (string) ($a['name'] ?? 'Allowance').' (Arrear)',
+                                'amount' => $arrAmt,
+                                'calculated_amount' => $arrAmt,
+                                'arrear_phase5' => true,
+                            ];
+                        }
+                    }
+                    foreach (($setup['deductions'] ?? []) as $d) {
+                        $name = (string) ($d['name'] ?? 'Deduction');
+                        $curAmt = round((float) ($d['current_amount'] ?? 0.0), 2);
+                        $arrAmt = round((float) ($d['arrear_amount'] ?? 0.0), 2);
+                        if (abs($curAmt) >= 0.005) {
+                            $deductions[] = [
+                                'name' => $name,
+                                'amount' => $curAmt,
+                                'calculated_amount' => $curAmt,
+                            ];
+                            $lower = strtolower($name);
+                            if (str_contains($lower, 'tax')) {
+                                $taxDed = round($taxDed + $curAmt, 2);
+                            } elseif (str_contains($lower, 'gpf') || str_contains($lower, 'provident')) {
+                                $gpfDed = round($gpfDed + $curAmt, 2);
+                            }
+                        }
+                        if (abs($arrAmt) >= 0.005) {
+                            $deductions[] = [
+                                'name' => $name.' (Arrear)',
+                                'amount' => $arrAmt,
+                                'calculated_amount' => $arrAmt,
+                                'arrear_phase5' => true,
+                            ];
+                        }
+                    }
+
+                    return [
+                        'sl' => $index + 1,
+                        'user_id' => $user->id,
+                        'employee_code' => $employeeInfo?->employeeCode ?? (string) (10000 + $user->id),
+                        'name' => $user->name,
+                        'designation' => $designation,
+                        'department' => $dept,
+                        'user_category' => $category,
+                        'pay_scale' => (string) ($setup['pay_scale'] ?? $scaleName),
+                        'grade' => (string) ($setup['grade'] ?? $gradeName),
+                        'bank_account_no' => $bankAccountNo,
+                        'bank_address' => $bankAddress,
+                        'month_id' => $monthId,
+                        'year' => $year,
+                        'is_generated' => false,
+                        'bill_status' => 'not generated',
+                        'basic_pay' => round((float) ($setup['basic_pay'] ?? 0.0), 2),
+                        'total_allowance' => round((float) ($setup['total_allowances'] ?? 0.0), 2),
+                        'total_deduction' => round((float) ($setup['total_deductions'] ?? 0.0), 2),
+                        'tax_deduction' => $taxDed,
+                        'gpf_deduction' => $gpfDed,
+                        'salary_total' => round((float) ($setup['net_payable'] ?? 0.0), 2),
+                        'allowance_items' => $allowances,
+                        'deduction_items' => $deductions,
+                        'arrear_unresolved' => false,
+                        'calculation_version_id' => null,
+                        'calculation_status' => 'monthly_setup_preview',
+                    ];
+                }
             }
 
             // October review reports must use persisted monthly calculator amounts,
@@ -1052,7 +1162,8 @@ class SalaryReportController extends Controller
     }
 
     /**
-     * Calculate summary aggregates for report.
+     * Calculate summary aggregates for report, including exact 2-decimal
+     * totals and Revenue Stamp count vs. payable salary bill count.
      */
     private function calculateSummary($items)
     {
@@ -1062,22 +1173,72 @@ class SalaryReportController extends Controller
         $totalNet = 0.0;
         $totalTax = 0.0;
         $totalGpf = 0.0;
+        $payableBillCount = 0;
+        $revenueStampCount = 0;
+        $revenueStampAmount = 0.0;
 
         foreach ($items as $item) {
             $totalAllowance += (float) ($item['total_allowance'] ?? 0);
             $totalDeduction += (float) ($item['total_deduction'] ?? 0);
-            $totalNet += (float) ($item['salary_total'] ?? 0);
+            $net = $item['salary_total'] ?? null;
+            if (is_numeric($net) && is_finite((float) $net)) {
+                $totalNet += (float) $net;
+                if ((float) $net > 0.0) {
+                    $payableBillCount++;
+                }
+            }
             $totalTax += (float) ($item['tax_deduction'] ?? 0);
             $totalGpf += (float) ($item['gpf_deduction'] ?? 0);
+
+            $regularStampForBill = 0.0;
+            foreach (($item['deduction_items'] ?? []) as $ded) {
+                if (!is_array($ded)) {
+                    continue;
+                }
+                if (!empty($ded['arrear_phase5']) || !empty($ded['arrear_snapshot_id'])) {
+                    continue;
+                }
+                $name = strtolower(trim((string) ($ded['name'] ?? $ded['payroll_component_type']['name'] ?? '')));
+                if (str_contains($name, 'arrear') || str_contains($name, 'difference')) {
+                    continue;
+                }
+                if (str_contains($name, 'revenue stamp') || preg_match('/\bstamp\b/i', $name)) {
+                    $rawAmt = $ded['calculated_amount'] ?? $ded['amount'] ?? 0;
+                    if (is_numeric($rawAmt) && (float) $rawAmt > 0.0) {
+                        $regularStampForBill += (float) $rawAmt;
+                    }
+                }
+            }
+            if ($regularStampForBill > 0.0) {
+                $revenueStampCount++;
+                $revenueStampAmount += $regularStampForBill;
+            }
         }
+
+        $totalAllowance = round($totalAllowance, 2);
+        $totalDeduction = round($totalDeduction, 2);
+        $totalNet = round($totalNet, 2);
+        $totalTax = round($totalTax, 2);
+        $totalGpf = round($totalGpf, 2);
+        $revenueStampAmount = round($revenueStampAmount, 2);
 
         return [
             'total_records' => $totalRecords,
+            'payable_bill_count' => $payableBillCount,
+            'revenue_stamp_count' => $revenueStampCount,
+            'revenue_stamp_amount' => $revenueStampAmount,
+            'revenue_stamp_amount_formatted' => number_format($revenueStampAmount, 2, '.', ''),
+            'revenue_stamp_matches_payable_bills' => $revenueStampCount === $payableBillCount,
             'total_allowance' => $totalAllowance,
+            'total_allowance_formatted' => number_format($totalAllowance, 2, '.', ''),
             'total_deduction' => $totalDeduction,
+            'total_deduction_formatted' => number_format($totalDeduction, 2, '.', ''),
             'total_net' => $totalNet,
+            'total_net_formatted' => number_format($totalNet, 2, '.', ''),
             'total_tax' => $totalTax,
+            'total_tax_formatted' => number_format($totalTax, 2, '.', ''),
             'total_gpf' => $totalGpf,
+            'total_gpf_formatted' => number_format($totalGpf, 2, '.', ''),
         ];
     }
 }

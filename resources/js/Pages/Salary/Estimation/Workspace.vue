@@ -63,16 +63,7 @@ const years = computed(() => {
     return list;
 });
 
-const defaultEmployeeTypes = computed(
-    () =>
-        props.filterOptions?.default_employee_types || [
-            'Active',
-            'Study Leave With Pay',
-            'Ad Hoc',
-            'Contractual',
-            'Deputation',
-        ],
-);
+const defaultEmployeeTypes = computed(() => props.filterOptions?.default_employee_types ?? []);
 
 const search = ref(props.filters?.search || '');
 const categoryId = ref(props.filters?.category_id || '');
@@ -81,16 +72,21 @@ const designation = ref(props.filters?.designation || '');
 const statusFilter = ref(props.filters?.status || 'ALL');
 const perPage = ref(props.filters?.per_page || '50');
 const selectedEmployeeTypes = ref(
-    Array.isArray(props.filters?.employee_types) && props.filters.employee_types.length
-        ? [...props.filters.employee_types]
-        : [...defaultEmployeeTypes.value],
+    [...(props.filters?.employee_types ?? defaultEmployeeTypes.value)],
 );
 const employeeTypeToAdd = ref('');
 
 const availableEmployeeTypesToAdd = computed(() =>
     (props.filterOptions?.employee_types || []).filter(
-        (type) => !selectedEmployeeTypes.value.includes(type),
+        (type) => !selectedEmployeeTypes.value.includes(type.value),
     ),
+);
+
+watch(
+    () => props.filters?.employee_types,
+    (types) => {
+        selectedEmployeeTypes.value = [...(types ?? defaultEmployeeTypes.value)];
+    },
 );
 
 watch(
@@ -678,12 +674,6 @@ const exportHorizontalPdf = () => {
                         </select>
                     </div>
 
-                    <a
-                        :href="`/dashboard/salary/estimation/bulk-components?year=${year}&month=${month}`"
-                        class="rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-semibold text-indigo-800 transition hover:bg-indigo-100"
-                    >
-                        Bulk Component Grid
-                    </a>
                 </div>
             </header>
 
@@ -778,8 +768,8 @@ const exportHorizontalPdf = () => {
                                 class="rounded-full border-slate-300 bg-white py-0.5 pl-2.5 pr-7 text-xs font-medium text-slate-600 focus:border-indigo-500 focus:ring-indigo-500"
                             >
                                 <option value="">+ Add Type</option>
-                                <option v-for="t in availableEmployeeTypesToAdd" :key="t" :value="t">
-                                    {{ t }}
+                                <option v-for="type in availableEmployeeTypesToAdd" :key="type.value" :value="type.value">
+                                    {{ type.value }} ({{ type.count }})
                                 </option>
                             </select>
                         </div>
@@ -951,12 +941,12 @@ const exportHorizontalPdf = () => {
                     {{ notice }}
                 </div>
 
-                <!-- Responsive Employee Payroll Table (No clipping at 1280px+) -->
-                <div class="w-full overflow-x-auto">
+                <!-- Employee payroll table -->
+                <div class="w-full max-w-full overflow-x-auto">
                     <table class="w-full table-auto text-left text-xs">
-                        <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                             <tr>
-                                <th class="w-9 px-2.5 py-2.5 text-center">
+                                <th class="w-9 px-2.5 py-2 text-center">
                                     <input
                                         type="checkbox"
                                         :checked="allPageSelected"
@@ -966,15 +956,15 @@ const exportHorizontalPdf = () => {
                                         aria-label="Select all pending employees on page"
                                     />
                                 </th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5">Code</th>
-                                <th class="px-2.5 py-2.5">Name &amp; Designation</th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5">Category / Grade</th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Basic</th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Regular Net</th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Net Arrear</th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Net Payable</th>
-                                <th class="whitespace-nowrap px-2.5 py-2.5 text-center">Status</th>
-                                <th class="sticky right-0 z-10 whitespace-nowrap border-l border-slate-200 bg-slate-50 px-2.5 py-2.5 text-center">
+                                <th class="whitespace-nowrap px-2.5 py-2">Code</th>
+                                <th class="px-2.5 py-2">Employee</th>
+                                <th class="whitespace-nowrap px-2.5 py-2">Category</th>
+                                <th class="whitespace-nowrap px-2.5 py-2 text-right">Basic</th>
+                                <th class="whitespace-nowrap px-2.5 py-2 text-right">Reg. Net</th>
+                                <th class="whitespace-nowrap px-2.5 py-2 text-right">Arrear</th>
+                                <th class="whitespace-nowrap px-2.5 py-2 text-right">Net Payable</th>
+                                <th class="whitespace-nowrap px-2.5 py-2 text-center">Status</th>
+                                <th class="sticky right-0 z-10 min-w-[7.25rem] whitespace-nowrap border-l border-slate-200 bg-slate-50 px-2.5 py-2 text-center">
                                     Action
                                 </th>
                             </tr>
@@ -985,7 +975,7 @@ const exportHorizontalPdf = () => {
                                 :key="row.user_id"
                                 class="group align-middle transition hover:bg-slate-50/80"
                             >
-                                <td class="px-2.5 py-2.5 text-center">
+                                <td class="px-2.5 py-2 text-center">
                                     <input
                                         v-model="selectedIds"
                                         type="checkbox"
@@ -995,10 +985,10 @@ const exportHorizontalPdf = () => {
                                         :aria-label="`Select ${row.employee_code}`"
                                     />
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5 font-mono text-xs font-semibold text-slate-800">
+                                <td class="whitespace-nowrap px-2.5 py-2 font-mono text-xs font-semibold text-slate-800">
                                     {{ row.employee_code }}
                                 </td>
-                                <td class="max-w-[240px] px-2.5 py-2.5">
+                                <td class="max-w-[240px] px-2.5 py-2">
                                     <div class="truncate font-semibold text-slate-900" :title="row.name">
                                         {{ row.name }}
                                     </div>
@@ -1010,7 +1000,7 @@ const exportHorizontalPdf = () => {
                                         <span v-if="row.department_name"> · {{ row.department_name }}</span>
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5">
+                                <td class="min-w-24 px-2.5 py-2">
                                     <div class="font-medium text-slate-800">
                                         {{ row.category_names || '—' }}
                                     </div>
@@ -1018,19 +1008,19 @@ const exportHorizontalPdf = () => {
                                         {{ row.grade_name || 'No grade' }}
                                         <span
                                             v-if="row.employee_type && row.employee_type !== 'Active'"
-                                            class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800"
+                                            class="ml-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800"
                                         >
                                             {{ row.employee_type }}
                                         </span>
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono text-slate-700">
+                                <td class="whitespace-nowrap px-2.5 py-2 text-right font-mono text-slate-700">
                                     {{ formatMoney(row.basic_pay) }}
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono font-medium text-slate-800">
+                                <td class="whitespace-nowrap px-2.5 py-2 text-right font-mono font-medium text-slate-800">
                                     {{ formatMoney(row.regular_net) }}
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono">
+                                <td class="whitespace-nowrap px-2.5 py-2 text-right font-mono">
                                     <span
                                         v-if="Math.abs(Number(row.net_arrear || 0)) >= 0.005"
                                         class="inline-flex items-center rounded px-1.5 py-0.5 font-semibold"
@@ -1044,10 +1034,10 @@ const exportHorizontalPdf = () => {
                                     </span>
                                     <span v-else class="text-slate-400">0.00</span>
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono text-xs font-bold text-slate-900">
+                                <td class="whitespace-nowrap px-2.5 py-2 text-right font-mono text-xs font-bold text-slate-900">
                                     {{ formatMoney(row.net_payable) }}
                                 </td>
-                                <td class="whitespace-nowrap px-2.5 py-2.5 text-center">
+                                <td class="whitespace-nowrap px-2.5 py-2 text-center">
                                     <span
                                         v-if="row.is_generated"
                                         class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800"
@@ -1061,7 +1051,7 @@ const exportHorizontalPdf = () => {
                                         Pending
                                     </span>
                                 </td>
-                                <td class="sticky right-0 z-10 whitespace-nowrap border-l border-slate-100 bg-white px-2.5 py-2 text-center group-hover:bg-slate-50">
+                                <td class="sticky right-0 z-10 min-w-[7.25rem] whitespace-nowrap border-l border-slate-100 bg-white px-2.5 py-2 text-center group-hover:bg-slate-50">
                                     <div class="inline-flex items-center justify-center gap-1">
                                         <!-- 1. Profile Edit (Pencil Icon) -->
                                         <button
@@ -1069,7 +1059,7 @@ const exportHorizontalPdf = () => {
                                             @click="openProfileEdit(row)"
                                             title="Edit Employee Profile"
                                             aria-label="Edit Employee Profile"
-                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+                                            class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
                                         >
                                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -1082,7 +1072,7 @@ const exportHorizontalPdf = () => {
                                             @click="openSalarySetup(row)"
                                             title="Monthly Salary Setup"
                                             aria-label="Monthly Salary Setup"
-                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 transition hover:bg-indigo-100"
+                                            class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 transition hover:bg-indigo-100"
                                         >
                                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -1095,7 +1085,7 @@ const exportHorizontalPdf = () => {
                                             @click="openBillPreview(row)"
                                             title="View / Print Salary Bill"
                                             aria-label="View / Print Salary Bill"
-                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
+                                            class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
                                         >
                                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
