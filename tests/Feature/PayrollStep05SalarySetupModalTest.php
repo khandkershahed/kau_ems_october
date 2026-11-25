@@ -646,9 +646,9 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $component = static fn ($name, $amount) => ['name' => $name, 'calcType' => 'fixed', 'amount' => $amount];
         $profile = EmployeeInfo::findOrFail(12);
         $profile->update([
-            'employeeCode' => '10046',
+            'employeeCode' => '20028',
             'additionObjects' => [
-                $component('Basic Pay', 59886),
+                $component('Basic Pay', 36396),
                 $component('House Rent Allowance', 17268),
                 $component('Medical Allowance', 0),
             ],
@@ -666,7 +666,7 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
                 $component('Charge Allowance', 600) + ['arrear_phase5' => true],
             ]),
             'salaryDeductionCalcObject' => json_encode([
-                $component('General Provident Fund (GPF)', 5989),
+                $component('General Provident Fund (GPF)', 3640),
                 $component('Income Tax', 300),
                 $component('Others Deduction', 500) + ['arrear_snapshot_id' => 1],
             ]),
@@ -675,15 +675,20 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $setup = app(MonthlySalarySetupService::class);
         $november = $setup->getSetupForEmployee($this->employee, 2026, 11);
         $bulk = $setup->getSummariesForUsers([12], 2026, 11)[12];
-        $this->assertEquals(82330.00, $november['regular_allowances']);
-        $this->assertEquals(6299.00, $november['regular_deductions']);
+        $this->assertEquals(58840.00, $november['regular_allowances']);
+        $this->assertEquals(3949.60, $november['regular_deductions']);
+        $this->assertSame(3639.60, collect($november['deductions'])->firstWhere('payroll_component_type_id', 16)['current_amount']);
         $this->assertEquals(0.00, $november['net_arrear']);
         $this->assertSame($november['allowances'], $bulk['allowances']);
         $this->assertSame($november['deductions'], $bulk['deductions']);
 
         $december = $setup->getSetupForEmployee($this->employee, 2026, 12);
-        $this->assertEquals(77154.00, $december['regular_allowances']);
-        $this->assertEquals(10.00, $december['regular_deductions']);
+        $this->assertEquals(53664.00, $december['regular_allowances']);
+        $this->assertEquals(3649.60, $december['regular_deductions']);
+
+        $profile->update(['substractionObjects' => []]);
+        $novemberWithoutGpfRow = $setup->getSetupForEmployee($this->employee, 2026, 11);
+        $this->assertSame($november['deductions'], $novemberWithoutGpfRow['deductions']);
     }
 
     public function test_november_applies_the_verified_ad_hoc_and_gpf_exceptions(): void

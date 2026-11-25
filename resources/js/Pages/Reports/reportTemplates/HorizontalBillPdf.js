@@ -101,16 +101,16 @@ export async function createHorizontalBillPdf({
     const numericColEnd = numericColStart + activeCols.length - 1;
     const columnStyles = {
         0: { halign: 'center', cellWidth: 7 },
-        1: { halign: 'center', cellWidth: 14 },
-        2: { halign: 'left', cellWidth: 26 },
-        3: { halign: 'left', cellWidth: 22 },
+        1: { halign: 'center', cellWidth: 13 },
+        2: { halign: 'left', cellWidth: 25 },
+        3: { halign: 'left', cellWidth: 21 },
     };
     for (let c = numericColStart; c <= numericColEnd; c++) {
         columnStyles[c] = { halign: 'right' };
     }
-    columnStyles[numericColEnd + 1] = { halign: 'center', cellWidth: 14 };
+    columnStyles[numericColEnd + 1] = { halign: 'center', cellWidth: 13 };
 
-    const fontSize = activeCols.length >= 16 ? 5.6 : activeCols.length >= 13 ? 6.1 : 6.6;
+    const fontSize = activeCols.length >= 16 ? 5.3 : activeCols.length >= 13 ? 5.8 : 6.3;
 
     const drawHeader = (pageIdx) => {
         if (logoBase64) {
@@ -211,7 +211,7 @@ export async function createHorizontalBillPdf({
             theme: 'grid',
             styles: {
                 fontSize,
-                cellPadding: 1.1,
+                cellPadding: 0.8,
                 lineColor: [148, 163, 184],
                 lineWidth: 0.15,
                 overflow: 'linebreak',
@@ -230,6 +230,11 @@ export async function createHorizontalBillPdf({
                 fontStyle: 'bold',
             },
             columnStyles,
+            didParseCell: ({ cell, column }) => {
+                if (column.index >= numericColStart && column.index <= numericColEnd) {
+                    cell.styles.cellWidth = 'wrap';
+                }
+            },
         });
 
         doc.setFont('helvetica', 'normal');

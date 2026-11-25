@@ -27,6 +27,10 @@ final class MonthlySalarySetupService
         '20037', '20062', '20069', '30098', '30254', '40033', '40158',
     ];
 
+    private const GPF_PLACEHOLDER_CODES = [
+        '20028', '20029', '20033', '20034', '20035', '20037', '40033', '40158',
+    ];
+
     private const NOVEMBER_AD_HOC_CODES = ['30036', '30043', '30073', '30075'];
 
     public static function classifyDirection(string $name): string
@@ -199,6 +203,8 @@ final class MonthlySalarySetupService
         $code = (string) $profile->employeeCode;
         $useOctoberFallback = $isNovember2026 && in_array($code, self::NOVEMBER_OCTOBER_FALLBACK_CODES, true);
         $isNovemberAdHoc = $isNovember2026 && in_array($code, self::NOVEMBER_AD_HOC_CODES, true);
+        $ignoreGpfPlaceholder = !SalaryGenerationGuards::isMonthLocked($year, $month)
+            && in_array($code, self::GPF_PLACEHOLDER_CODES, true);
         $octoberAdds = $octoberBill && ($is2026Scale || $useOctoberFallback)
             ? $this->octoberRegularRows($octoberBill->salaryAllowanceCalcObject)
             : [];
@@ -238,11 +244,12 @@ final class MonthlySalarySetupService
             $direction = self::classifyDirection($name);
             $sourceRows = $direction === 'allowance' ? $profileAdds : $profileDeds;
             $profileRow = $this->matchProfileRow($sourceRows, $typeId, $name);
+            $isGpf = SalaryCalculationService::isGpf(['name' => $name]);
 
             $autoCurrent = $this->computeAutoCurrentAmount(
                 $name,
                 $profile,
-                $profileRow,
+                $isGpf && $ignoreGpfPlaceholder ? null : $profileRow,
                 $effectiveBasic,
                 $is2015Scale,
                 $is2026Scale,
@@ -251,9 +258,8 @@ final class MonthlySalarySetupService
                 $month
             );
 
-            $isGpf = SalaryCalculationService::isGpf(['name' => $name]);
             $needsOctoberAmount = $useOctoberFallback
-                && !self::isBasicPay($name) && !self::isRevenueStamp($name)
+                && !$isGpf && !self::isBasicPay($name) && !self::isRevenueStamp($name)
                 && !(self::isSpecialBenefit($name) && ($is2026Scale || $autoCurrent !== 0.0))
                 && ($this->evaluateProfileRow($profileRow, $effectiveBasic) === 0.0);
             $usesFrozenHra = $isNovember2026 && $is2026Scale && strcasecmp($name, 'House Rent Allowance') === 0;
@@ -261,9 +267,6 @@ final class MonthlySalarySetupService
             if ($needsOctoberAmount || $usesFrozenHra) {
                 $octoberRows = $direction === 'allowance' ? $octoberAdds : $octoberDeds;
                 $octoberRow = $this->matchProfileRow($octoberRows, $typeId, $name);
-                if ($octoberRow === null && $isGpf) {
-                    $octoberRow = collect($octoberRows)->first(fn ($row) => SalaryCalculationService::isGpf($row));
-                }
                 $autoCurrent = $octoberRow['amount'] ?? $autoCurrent;
             }
             if ($isNovemberAdHoc && strcasecmp($name, 'Others Deduction') === 0 && $autoCurrent === 1270.50) {
