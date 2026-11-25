@@ -145,7 +145,7 @@ final class SalaryCalculatorEntryController extends Controller
             // silently inserted deduction for an empty Payroll Component list.
             $gpfOverride = collect($ded)->contains(fn($r) => SalaryCalculationService::isGpf($r))
                 ? null : ['type' => 'disabled', 'amount' => 0];
-            $baseline = $calculator->calculate($adds, $ded, $fixation, $gpfOverride);
+            $baseline = $calculator->calculate($adds, $ded, $fixation, $gpfOverride, $year, $month);
             $arrearRows = app(SalaryArrearRuleService::class)->preview($user->id, $year, $month);
             if ($overrideChanged) {
                 $error = 'Employee component overrides changed since the saved calculation. Current automatic components are displayed. Save a new version before bill generation.';
@@ -183,7 +183,7 @@ final class SalaryCalculatorEntryController extends Controller
                                 . 'October House Rent now uses the approved June 2026 salary. Review and save a NEW calculation version before generating a bill.');
                         }
                     }
-                    $financial = $calculator->calculate($adds, $ded, null, $gpfOverride);
+                    $financial = $calculator->calculate($adds, $ded, null, $gpfOverride, $year, $month);
                     if (abs((float) ($saved['net_salary'] ?? -1) - $financial['net_salary']) > 0.009) {
                         $error = 'Saved calculation totals do not match its component snapshot. Review before using it.';
                     }
@@ -445,7 +445,7 @@ final class SalaryCalculatorEntryController extends Controller
         $gpf = collect($ded)->contains(fn($r) => SalaryCalculationService::isGpf($r))
             ? null : ['type' => 'disabled', 'amount' => 0];
         // Identical original calculation service and approval constraints.
-        $calculator->calculate($adds, $ded, $fixation, $gpf);
+        $calculator->calculate($adds, $ded, $fixation, $gpf, $year, $month);
         $rules = app(SalaryArrearRuleService::class)->preview($user->id, $year, $month);
         if (!$rules && $saveStatus === 'approved') throw new DomainException('No published arrear rules; verify October arrear configuration.');
         $arrears = [];
@@ -539,6 +539,7 @@ final class SalaryCalculatorEntryController extends Controller
             $employee = $this->profiles($user);
             $year = (int) $input['year'];
             $month = (int) $input['month'];
+            \App\Services\SalaryGenerationGuards::assertMonthMutable($year, $month, 'recalculated');
             $fixation = $resolver->forUser($user->id, $year, $month);
             $sourceId = (int) ($fixation['salary_fixation_id'] ?? 0);
             $componentSignature = app(SalaryEmployeeComponentOverrideService::class)->signature($user->id, $year, $month);
@@ -707,7 +708,7 @@ final class SalaryCalculatorEntryController extends Controller
                 $ded = array_values(array_filter($ded, static fn($row) =>
                 !SalaryCalculationService::isGpf($row)));
             }
-            $calculated = $calculator->calculate($adds, $ded, $calculationFixation, $gpfInput);
+            $calculated = $calculator->calculate($adds, $ded, $calculationFixation, $gpfInput, $year, $month);
             $submittedArrear = $input['arrear_rows'] ?? [];
             // Re-evaluate every published rule from authoritative historical records.
             // Never trust browser-provided automatic results or payment evidence.
@@ -793,7 +794,7 @@ final class SalaryCalculatorEntryController extends Controller
                 $baselineDed = SalaryComponentNormalizer::rows($employee->substractionObjects);
                 $baseline = null;
                 try {
-                    $baseline = $calculator->calculate($baselineAdds, $baselineDed, null);
+                    $baseline = $calculator->calculate($baselineAdds, $baselineDed, null, null, $year, $month);
                 } catch (DomainException $e) {
                     $baseline = ['unavailable_reason' => $e->getMessage()];
                 }

@@ -59,7 +59,15 @@ final class SalaryOfficialReportController extends Controller
             ->where('monthId', (int) $validated['month'])->get()->groupBy('user_id');
         $draftPreview = ($validated['mode'] ?? null) === 'preview';
         $rows = [];
+        // BUG-002: a preview never lists employees who joined after the salary month ended.
+        $joiningByUser = $draftPreview
+            ? \App\Models\JoiningDate::query()->whereIn('user_id', $ids)->orderBy('id')->get()->unique('user_id')->pluck('joining_date', 'user_id')
+            : collect();
         foreach ($ids as $id) {
+            if ($draftPreview && \App\Services\SalaryGenerationGuards::joinedAfterPeriodEnd(
+                $joiningByUser->get($id), (int) $validated['year'], (int) $validated['month'])) {
+                continue;
+            }
             // In preview mode the operator explicitly requests the values LAST
             // SAVED in Salary Calculator, even if an older regular-only bill
             // exists. This NEVER mutates or replaces the posted salary bill.

@@ -524,6 +524,9 @@ final class HistoricalSalaryImportService
         if (! $targetIds) {
             return 0;
         }
+        foreach (DB::table('salary_generates')->whereIn('id', $targetIds)->get(['salaryGenerationYear', 'monthId']) as $row) {
+            SalaryGenerationGuards::assertMonthMutable((int) $row->salaryGenerationYear, (int) $row->monthId, 'deleted by import rollback');
+        }
         $deleted = 0;
         DB::transaction(function () use ($targetIds, &$deleted, $runId) {
             foreach (array_chunk($targetIds, 200) as $chunk) {
@@ -561,6 +564,7 @@ final class HistoricalSalaryImportService
                 if (! $current) {
                     continue;
                 }
+                SalaryGenerationGuards::assertMonthMutable((int) $current->salaryGenerationYear, (int) $current->monthId, 'overwritten by import');
                 DB::table('salary_import_backups')->insert([
                     'run_id' => $replaceRunId,
                     'salary_generate_id' => $existingId,

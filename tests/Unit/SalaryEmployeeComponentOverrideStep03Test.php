@@ -55,8 +55,9 @@ final class SalaryEmployeeComponentOverrideStep03Test extends TestCase
         $rule=$this->rule(['direction'=>'deduction','component_key'=>'type:12',
             'component_title'=>'General Provident Fund (GPF)','payroll_component_type_id'=>12,'value'=>10]);
         [$adds,$ded]=OverrideService::apply([$this->basic()],[$gpf],[$rule]);
-        $result=(new SalaryCalculationService)->calculate($adds,$ded);
+        $result=(new SalaryCalculationService)->calculate($adds,$ded,null,null,2026,10); // finalized month keeps whole-taka
         self::assertSame(2872.0,$result['gpf_deduction']);
+        self::assertSame(2871.5,(new SalaryCalculationService)->calculate($adds,$ded,null,null,2026,11)['gpf_deduction']);
         self::assertSame('employee_month_override',$result['gpf_rule']['source']);
     }
 

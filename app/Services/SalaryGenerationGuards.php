@@ -2,12 +2,39 @@
 
 namespace App\Services;
 
+use App\Exceptions\HistoricalSalaryImmutableException;
 use DateTimeImmutable;
 use DomainException;
 
 /** Shared non-mutating prerequisites for real salary generation and staging rehearsal. */
 final class SalaryGenerationGuards
 {
+    /** Salary months up to and including 2026-10 are finalized (YYYYMM). */
+    public const LOCKED_THROUGH_YEAR_MONTH = 202610;
+
+    public static function isMonthLocked(int $year, int $month): bool
+    {
+        return $year * 100 + $month <= self::LOCKED_THROUGH_YEAR_MONTH;
+    }
+
+    /** @throws HistoricalSalaryImmutableException when the month is finalized. */
+    public static function assertMonthMutable(int $year, int $month, string $action = 'changed'): void
+    {
+        if (self::isMonthLocked($year, $month)) {
+            throw HistoricalSalaryImmutableException::forMonth($year, $month, $action);
+        }
+    }
+
+    /** True when the employee joined after the last day of the salary month. */
+    public static function joinedAfterPeriodEnd(mixed $joiningDate, int $year, int $month): bool
+    {
+        if ($joiningDate === null || trim((string) $joiningDate) === '') return false;
+        $joined = substr(is_object($joiningDate) && method_exists($joiningDate, 'format')
+            ? $joiningDate->format('Y-m-d') : (string) $joiningDate, 0, 10);
+        $periodEnd = (new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month)))->format('Y-m-t');
+        return $joined > $periodEnd;
+    }
+
     public static function assertSalaryDate(int $year, int $month, string $salaryDate): void
     {
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $salaryDate);

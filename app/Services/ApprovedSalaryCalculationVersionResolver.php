@@ -32,7 +32,7 @@ final class ApprovedSalaryCalculationVersionResolver
         if (!is_array($adds) || !is_array($ded) || !is_array($stored)) {
             throw new DomainException('Saved approved salary calculation snapshot is malformed.');
         }
-        $calc = app(SalaryCalculationService::class)->calculate($adds, $ded, null, $gpfOverride);
+        $calc = app(SalaryCalculationService::class)->calculate($adds, $ded, null, $gpfOverride, $year, $month);
         foreach (['basic', 'total_allowance', 'total_deduction', 'gpf_deduction', 'net_salary'] as $key) {
             if (abs((float) ($stored[$key] ?? -1) - (float) $calc[$key]) > 0.009) {
                 throw new DomainException('Approved salary calculation snapshot amount mismatch: '.$key);

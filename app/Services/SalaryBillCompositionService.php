@@ -34,6 +34,9 @@ final class SalaryBillCompositionService
         }
         $user = User::findOrFail($userId);
         if (!(bool) $user->isActive) throw new DomainException('Employee is inactive; reconcile employment status.');
+        if (SalaryGenerationGuards::joinedAfterPeriodEnd($user->joiningDate?->joining_date, $year, $month)) {
+            throw new DomainException('EMPLOYEE_NOT_YET_JOINED_IN_SELECTED_PAYROLL_PERIOD');
+        }
         $profiles = EmployeeInfo::with(['payScale', 'payrollGroup.grade','payrollGroup.payrollGroupType'])
             ->where('user_id', $userId)->limit(2)->get();
         if ($profiles->count() !== 1) throw new DomainException('Exactly one employee payroll profile is required.');
@@ -96,7 +99,7 @@ final class SalaryBillCompositionService
         if (!$gpfOverride && !collect($ded)->contains(fn($v)=>SalaryCalculationService::isGpf($v))) {
             $gpfOverride=['type'=>'disabled','amount'=>0];
         }
-        $regular=app(SalaryCalculationService::class)->calculate($add,$ded,$fixation,$gpfOverride);
+        $regular=app(SalaryCalculationService::class)->calculate($add,$ded,$fixation,$gpfOverride,$year,$month);
         if ($saved) {
             foreach (['basic','total_allowance','total_deduction','gpf_deduction','net_salary'] as $field) {
                 if (self::cents($regular[$field]) !== self::cents($savedCalc[$field] ?? null)) {
@@ -262,6 +265,9 @@ final class SalaryBillCompositionService
         }
         $user = User::findOrFail($userId);
         if (!(bool) $user->isActive) throw new DomainException('Employee is inactive; reconcile employment status.');
+        if (SalaryGenerationGuards::joinedAfterPeriodEnd($user->joiningDate?->joining_date, $year, $month)) {
+            throw new DomainException('EMPLOYEE_NOT_YET_JOINED_IN_SELECTED_PAYROLL_PERIOD');
+        }
         $profiles = EmployeeInfo::with(['payScale', 'payrollGroup.grade', 'payrollGroup.payrollGroupType'])
             ->where('user_id', $userId)->limit(2)->get();
         if ($profiles->count() !== 1) throw new DomainException('Exactly one employee payroll profile is required.');
@@ -295,7 +301,7 @@ final class SalaryBillCompositionService
         } else {
             $gpfOverride = null;
         }
-        $regular = app(SalaryCalculationService::class)->calculate($add, $ded, $fixation, $gpfOverride);
+        $regular = app(SalaryCalculationService::class)->calculate($add, $ded, $fixation, $gpfOverride, $year, $month);
 
         // Arrear readiness is metadata only: it never changes regular totals.
         [$ready, $reasons] = self::evaluateArrearReadiness(

@@ -126,6 +126,8 @@ final class SalaryArrearPostingService
             if (!$bill || (int) $bill->user_id !== (int) $snapshot->user_id) {
                 throw new DomainException('Salary bill and arrear employee do not match.');
             }
+            SalaryGenerationGuards::assertMonthMutable(
+                (int) $bill->salaryGenerationYear, (int) $bill->monthId, 'overwritten with arrear');
             if (\Illuminate\Support\Facades\Schema::hasTable('salary_bill_source_links')
                 && DB::table('salary_bill_source_links')->where('salary_generate_id',$billId)->exists()) {
                 throw new DomainException('Phase 5 bill has a frozen salary/arrear source. Do not mutate it through the legacy arrear posting workflow.');

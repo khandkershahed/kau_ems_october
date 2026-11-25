@@ -70,6 +70,7 @@ final class SalaryBillPostingService
 
     public function post(int $userId, int $year, int $month, ?int $actorId = null, ?int $expectedVersion = null, ?string $expectedSourceHash = null): array
     {
+        SalaryGenerationGuards::assertMonthMutable($year, $month, 'posted or regenerated');
         if (!Schema::hasTable('salary_bill_source_links') || !Schema::hasTable('salary_bill_arrear_gpf_entries')) {
             throw new DomainException('Phase 5 source/link migrations have not been applied.');
         }

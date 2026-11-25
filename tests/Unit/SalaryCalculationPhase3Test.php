@@ -23,9 +23,11 @@ final class SalaryCalculationPhase3Test extends TestCase
     ]); }
     public function test_default_gpf_half_up_from_28715(): void
     {
-        $a=$this->engine()->calculate($this->additions(), [], $this->fixation());
+        $a=$this->engine()->calculate($this->additions(), [], $this->fixation(), null, 2026, 10); // finalized month: whole-taka
         $this->assertSame(28715.0, $a['basic']);
         $this->assertSame(2872.0, $a['gpf_deduction']);
+        $nov=$this->engine()->calculate($this->additions(), [], $this->fixation(), null, 2026, 11);
+        $this->assertSame(2871.5, $nov['gpf_deduction']);
         $this->assertSame('default_10_percent_half_up',$a['gpf_rule']['source']);
         $this->assertSame('approved_fixation',$a['calculation_source']);
     }
@@ -53,8 +55,9 @@ final class SalaryCalculationPhase3Test extends TestCase
     }
     public function test_percentage_override_half_up(): void
     {
-        $a=$this->engine()->calculate($this->additions(),[],null,['type'=>'percentage','amount'=>7.5]);
+        $a=$this->engine()->calculate($this->additions(),[],null,['type'=>'percentage','amount'=>7.5],2026,10);
         $this->assertSame(1460.0,$a['gpf_deduction']);
+        $this->assertSame(1459.5,$this->engine()->calculate($this->additions(),[],null,['type'=>'percentage','amount'=>7.5],2026,11)['gpf_deduction']);
     }
     public function test_revised_basic_recalculates_percentage_allowances(): void
     {

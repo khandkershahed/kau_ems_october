@@ -6,15 +6,27 @@ use DomainException;
 
 /**
  * Phase 3 side-effect-free calculator. Never writes salary bills or GPF ledger.
- * All monetary figures are rounded at the component boundary to two decimals;
- * default GPF uses HALF UP to the nearest whole taka.
+ * All monetary figures are rounded at the component boundary to two decimals.
+ * GPF keeps two decimals from November 2026; whole-taka HALF UP is retained
+ * ONLY to reproduce finalized salary months through 2026-10.
  */
 final class SalaryCalculationService
 {
+    /** Legacy whole-taka GPF rounding. Use only for locked months (<= 2026-10). */
     public static function halfUpTaka(float $amount): float
     {
         if (!is_finite($amount) || $amount < 0) throw new DomainException('GPF cannot be negative.');
         return (float) floor($amount + 0.5 + 1e-9);
+    }
+
+    /** GPF amount: exact 2 decimals, except locked historical months keep whole-taka HALF UP. */
+    public static function gpfAmount(float $amount, ?int $year = null, ?int $month = null): float
+    {
+        if ($year !== null && $month !== null && SalaryGenerationGuards::isMonthLocked($year, $month)) {
+            return self::halfUpTaka($amount);
+        }
+        if (!is_finite($amount) || $amount < 0) throw new DomainException('GPF cannot be negative.');
+        return round($amount, 2);
     }
 
     public static function isGpf(array $component): bool
@@ -30,7 +42,7 @@ final class SalaryCalculationService
      * @param array<string,mixed>|null $fixation ApprovedFixationResolver output
      * @param array<string,mixed>|null $gpfOverride {type: fixed|percentage, amount: number}
      */
-    public function calculate(array $additions, array $deductions, ?array $fixation = null, ?array $gpfOverride = null): array
+    public function calculate(array $additions, array $deductions, ?array $fixation = null, ?array $gpfOverride = null, ?int $year = null, ?int $month = null): array
     {
         if ($fixation !== null) {
             $projected = ApprovedFixationComponentProjector::project($additions, $deductions, $fixation);
@@ -162,7 +174,7 @@ final class SalaryCalculationService
         }
         $gpfBase = in_array($gpfSource, ['published_effective_rule','employee_month_override'], true) && isset($gpfRows[0]['percentage_base_amount'])
             ? (float) $gpfRows[0]['percentage_base_amount'] : $basic;
-        $gpfCalculated = self::halfUpTaka($gpfType === 'percentage' ? $gpfBase * $gpfAmount / 100 : $gpfAmount);
+        $gpfCalculated = self::gpfAmount($gpfType === 'percentage' ? $gpfBase * $gpfAmount / 100 : $gpfAmount, $year, $month);
         $gpf = array_merge($gpfRows[0] ?? [], ['name' => $gpfRows[0]['name'] ?? 'General Provident Fund (GPF)',
             'calcType' => $gpfType, 'amount' => $gpfAmount, 'component_type' => 'deduction',
             'calculated_amount' => $gpfCalculated, 'gpf_calculation_source' => $gpfSource]);

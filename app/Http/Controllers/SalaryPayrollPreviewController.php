@@ -130,7 +130,7 @@ class SalaryPayrollPreviewController extends Controller
             $financial = null;
             if (!$errors) {
                 try {
-                    $financial = app(\App\Services\SalaryCalculationService::class)->calculate($adds, $deductions);
+                    $financial = app(\App\Services\SalaryCalculationService::class)->calculate($adds, $deductions, null, null, $year, $month);
                     $approvedWorkspace = app(\App\Services\ApprovedSalaryCalculationVersionResolver::class)
                         ->forUser((int) $profile->user_id, $year, $month, $fixation);
                     if ($approvedWorkspace) {

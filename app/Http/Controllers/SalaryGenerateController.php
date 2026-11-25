@@ -305,6 +305,7 @@ class SalaryGenerateController extends Controller
         $salaryDate = $request->input('salaryGenerationDate') ?? \Carbon\Carbon::createFromDate($year, $monthId, 1)->endOfMonth()->toDateString();
         try {
             \App\Services\SalaryGenerationGuards::assertSalaryDate($year, $monthId, (string) $salaryDate);
+            \App\Services\SalaryGenerationGuards::assertMonthMutable($year, $monthId, 'generated or recalculated');
         } catch (\DomainException $e) {
             return response()->json(['status' => 422, 'errors' => [$e->getMessage()]], 422);
         }
