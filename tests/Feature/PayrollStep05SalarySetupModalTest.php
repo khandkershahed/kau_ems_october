@@ -334,4 +334,30 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $this->assertSame(0, SalaryMonthlyComponentAdjustment::count());
         $this->assertEquals(0.00, $response->json('net_arrear'));
     }
+
+    public function test_estimation_index_accepts_november_2026_and_marks_october_2026_as_locked(): void
+    {
+        // November 2026: open month, active employee visible with live totals.
+        $novResponse = $this->actingAs($this->admin)
+            ->get('/dashboard/salary/estimation?year=2026&month=11');
+
+        $novResponse->assertOk();
+        $novProps = $novResponse->viewData('page')['props'];
+        $this->assertSame(2026, $novProps['year']);
+        $this->assertSame(11, $novProps['month']);
+        $this->assertFalse($novProps['isLocked']);
+        $this->assertSame(1, $novProps['summary']['active_eligible']);
+        $this->assertEquals(54470.00, $novProps['summary']['regular_net_total']);
+        $this->assertEquals(54470.00, $novProps['summary']['net_payable_total']);
+
+        // October 2026: locked historical month.
+        $octResponse = $this->actingAs($this->admin)
+            ->get('/dashboard/salary/estimation?year=2026&month=10');
+
+        $octResponse->assertOk();
+        $octProps = $octResponse->viewData('page')['props'];
+        $this->assertSame(2026, $octProps['year']);
+        $this->assertSame(10, $octProps['month']);
+        $this->assertTrue($octProps['isLocked']);
+    }
 }

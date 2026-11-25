@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MonthlySalarySetupService;
 use App\Services\SalaryBillPostingService;
+use App\Services\SalaryGenerationGuards;
 use App\Services\SalaryWorkflowRosterService;
 use App\Services\SalaryFinancialSourceFingerprint;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +30,7 @@ final class SalaryEstimationWorkspaceController extends Controller
         return $request->validate([
             'year' => 'nullable|integer|between:2020,2100',
             'month' => 'nullable|integer|between:1,12',
-            'status' => 'nullable|in:NOT_INITIALIZED,BLOCKED,CALCULATED,READY_FOR_GENERATION,GENERATED,WORK_BLOCKED,ALL',
+            'status' => 'nullable|in:ALL,PENDING,GENERATED,NOT_INITIALIZED,BLOCKED,CALCULATED,READY_FOR_GENERATION,WORK_BLOCKED',
             'search' => 'nullable|string|max:100',
             'department_id' => 'nullable|integer|min:1',
             'category_id' => 'nullable|integer|min:1',
@@ -178,72 +181,212 @@ final class SalaryEstimationWorkspaceController extends Controller
         return $query;
     }
 
-    public function index(Request $request)
+    public function index(Request $request, MonthlySalarySetupService $setupService)
     {
         $this->hr($request);
         $data = $this->directoryRequest($request);
-        $data['status'] = $data['status'] ?? 'WORK_BLOCKED';
-        $year = (int)($data['year'] ?? 2026);
-        $month = (int)($data['month'] ?? 10);
-        $base = $this->directoryQuery($data, $year, $month, false);
-        $allCounts = (clone $base)->selectRaw("COALESCE(w.workflow_status, 'NOT_INITIALIZED') as status, COUNT(*) as total")
-            ->groupByRaw("COALESCE(w.workflow_status, 'NOT_INITIALIZED')")->pluck('total', 'status');
-        $filtered = $this->directoryQuery($data, $year, $month);
-        $selectableCount = (clone $filtered)->where('ep.profile_count', 1)
-            ->where(fn ($q) => $q->whereNull('w.id')->orWhereIn('w.workflow_status', ['BLOCKED', 'CALCULATED']))->count();
-        $rows = $filtered->select(
-            'ep.user_id', 'ep.employee_code', 'ep.profile_count', 'u.name', 'u.email',
-            'u.gender', 'u.isActive', 'dep.name as department_name', 'ps.scale_name as pay_scale_name',
-            'gr.grade_name', 'pgt_info.group_name as designation_name', 'jd.joining_date',
-            'ei.holdIncrement', 'ei.jobStatus', 'fa.increment_2026 as increment_2026_override',
-            'sf.status as fixation_status', 'w.id as workflow_id', 'w.workflow_status', 'w.revision',
-            'w.blocking_reasons', 'w.posted_salary_generate_id', 'w.active_calculation_version_id'
+        $year = (int) ($data['year'] ?? 2026);
+        $month = (int) ($data['month'] ?? 11);
+        $isLocked = SalaryGenerationGuards::isMonthLocked($year, $month);
+
+        $rawStatus = strtoupper((string) ($data['status'] ?? 'ALL'));
+        $status = in_array($rawStatus, ['ALL', 'PENDING', 'GENERATED'], true) ? $rawStatus : 'ALL';
+        $search = trim((string) ($data['search'] ?? ''));
+        $categoryId = !empty($data['category_id']) ? (int) $data['category_id'] : null;
+        $perPage = (int) ($data['per_page'] ?? 50);
+
+        $profiles = DB::table('employee_infos')
+            ->select('user_id')
+            ->selectRaw('MIN(employeeCode) as employee_code, MIN(id) as profile_id, COUNT(*) as profile_count')
+            ->groupBy('user_id');
+
+        $query = DB::query()->fromSub($profiles, 'ep')
+            ->join('users as u', 'u.id', '=', 'ep.user_id')
+            ->where('u.isActive', 1)
+            ->leftJoin('employee_infos as ei', 'ei.id', '=', 'ep.profile_id')
+            ->leftJoin('department_offices as dep', 'dep.id', '=', 'ei.department_office_id')
+            ->leftJoin('pay_scales as ps', 'ps.id', '=', 'ei.pay_scale_id')
+            ->leftJoin('payroll_groups as pg_info', 'pg_info.id', '=', 'ei.payroll_group_id')
+            ->leftJoin('grades as gr', 'gr.id', '=', 'pg_info.grade_id')
+            ->leftJoin('payroll_group_types as pgt_info', 'pgt_info.id', '=', 'pg_info.payroll_group_type_id');
+
+        if ($categoryId !== null && Schema::hasTable('user_user_categories')) {
+            $query->whereExists(function ($q) use ($categoryId) {
+                $q->selectRaw('1')
+                    ->from('user_user_categories as uc')
+                    ->whereColumn('uc.user_id', 'ep.user_id')
+                    ->where('uc.user_category_id', $categoryId);
+            });
+        }
+
+        if ($search !== '') {
+            $term = '%' . addcslashes($search, '%_\\') . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('u.name', 'like', $term)
+                    ->orWhere('u.email', 'like', $term)
+                    ->orWhere('ep.employee_code', 'like', $term);
+            });
+        }
+
+        $baseRows = $query->select(
+            'ep.user_id',
+            'ep.employee_code',
+            'ep.profile_count',
+            'u.name',
+            'u.email',
+            'dep.name as department_name',
+            'ps.scale_name as pay_scale_name',
+            'gr.grade_name',
+            'pgt_info.group_name as designation_name'
         )
-            ->selectRaw("COALESCE(w.workflow_status, 'NOT_INITIALIZED') as display_status")
-            ->selectRaw("CASE WHEN JSON_VALID(sf.calculation) THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(sf.calculation, '$.increment_2026')) AS DECIMAL(12,2)) ELSE NULL END as saved_increment_amount")
-            ->addSelect(['category_names' => DB::table('user_user_categories as uc')
+            ->orderBy('ep.employee_code')
+            ->orderBy('ep.user_id')
+            ->get();
+
+        $allUserIds = $baseRows->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+
+        $categoryMap = [];
+        if ($allUserIds !== [] && Schema::hasTable('user_user_categories') && Schema::hasTable('user_categories')) {
+            $catRows = DB::table('user_user_categories as uc')
                 ->join('user_categories as cat', 'cat.id', '=', 'uc.user_category_id')
-                ->whereColumn('uc.user_id', 'ep.user_id')
-                ->selectRaw('GROUP_CONCAT(DISTINCT cat.name ORDER BY cat.name SEPARATOR ", ")')->limit(1)])
-            ->addSelect(['religion_name' => DB::table('religions as rel')
-                ->whereColumn('rel.user_id', 'ep.user_id')->select('rel.religion')->limit(1)])
-            ->addSelect(['latest_approved_calculation_version_id' => DB::table('salary_calculation_versions as v')
-                ->select('v.id')->whereColumn('v.user_id', 'ep.user_id')
-                ->where('v.salary_year', $year)->where('v.salary_month', $month)
-                ->where('v.status', 'approved')->orderByDesc('v.version')->limit(1)])
-            ->orderBy('ep.employee_code')->orderBy('ep.user_id')
-            ->paginate((int)($data['per_page'] ?? 25))->withQueryString();
-        $codes = $this->eligibilityCodes();
-        $rows->getCollection()->transform(function ($row) use ($codes) {
-            $code = (string)$row->employee_code;
-            if (in_array($code, $codes['hold'], true)) $row->eligibility_label = 'Increment Hold';
-            elseif (in_array($code, $codes['adhoc'], true)) $row->eligibility_label = 'AD HOC — no increment';
-            elseif (in_array($code, $codes['study_with'], true)) $row->eligibility_label = 'Study Leave — with increment';
-            elseif (in_array($code, $codes['study_without'], true)) $row->eligibility_label = 'Study Leave — no increment';
-            elseif ((int)$row->holdIncrement === 1 || $row->increment_2026_override === 'hold') $row->eligibility_label = 'Increment Hold / HR override';
-            elseif ($row->jobStatus === 'others') $row->eligibility_label = 'Other job status — review';
-            elseif ($row->saved_increment_amount !== null && (float)$row->saved_increment_amount <= 0) $row->eligibility_label = 'No increment in latest fixation';
-            elseif ($row->holdIncrement === null) $row->eligibility_label = 'Eligibility not recorded';
-            else $row->eligibility_label = 'Increment eligible (profile)';
-            return $row;
-        });
-        $counts = $allCounts->toArray();
-        $counts['WORK_BLOCKED'] = (int)($counts['BLOCKED'] ?? 0) + (int)($counts['NOT_INITIALIZED'] ?? 0);
-        $filterOptions = [
-            'departments' => DB::table('department_offices')->orderBy('name')->get(['id', 'name']),
-            'payroll_groups' => DB::table('payroll_groups as pg')->join('payroll_group_types as pgt', 'pgt.id', '=', 'pg.payroll_group_type_id')->orderBy('pgt.group_name')->get(['pg.id', 'pgt.group_name']),
-            'categories' => DB::table('user_categories')->orderBy('name')->get(['id', 'name']),
-            'pay_scales' => DB::table('pay_scales')->orderBy('scale_name')->get(['id', 'scale_name']),
-            'grades' => DB::table('grades')->orderBy('grade_name')->get(['id', 'grade_name', 'pay_scale_id']),
-            'designations' => DB::table('payroll_group_types')->orderBy('group_name')->pluck('group_name'),
-            'component_types' => DB::table('payroll_component_types')->orderBy('name')->get(['id', 'name']),
-            'genders' => DB::table('users')->whereNotNull('gender')->distinct()->orderBy('gender')->pluck('gender'),
-            'religions' => DB::table('religions')->distinct()->orderBy('religion')->pluck('religion'),
+                ->whereIn('uc.user_id', $allUserIds)
+                ->orderBy('cat.name')
+                ->get(['uc.user_id', 'cat.name']);
+            foreach ($catRows as $cr) {
+                $uid = (int) $cr->user_id;
+                $categoryMap[$uid][] = (string) $cr->name;
+            }
+        }
+
+        $generatedIds = [];
+        if ($allUserIds !== [] && Schema::hasTable('salary_generates')) {
+            $generatedIds = DB::table('salary_generates')
+                ->whereIn('user_id', $allUserIds)
+                ->where('salaryGenerationYear', $year)
+                ->where('monthId', $month)
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->flip()
+                ->all();
+        }
+
+        $summariesByUser = $setupService->getSummariesForUsers($allUserIds, $year, $month);
+
+        $regularNetCents = 0;
+        $netArrearCents = 0;
+        $netPayableCents = 0;
+        $generatedCount = 0;
+        $pendingCount = 0;
+
+        $enriched = [];
+        $eligiblePending = [];
+
+        foreach ($baseRows as $row) {
+            $uid = (int) $row->user_id;
+            $fin = $summariesByUser[$uid] ?? null;
+            $isGenerated = isset($generatedIds[$uid]);
+
+            $basicPay = (float) ($fin['basic_pay'] ?? 0.0);
+            $regularNet = (float) ($fin['regular_net'] ?? 0.0);
+            $netArrear = (float) ($fin['net_arrear'] ?? 0.0);
+            $netPayable = (float) ($fin['net_payable'] ?? 0.0);
+
+            $regularNetCents += (int) round($regularNet * 100);
+            $netArrearCents += (int) round($netArrear * 100);
+            $netPayableCents += (int) round($netPayable * 100);
+
+            if ($isGenerated) {
+                $generatedCount++;
+            } else {
+                $pendingCount++;
+            }
+
+            $item = [
+                'user_id' => $uid,
+                'employee_code' => (string) $row->employee_code,
+                'profile_count' => (int) $row->profile_count,
+                'name' => (string) $row->name,
+                'email' => $row->email,
+                'department_name' => $row->department_name,
+                'designation_name' => $row->designation_name,
+                'pay_scale_name' => $fin['pay_scale'] ?? $row->pay_scale_name,
+                'grade_name' => $fin['grade'] ?? $row->grade_name,
+                'category_names' => isset($categoryMap[$uid]) ? implode(', ', array_unique($categoryMap[$uid])) : null,
+                'basic_pay' => $basicPay,
+                'regular_allowances' => (float) ($fin['regular_allowances'] ?? 0.0),
+                'regular_deductions' => (float) ($fin['regular_deductions'] ?? 0.0),
+                'regular_net' => $regularNet,
+                'arrear_allowances' => (float) ($fin['arrear_allowances'] ?? 0.0),
+                'arrear_deductions' => (float) ($fin['arrear_deductions'] ?? 0.0),
+                'net_arrear' => $netArrear,
+                'net_payable' => $netPayable,
+                'is_generated' => $isGenerated,
+                'status' => $isGenerated ? 'GENERATED' : 'PENDING',
+            ];
+
+            if ($status === 'PENDING' && $isGenerated) {
+                continue;
+            }
+            if ($status === 'GENERATED' && !$isGenerated) {
+                continue;
+            }
+
+            $enriched[] = $item;
+
+            if (!$isGenerated && (int) $row->profile_count === 1) {
+                $eligiblePending[] = [
+                    'user_id' => $uid,
+                    'employee_code' => (string) $row->employee_code,
+                    'name' => (string) $row->name,
+                    'net_payable' => $netPayable,
+                ];
+            }
+        }
+
+        $page = max(1, (int) $request->integer('page', 1));
+        $totalFiltered = count($enriched);
+        $slice = array_slice($enriched, ($page - 1) * $perPage, $perPage);
+        $rows = (new LengthAwarePaginator(
+            $slice,
+            $totalFiltered,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        ));
+
+        $summary = [
+            'active_eligible' => count($baseRows),
+            'generated_count' => $generatedCount,
+            'pending_count' => $pendingCount,
+            'regular_net_total' => $regularNetCents / 100,
+            'net_arrear_total' => $netArrearCents / 100,
+            'net_payable_total' => $netPayableCents / 100,
         ];
-        $runs = Schema::hasTable('salary_estimation_runs')
-            ? DB::table('salary_estimation_runs')->where('salary_year', $year)->where('salary_month', $month)
-                ->orderByDesc('id')->limit(8)->get() : [];
-        return Inertia::render('Salary/Estimation/Workspace', compact('rows', 'counts', 'runs', 'year', 'month', 'filterOptions', 'selectableCount'));
+
+        $filterOptions = [
+            'categories' => Schema::hasTable('user_categories')
+                ? DB::table('user_categories')->orderBy('name')->get(['id', 'name'])
+                : [],
+        ];
+
+        $filters = [
+            'search' => $search,
+            'category_id' => $categoryId ? (string) $categoryId : '',
+            'status' => $status,
+            'per_page' => (string) $perPage,
+        ];
+
+        return Inertia::render('Salary/Estimation/Workspace', [
+            'rows' => $rows,
+            'exportRows' => $enriched,
+            'summary' => $summary,
+            'eligiblePending' => $eligiblePending,
+            'year' => $year,
+            'month' => $month,
+            'isLocked' => $isLocked,
+            'filters' => $filters,
+            'filterOptions' => $filterOptions,
+        ]);
     }
 
     /** Cursor batches return only identity/revision metadata; never update financial records. */
@@ -251,12 +394,12 @@ final class SalaryEstimationWorkspaceController extends Controller
     {
         $this->hr($request);
         $data = $this->directoryRequest($request);
-        $data['status'] = $data['status'] ?? 'WORK_BLOCKED';
+        $data['status'] = $data['status'] ?? 'ALL';
         $paging = $request->validate(['cursor' => 'nullable|integer|min:0', 'limit' => 'nullable|integer|between:1,25']);
         $cursor = (int)($paging['cursor'] ?? 0);
         $limit = (int)($paging['limit'] ?? 25);
         $year = (int)($data['year'] ?? 2026);
-        $month = (int)($data['month'] ?? 10);
+        $month = (int)($data['month'] ?? 11);
         $query = $this->directoryQuery($data, $year, $month)
             ->where('ep.profile_count', 1)
             ->where(fn ($q) => $q->whereNull('w.id')->orWhereIn('w.workflow_status', ['BLOCKED', 'CALCULATED']));
@@ -274,9 +417,9 @@ final class SalaryEstimationWorkspaceController extends Controller
     {
         $this->hr($request);
         $data = $this->directoryRequest($request);
-        $data['status'] = $data['status'] ?? 'WORK_BLOCKED';
+        $data['status'] = $data['status'] ?? 'ALL';
         $year = (int) ($data['year'] ?? 2026);
-        $month = (int) ($data['month'] ?? 10);
+        $month = (int) ($data['month'] ?? 11);
         $ids = $this->directoryQuery($data, $year, $month)
             ->select('ep.user_id')->distinct()->orderBy('ep.user_id')
             ->limit(501)->pluck('ep.user_id')->map(fn ($id) => (int) $id)->all();

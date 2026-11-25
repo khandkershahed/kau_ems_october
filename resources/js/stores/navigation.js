@@ -181,11 +181,11 @@ export const useNavigationStore = defineStore('navigation', () => {
                     description: 'Personalize employee salary components & review estimations'
                 },
                 {
-                    title: 'Bulk modify 18 employees',
+                    title: 'Bulk Component Grid',
                     routeName: 'salary-estimation.bulk-components',
                     activePattern: 'salary-estimation.bulk-components',
                     category: 'Salary & Bonus Management',
-                    keywords: ['18 employees', 'bulk components', 'salary corrections'],
+                    keywords: ['bulk component grid', 'bulk components', 'salary corrections'],
                     description: 'Edit selected component rules across multiple employees with audit tracking'
                 },
                 {

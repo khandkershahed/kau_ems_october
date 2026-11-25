@@ -61,7 +61,109 @@ final class MonthlySalarySetupService
         $this->assertValidPeriod($year, $month);
 
         $profile = $this->loadProfile($user);
-        $fixation = $this->resolveFixation((int) $user->id, $year, $month);
+        $types = PayrollComponentType::query()->orderBy('id')->get();
+        $adjustments = Schema::hasTable('salary_monthly_component_adjustments')
+            ? SalaryMonthlyComponentAdjustment::query()
+                ->where('user_id', $user->id)
+                ->where('year', $year)
+                ->where('month', $month)
+                ->get()
+                ->keyBy('payroll_component_type_id')
+            : collect();
+
+        return $this->computeSetupFromLoaded((int) $user->id, $profile, $types, $adjustments, $year, $month);
+    }
+
+    /**
+     * Batch-compute monthly payroll summaries for multiple employees in a single (year, month).
+     * Shares the exact same calculation logic as getSetupForEmployee() with minimal DB queries.
+     *
+     * @param array<int, int> $userIds
+     * @return array<int, array<string, mixed>> Keyed by user_id
+     */
+    public function getSummariesForUsers(array $userIds, int $year, int $month): array
+    {
+        $this->assertValidPeriod($year, $month);
+        $userIds = array_values(array_unique(array_map('intval', $userIds)));
+        if ($userIds === []) {
+            return [];
+        }
+
+        $relations = $this->profileRelations();
+        $profileQuery = EmployeeInfo::query()->whereIn('user_id', $userIds)->orderBy('id');
+        if ($relations !== []) {
+            $profileQuery->with($relations);
+        }
+        $profilesByUser = [];
+        foreach ($profileQuery->get() as $profile) {
+            $uid = (int) $profile->user_id;
+            if (!isset($profilesByUser[$uid])) {
+                $profilesByUser[$uid] = $profile;
+            }
+        }
+
+        $types = PayrollComponentType::query()->orderBy('id')->get();
+        $adjustmentsByUser = Schema::hasTable('salary_monthly_component_adjustments')
+            ? SalaryMonthlyComponentAdjustment::query()
+                ->whereIn('user_id', $userIds)
+                ->where('year', $year)
+                ->where('month', $month)
+                ->get()
+                ->groupBy('user_id')
+            : collect();
+
+        $results = [];
+        foreach ($userIds as $uid) {
+            if (!isset($profilesByUser[$uid])) {
+                continue;
+            }
+            $userAdjustments = ($adjustmentsByUser->get($uid) ?? collect())->keyBy('payroll_component_type_id');
+            $setup = $this->computeSetupFromLoaded($uid, $profilesByUser[$uid], $types, $userAdjustments, $year, $month);
+
+            $basicPay = 0.0;
+            foreach ($setup['allowances'] as $row) {
+                if (self::isBasicPay((string) $row['name'])) {
+                    $basicPay = (float) $row['current_amount'];
+                    break;
+                }
+            }
+
+            $results[$uid] = [
+                'user_id' => $uid,
+                'pay_scale' => $setup['pay_scale'],
+                'grade' => $setup['grade'],
+                'basic_pay' => $basicPay,
+                'regular_allowances' => $setup['regular_allowances'],
+                'arrear_allowances' => $setup['arrear_allowances'],
+                'total_allowances' => $setup['total_allowances'],
+                'regular_deductions' => $setup['regular_deductions'],
+                'arrear_deductions' => $setup['arrear_deductions'],
+                'total_deductions' => $setup['total_deductions'],
+                'regular_net' => $setup['regular_net'],
+                'net_arrear' => $setup['net_arrear'],
+                'net_payable' => $setup['net_payable'],
+                'allowances' => $setup['allowances'],
+                'deductions' => $setup['deductions'],
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, PayrollComponentType> $types
+     * @param \Illuminate\Support\Collection<int, SalaryMonthlyComponentAdjustment> $adjustments
+     * @return array<string, mixed>
+     */
+    private function computeSetupFromLoaded(
+        int $userId,
+        EmployeeInfo $profile,
+        $types,
+        $adjustments,
+        int $year,
+        int $month
+    ): array {
+        $fixation = $this->resolveFixation($userId, $year, $month);
 
         $scaleName = $fixation !== null
             ? 'Govt. Pay Scale 2026'
@@ -72,16 +174,6 @@ final class MonthlySalarySetupService
 
         $profileAdds = $this->safeNormalizeRows($profile->additionObjects);
         $profileDeds = $this->safeNormalizeRows($profile->substractionObjects);
-
-        $types = PayrollComponentType::query()->orderBy('id')->get();
-        $adjustments = Schema::hasTable('salary_monthly_component_adjustments')
-            ? SalaryMonthlyComponentAdjustment::query()
-                ->where('user_id', $user->id)
-                ->where('year', $year)
-                ->where('month', $month)
-                ->get()
-                ->keyBy('payroll_component_type_id')
-            : collect();
 
         // Pass 1: resolve effective Basic Pay so percentage components, SB, and GPF use it.
         $profileBasicRow = $this->findBasicRow($profileAdds);
@@ -171,7 +263,7 @@ final class MonthlySalarySetupService
         $netPayableCents = $totalAllowancesCents - $totalDeductionsCents;
 
         return [
-            'user_id' => (int) $user->id,
+            'user_id' => $userId,
             'year' => $year,
             'month' => $month,
             'pay_scale' => $scaleName !== '' ? $scaleName : null,
@@ -492,7 +584,8 @@ final class MonthlySalarySetupService
         return SalaryComponentNormalizer::rows($value);
     }
 
-    private function loadProfile(User $user): EmployeeInfo
+    /** @return array<int, string> */
+    private function profileRelations(): array
     {
         $relations = [];
         if (Schema::hasTable('pay_scales')) {
@@ -504,6 +597,13 @@ final class MonthlySalarySetupService
         if (Schema::hasTable('payroll_groups') && Schema::hasTable('payroll_group_types')) {
             $relations[] = 'payrollGroup.payrollGroupType';
         }
+
+        return $relations;
+    }
+
+    private function loadProfile(User $user): EmployeeInfo
+    {
+        $relations = $this->profileRelations();
 
         $query = EmployeeInfo::query()->where('user_id', $user->id);
         if ($relations !== []) {
