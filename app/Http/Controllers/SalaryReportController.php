@@ -869,6 +869,11 @@ class SalaryReportController extends Controller
                 $allowances = is_array($rawAllowances) ? $rawAllowances : [];
                 $deductions = is_array($rawDeductions) ? $rawDeductions : [];
 
+                if ($isNov2026Plus && $reportType === 'Salary Summary') {
+                    $allowances = $this->summaryComponentRows($allowances);
+                    $deductions = $this->summaryComponentRows($deductions);
+                }
+
                 // Historical reports may only show the frozen saved Basic.
                 // A percentage rate is not a Basic amount; do not recompute from
                 // today's employee profile or a current Grade minimum.
@@ -964,8 +969,10 @@ class SalaryReportController extends Controller
 
             // Arrear components are embedded in the posted salary bill. Keep the
             // regular and supplemental GPF ledgers distinct in reporting.
-            $arrearAllowances = array_values(array_filter($allowances, fn ($item) => (isset($item['arrear_snapshot_id']) || !empty($item['arrear_phase5']))));
-            $arrearDeductions = array_values(array_filter($deductions, fn ($item) => (isset($item['arrear_snapshot_id']) || !empty($item['arrear_phase5']))));
+            $isArrear = static fn ($item) => isset($item['arrear_snapshot_id'])
+                || !empty($item['arrear_phase5']) || !empty($item['monthly_arrear']);
+            $arrearAllowances = array_values(array_filter($allowances, $isArrear));
+            $arrearDeductions = array_values(array_filter($deductions, $isArrear));
             $arrearAddTotal = array_sum(array_map(fn ($item) => (float) ($item['calculated_amount'] ?? 0), $arrearAllowances));
             $arrearDedTotal = array_sum(array_map(fn ($item) => (float) ($item['calculated_amount'] ?? 0), $arrearDeductions));
             $arrearGpfTotal = array_sum(array_map(fn ($item) => strtolower((string)($item['arrear_code'] ?? '')) === 'additional_gpf'
@@ -1102,6 +1109,35 @@ class SalaryReportController extends Controller
         })->filter(fn ($row) => $row !== null)->values();
     }
 
+
+    /** Present saved monthly splits in the same row format as the Summary preview. */
+    private function summaryComponentRows(array $items): array
+    {
+        $rows = [];
+        foreach ($items as $item) {
+            if (!isset($item['current_amount'], $item['arrear_amount'])) {
+                $rows[] = $item;
+                continue;
+            }
+
+            $name = $item['name'] ?? $item['payroll_component_type']['name'] ?? 'Component';
+            $current = $item['current_amount'];
+            $arrear = $item['arrear_amount'];
+            if (abs($current) >= 0.005) {
+                $rows[] = ['name' => $name, 'amount' => $current, 'calculated_amount' => $current];
+            }
+            if (abs($arrear) >= 0.005) {
+                $rows[] = [
+                    'name' => $name.' (Arrear)',
+                    'amount' => $arrear,
+                    'calculated_amount' => $arrear,
+                    'monthly_arrear' => true,
+                ];
+            }
+        }
+
+        return $rows;
+    }
 
     /** Store a readable exclusion without inventing any missing salary amount. */
     private function excludeProvisionalRow($user, $employeeInfo, ?array &$exclusions,

@@ -13,15 +13,15 @@ use Illuminate\Support\Facades\Schema;
  */
 final class SalaryOfficialReportSource
 {
-    private static function money(mixed $value, string $field): int
+    private static function money(mixed $value, string $field, bool $signed = false): int
     {
-        if (!is_numeric($value) || !is_finite((float) $value) || (float) $value < 0) {
+        if (!is_numeric($value) || !is_finite((float) $value) || (!$signed && (float) $value < 0)) {
             throw new DomainException('Invalid posted monetary value: '.$field);
         }
         return (int) round((float) $value * 100, 0, PHP_ROUND_HALF_UP);
     }
 
-    private static function entries(mixed $payload, string $direction): array
+    private static function entries(mixed $payload, string $direction, bool $monthly): array
     {
         if (is_string($payload)) {
             $payload = json_decode($payload, true);
@@ -37,13 +37,23 @@ final class SalaryOfficialReportSource
             // An old percentage *rate* is not a saved monetary amount. Do not
             // infer a payment from today's basic or designation rules.
             $raw = $item['calculated_amount'] ?? (strtolower((string) ($item['calcType'] ?? 'fixed')) === 'percentage' ? null : ($item['amount'] ?? null));
-            $cents = $raw === null ? null : self::money($raw, $title);
             $isArrear = !empty($item['arrear_phase5']) || !empty($item['arrear_snapshot_id']);
+            $hasMonthlySplit = $monthly && isset($item['current_amount'], $item['arrear_amount']);
+            $cents = $raw === null ? null : self::money($raw, $title, $hasMonthlySplit);
+            $current = $isArrear ? 0 : $cents;
+            $arrear = $isArrear ? $cents : 0;
+            if ($hasMonthlySplit) {
+                $current = self::money($item['current_amount'], $title.' current', true);
+                $arrear = self::money($item['arrear_amount'], $title.' arrear', true);
+                if ($current + $arrear !== $cents) {
+                    throw new DomainException('Saved monthly component split does not match the total: '.$title);
+                }
+            }
             $rows[] = [
                 'title' => $title,
                 'direction' => $direction,
-                'current' => $isArrear ? 0.0 : ($cents === null ? null : $cents / 100.0),
-                'arrear' => $isArrear ? ($cents === null ? null : $cents / 100.0) : 0.0,
+                'current' => $current === null ? null : $current / 100.0,
+                'arrear' => $arrear === null ? null : $arrear / 100.0,
                 'total' => $cents === null ? null : $cents / 100.0,
                 'code' => $item['arrear_code'] ?? null,
                 'months' => array_values($item['arrear_entitlement_months'] ?? []),
@@ -59,7 +69,7 @@ final class SalaryOfficialReportSource
         $sum = 0;
         foreach ($rows as $row) {
             if ($row['total'] === null) return null;
-            $sum += self::money($row['total'], 'component total');
+            $sum += self::money($row['total'], 'component total', true);
         }
         return $sum;
     }
@@ -116,10 +126,11 @@ final class SalaryOfficialReportSource
             }
         }
 
-        $allowances = self::entries($bill->salaryAllowanceCalcObject, 'allowance');
-        $deductions = self::entries($bill->salaryDeductionCalcObject, 'deduction');
+        $monthly = !SalaryGenerationGuards::isMonthLocked((int) $bill->salaryGenerationYear, (int) $bill->monthId);
+        $allowances = self::entries($bill->salaryAllowanceCalcObject, 'allowance', $monthly);
+        $deductions = self::entries($bill->salaryDeductionCalcObject, 'deduction', $monthly);
         $gross = self::money($bill->totalAllowance, 'posted gross');
-        $ded = self::money($bill->totalDeduction, 'posted deductions');
+        $ded = self::money($bill->totalDeduction, 'posted deductions', $monthly);
         $net = self::money($bill->salaryTotal, 'posted net salary');
         if ($gross - $ded !== $net) throw new DomainException('Posted bill gross/deduction/net do not reconcile.');
         $allowSum = self::sumRows($allowances);
@@ -147,7 +158,8 @@ final class SalaryOfficialReportSource
                 ? ['regular_gross' => $gross, 'regular_deductions' => $ded, 'regular_net' => $net]
                 : ['gross' => $gross, 'total_deduction' => $ded, 'net_payable' => $net];
             foreach ($expectedFields as $key => $expected) {
-                if (!array_key_exists($key, $snapshot) || self::money($snapshot[$key], $key) !== $expected) {
+                if (!array_key_exists($key, $snapshot)
+                    || self::money($snapshot[$key], $key, $monthly && $key === 'total_deduction') !== $expected) {
                     throw new DomainException('Saved posted bill and source snapshot differ: '.$key);
                 }
             }

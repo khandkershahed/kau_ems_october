@@ -106,6 +106,8 @@ export async function createHorizontalBillPdf({
         3: { halign: 'left', cellWidth: 21 },
     };
     for (let c = numericColStart; c <= numericColEnd; c++) {
+        // Let AutoTable resize monetary columns within the page margins,
+        // including when the final page contains wider grand totals.
         columnStyles[c] = { halign: 'right' };
     }
     columnStyles[numericColEnd + 1] = { halign: 'center', cellWidth: 13 };
@@ -230,11 +232,6 @@ export async function createHorizontalBillPdf({
                 fontStyle: 'bold',
             },
             columnStyles,
-            didParseCell: ({ cell, column }) => {
-                if (column.index >= numericColStart && column.index <= numericColEnd) {
-                    cell.styles.cellWidth = 'wrap';
-                }
-            },
         });
 
         doc.setFont('helvetica', 'normal');

@@ -672,8 +672,8 @@ final class SalaryEstimationWorkspaceController extends Controller
                     $bankRow = Schema::hasTable('bank_accounts')
                         ? DB::table('bank_accounts')->where('user_id', $uid)->orderByDesc('isSalaryAccount')->orderBy('id')->first()
                         : null;
-                    $phoneNo = Schema::hasTable('phone_numbers')
-                        ? (string) (DB::table('phone_numbers')->where('user_id', $uid)->value('phoneNumber') ?? 'N/A')
+                    $phoneNo = Schema::hasTable('phone_numbers') && Schema::hasTable('phone_number_users')
+                        ? (string) ($user->phoneNumbers()->orderBy('phone_numbers.id')->value('phoneNumber') ?? 'N/A')
                         : 'N/A';
                     $ageVal = Schema::hasTable('ages')
                         ? (string) (DB::table('ages')->where('user_id', $uid)->value('age') ?? 'N/A')
