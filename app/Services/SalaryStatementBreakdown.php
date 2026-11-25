@@ -11,9 +11,9 @@ use DomainException;
  */
 final class SalaryStatementBreakdown
 {
-    private static function cents(mixed $number): int
+    private static function cents(mixed $number, bool $allowNegative = false): int
     {
-        if (!is_numeric($number) || !is_finite((float) $number) || (float) $number < 0) {
+        if (!is_numeric($number) || !is_finite((float) $number) || (!$allowNegative && (float) $number < 0)) {
             throw new DomainException('Statement contains invalid monetary amount.');
         }
         return (int) round((float) $number * 100, 0, PHP_ROUND_HALF_UP);
@@ -58,7 +58,7 @@ final class SalaryStatementBreakdown
             if ($title === '') throw new DomainException('Arrear title is missing.');
             $raw = array_key_exists('final_amount', $row) ? $row['final_amount'] : ($row['calculated_amount'] ?? null);
             $missing = $raw === null || $raw === '';
-            $amount = $missing ? null : self::cents($raw);
+            $amount = $missing ? null : self::cents($raw, !empty($row['allow_negative']));
             $item = [
                 'title' => $title,
                 'direction' => $direction,

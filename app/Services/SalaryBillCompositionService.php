@@ -62,6 +62,11 @@ final class SalaryBillCompositionService
             }
         }
         [$add,$ded] = app(SalaryComponentCatalog::class)->forEmployee($profile,$add,$ded,$year,$month,$fixation);
+        $monthlyAdjustments = $this->loadMonthlyAdjustments($userId, $year, $month);
+        $effectiveFixation = $fixation;
+        if ($monthlyAdjustments !== []) {
+            [$add, $ded, $effectiveFixation] = $this->applyMonthlyRuleOverrides($add, $ded, $fixation, $monthlyAdjustments);
+        }
         $gpfOverride = collect($ded)->contains(fn ($v)=>SalaryCalculationService::isGpf($v))
             ? null : ['type'=>'disabled','amount'=>0];
         $saved = DB::table('salary_calculation_versions')->where('user_id',$userId)
@@ -99,7 +104,7 @@ final class SalaryBillCompositionService
         if (!$gpfOverride && !collect($ded)->contains(fn($v)=>SalaryCalculationService::isGpf($v))) {
             $gpfOverride=['type'=>'disabled','amount'=>0];
         }
-        $regular=app(SalaryCalculationService::class)->calculate($add,$ded,$fixation,$gpfOverride,$year,$month);
+        $regular=app(SalaryCalculationService::class)->calculate($add,$ded,$saved ? $fixation : $effectiveFixation,$gpfOverride,$year,$month);
         if ($saved) {
             foreach (['basic','total_allowance','total_deduction','gpf_deduction','net_salary'] as $field) {
                 if (self::cents($regular[$field]) !== self::cents($savedCalc[$field] ?? null)) {
@@ -182,6 +187,59 @@ final class SalaryBillCompositionService
             if (($row['code']??null)==='ADDITIONAL_GPF') {
                 if ($row['direction']!=='deduction') throw new DomainException('Additional GPF must be a deduction.');
                 $arrearGpf+=self::cents($amount);
+            }
+        }
+        if ($monthlyAdjustments !== []) {
+            $periodKey = sprintf('%04d-%02d', $year, $month);
+            foreach ($monthlyAdjustments as $adj) {
+                $arrearCents = self::cents($adj['arrear_amount']);
+                if ($arrearCents === 0) {
+                    continue;
+                }
+                $amount = $arrearCents / 100;
+                $direction = $adj['direction'] === 'allowance' ? 'payable' : 'deduction';
+                $isGpf = $direction === 'deduction' && SalaryCalculationService::isGpf(['name' => $adj['name']]);
+                $title = $adj['name'].' (Arrear)';
+                $item = [
+                    'name' => $title,
+                    'payroll_component_type_id' => $adj['payroll_component_type_id'],
+                    'calcType' => 'fixed',
+                    'amount' => $amount,
+                    'calculated_amount' => $amount,
+                    'component_type' => $direction === 'payable' ? 'allowance' : 'deduction',
+                    'arrear_monthly_adjustment' => true,
+                    'monthly_adjustment_id' => $adj['id'],
+                    'arrear_rule_id' => null,
+                    'arrear_code' => $isGpf ? 'ADDITIONAL_GPF' : null,
+                    'arrear_entitlement_months' => [$periodKey],
+                    'arrear_source_reference' => $adj['comment'],
+                    'arrear_calculated_amount' => $amount,
+                    'arrear_reason' => $adj['comment'],
+                ];
+                if ($direction === 'payable') {
+                    $a += $arrearCents;
+                    $arrearAdds[] = $item;
+                } else {
+                    $d += $arrearCents;
+                    $arrearDeds[] = $item;
+                }
+                if ($isGpf) {
+                    $arrearGpf += $arrearCents;
+                }
+                $finalRows[] = [
+                    'rule_id' => null,
+                    'code' => $isGpf ? 'ADDITIONAL_GPF' : 'MONTHLY_COMPONENT_ARREAR',
+                    'title' => $title,
+                    'direction' => $direction,
+                    'mode' => 'manual',
+                    'formula' => null,
+                    'months' => [$periodKey],
+                    'calculated_amount' => $amount,
+                    'final_amount' => $amount,
+                    'allow_negative' => true,
+                    'reason' => $adj['comment'],
+                    'evidence_reference' => null,
+                ];
             }
         }
         $gross=self::cents($regular['total_allowance'])+$a;
@@ -335,6 +393,122 @@ final class SalaryBillCompositionService
         $result['calculation_source_hash'] = hash('sha256',
             json_encode($result, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         return $result;
+    }
+
+    /**
+     * Load month-scoped adjustments for mutable months (2026-11+) only.
+     * Locked historical months (<= 2026-10) always return an empty list.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function loadMonthlyAdjustments(int $userId, int $year, int $month): array
+    {
+        if (SalaryGenerationGuards::isMonthLocked($year, $month)
+            || !Schema::hasTable('salary_monthly_component_adjustments')
+            || !Schema::hasTable('payroll_component_types')) {
+            return [];
+        }
+
+        $rows = DB::table('salary_monthly_component_adjustments as a')
+            ->join('payroll_component_types as t', 't.id', '=', 'a.payroll_component_type_id')
+            ->where('a.user_id', $userId)
+            ->where('a.year', $year)
+            ->where('a.month', $month)
+            ->orderBy('a.payroll_component_type_id')
+            ->get([
+                'a.id',
+                'a.payroll_component_type_id',
+                'a.arrear_amount',
+                'a.rule_override',
+                'a.override_current_amount',
+                'a.comment',
+                't.name',
+            ]);
+
+        $out = [];
+        foreach ($rows as $row) {
+            $name = (string) $row->name;
+            $out[] = [
+                'id' => (int) $row->id,
+                'payroll_component_type_id' => (int) $row->payroll_component_type_id,
+                'name' => $name,
+                'direction' => MonthlySalarySetupService::classifyDirection($name),
+                'arrear_amount' => (float) $row->arrear_amount,
+                'rule_override' => (bool) $row->rule_override,
+                'override_current_amount' => $row->override_current_amount !== null ? (float) $row->override_current_amount : null,
+                'comment' => $row->comment,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Apply explicit monthly rule_override current amounts to regular components (2026-11+ only).
+     *
+     * @param array<int, array<string, mixed>> $add
+     * @param array<int, array<string, mixed>> $ded
+     * @param array<string, mixed>|null $fixation
+     * @param array<int, array<string, mixed>> $adjustments
+     * @return array{0: array<int, array<string, mixed>>, 1: array<int, array<string, mixed>>, 2: array<string, mixed>|null}
+     */
+    private function applyMonthlyRuleOverrides(array $add, array $ded, ?array $fixation, array $adjustments): array
+    {
+        $effectiveFixation = $fixation;
+
+        foreach ($adjustments as $adj) {
+            if (!$adj['rule_override'] || $adj['override_current_amount'] === null) {
+                continue;
+            }
+            $overrideAmount = round((float) $adj['override_current_amount'], 2);
+            $typeId = (int) $adj['payroll_component_type_id'];
+            $name = (string) $adj['name'];
+            $isAllowance = $adj['direction'] === 'allowance';
+
+            if ($isAllowance && MonthlySalarySetupService::isBasicPay($name) && $effectiveFixation !== null) {
+                $effectiveFixation = array_merge($effectiveFixation, ['basic' => $overrideAmount]);
+            }
+
+            $target = $isAllowance ? $add : $ded;
+            $matchedIndex = null;
+            foreach ($target as $i => $row) {
+                if (!is_array($row) || isset($row['manual_adjustment_id'])) {
+                    continue;
+                }
+                $rowTypeId = (int) ($row['payroll_component_type_id'] ?? $row['payroll_component_type']['id'] ?? 0);
+                $rowName = trim((string) ($row['name'] ?? $row['payroll_component_type']['name'] ?? ''));
+                if (($rowTypeId > 0 && $rowTypeId === $typeId) || ($rowName !== '' && strcasecmp($rowName, $name) === 0)) {
+                    $matchedIndex = $i;
+                    break;
+                }
+            }
+
+            $updatedRow = array_merge($matchedIndex !== null ? $target[$matchedIndex] : [], [
+                'name' => $name,
+                'payroll_component_type_id' => $typeId,
+                'calcType' => 'fixed',
+                'amount' => $overrideAmount,
+                'component_type' => $isAllowance ? 'allowance' : 'deduction',
+                'component_source' => 'employee_month_override',
+                'monthly_adjustment_id' => $adj['id'],
+                'override_reason' => $adj['comment'],
+            ]);
+            unset($updatedRow['percentage_base_amount']);
+
+            if ($matchedIndex !== null) {
+                $target[$matchedIndex] = $updatedRow;
+            } else {
+                $target[] = $updatedRow;
+            }
+
+            if ($isAllowance) {
+                $add = array_values($target);
+            } else {
+                $ded = array_values($target);
+            }
+        }
+
+        return [$add, $ded, $effectiveFixation];
     }
 
 }
