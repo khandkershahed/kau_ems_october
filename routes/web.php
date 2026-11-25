@@ -255,6 +255,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Step 05: Monthly Salary Setup Modal JSON endpoints (19-component breakdown, month-scoped arrears & recurring defaults).
+    Route::get('/salary-setup/{user}', [\App\Http\Controllers\MonthlySalarySetupController::class, 'show'])
+        ->whereNumber('user')
+        ->name('monthly-salary-setup.show');
+    Route::post('/salary-setup/{user}/month', [\App\Http\Controllers\MonthlySalarySetupController::class, 'saveMonth'])
+        ->whereNumber('user')
+        ->name('monthly-salary-setup.save-month');
+    Route::post('/salary-setup/{user}/recurring', [\App\Http\Controllers\MonthlySalarySetupController::class, 'saveRecurring'])
+        ->whereNumber('user')
+        ->name('monthly-salary-setup.save-recurring');
 });
 
 require __DIR__ . '/auth.php';

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { Head } from "@inertiajs/vue3";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import Modal from "@/Components/Modal.vue";
+import SalarySetupModal from "@/Components/SalarySetupModal.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import DangerButton from "@/Components/DangerButton.vue";
@@ -40,6 +41,29 @@ const singleGenerateModalOpen = ref(false);
 const bulkGenerateModalOpen = ref(false);
 const overrideModalOpen = ref(false);
 const bulkOverrideModalOpen = ref(false);
+const monthlySetupModalOpen = ref(false);
+const monthlySetupUserId = ref(null);
+const monthlySetupYear = ref(2026);
+const monthlySetupMonth = ref(11);
+
+const openMonthlySetupModal = (row) => {
+    monthlySetupUserId.value = row.user_id;
+    monthlySetupYear.value = Number(
+        row.year || store.filters.salaryGenerationYear || props.currentYear || 2026,
+    );
+    monthlySetupMonth.value = Number(
+        row.month_id || store.filters.monthId || props.currentMonth || 11,
+    );
+    monthlySetupModalOpen.value = true;
+};
+
+const closeMonthlySetupModal = () => {
+    monthlySetupModalOpen.value = false;
+};
+
+const onMonthlySetupSaved = () => {
+    store.fetchBills(store.bills?.current_page || 1);
+};
 
 const pendingGenerateUser = ref(null);
 const pendingOverrideBill = ref(null);
@@ -2202,6 +2226,14 @@ const removeFilter = (key) => {
                                         class="flex items-center justify-end gap-1.5"
                                     >
                                         <button
+                                            type="button"
+                                            @click="openMonthlySetupModal(row)"
+                                            title="Open 19-component Monthly Salary Setup & Arrears modal"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                                        >
+                                            Monthly Setup
+                                        </button>
+                                        <button
                                             v-if="
                                                 row.bill_status !== 'generated'
                                             "
@@ -3559,5 +3591,14 @@ const removeFilter = (key) => {
                 </div>
             </div>
         </Modal>
+
+        <SalarySetupModal
+            :show="monthlySetupModalOpen"
+            :user-id="monthlySetupUserId"
+            :initial-year="monthlySetupYear"
+            :initial-month="monthlySetupMonth"
+            @close="closeMonthlySetupModal"
+            @saved="onMonthlySetupSaved"
+        />
     </AuthenticatedLayout>
 </template>

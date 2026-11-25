@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
+import SalarySetupModal from '@/Components/SalarySetupModal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -83,6 +84,21 @@ const localFilters = ref({
 
 // Modal state
 const isDetailModalOpen = ref(false);
+const monthlySetupModalOpen = ref(false);
+const monthlySetupUserId = ref(null);
+
+const openMonthlySetupModal = (emp) => {
+    monthlySetupUserId.value = emp.id;
+    monthlySetupModalOpen.value = true;
+};
+
+const closeMonthlySetupModal = () => {
+    monthlySetupModalOpen.value = false;
+};
+
+const onMonthlySetupSaved = () => {
+    salaryStore.fetchEmployees(employees.value?.current_page || 1);
+};
 
 // Cascading grades based on selected pay scale
 const availableGrades = computed(() => {
@@ -1212,6 +1228,11 @@ const handleUpdateCalculation = async () => {
 
                                 <!-- Actions -->
                                 <td class="py-3.5 px-4 whitespace-nowrap text-right text-xs font-medium space-x-2">
+                                    <button type="button" @click="openMonthlySetupModal(emp)"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                                        title="Open 19-component Monthly Salary Setup & Arrears modal">
+                                        Monthly Setup
+                                    </button>
                                     <a :href="calculatorUrl(emp)" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800" title="Open employee salary calculation (Phase 2 read-only entry)">Calculate Salary</a>
                                     <!-- View Details Button -->
                                     <button type="button" @click="openDetailModal(emp)"
@@ -1808,6 +1829,15 @@ const handleUpdateCalculation = async () => {
                 </div>
             </div>
         </Modal>
+
+        <SalarySetupModal
+            :show="monthlySetupModalOpen"
+            :user-id="monthlySetupUserId"
+            :initial-year="Number(localFilters.salary_year || 2026)"
+            :initial-month="Number(localFilters.salary_month || 11)"
+            @close="closeMonthlySetupModal"
+            @saved="onMonthlySetupSaved"
+        />
 
     </AuthenticatedLayout>
 </template>
