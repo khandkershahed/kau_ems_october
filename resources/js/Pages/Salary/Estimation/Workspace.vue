@@ -5,11 +5,10 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SalarySetupModal from '@/Components/SalarySetupModal.vue';
-import EmployeeProfileQuickEditModal from '@/Components/EmployeeProfileQuickEditModal.vue';
+import EditEmployeeProfileModal from '@/Pages/Employee/Modal/EditEmployeeProfileModal.vue';
 import SalaryBillPreviewModal from '@/Components/SalaryBillPreviewModal.vue';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { createHorizontalBillPdf } from '@/Pages/Reports/reportTemplates/HorizontalBillPdf';
+import { downloadHorizontalBillExcel } from '@/Pages/Reports/reportTemplates/HorizontalBillExcel';
 
 const props = defineProps({
     rows: { type: Object, required: true },
@@ -133,11 +132,27 @@ watch(
 );
 
 // Row Action Modals (3 Icons)
-const profileEditOpen = ref(false);
 const profileEditEmployee = ref(null);
-const openProfileEdit = (row) => {
-    profileEditEmployee.value = row;
-    profileEditOpen.value = true;
+const profileEditOptions = ref({});
+const loadingProfile = ref(false);
+const openProfileEdit = async (row) => {
+    loadingProfile.value = true;
+    try {
+        const { data } = await axios.get(route('employees.edit'), {
+            params: { profile_user_id: row.user_id },
+            headers: { Accept: 'application/json' },
+        });
+        profileEditOptions.value = data.options;
+        profileEditEmployee.value = data.employee;
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Unable to load employee profile',
+            text: error.response?.data?.message || 'Try opening the profile again.',
+        });
+    } finally {
+        loadingProfile.value = false;
+    }
 };
 const onProfileSaved = () => {
     router.reload({
@@ -431,196 +446,43 @@ const rowsForExport = computed(() => {
     return source;
 });
 
-const exportHorizontalExcel = () => {
-    const list = rowsForExport.value;
-    if (!list.length) {
-        noticeTone.value = 'error';
-        notice.value = 'No employees available to export for the current filter.';
-        return;
-    }
+const exportingHorizontal = ref(false);
 
-    const headers = [
-        'SL',
-        'Code',
-        'Name',
-        'Designation',
-        'Department',
-        'Employee Type',
-        'Category',
-        'Grade',
-        'Basic Pay',
-        'Regular Allowances',
-        'Regular Deductions',
-        'Regular Net',
-        'Net Arrear',
-        'Net Payable',
-        'Status',
-    ];
+const exportHorizontalBill = async (format) => {
+    const ids = [...new Set(rowsForExport.value.map((row) => row.user_id))];
+    if (!ids.length || exportingHorizontal.value) return;
 
-    const body = list.map((r, idx) => [
-        idx + 1,
-        String(r.employee_code || ''),
-        r.name || '',
-        r.designation_name || '',
-        r.department_name || '',
-        r.employee_type || 'Active',
-        r.category_names || '',
-        r.grade_name || '',
-        Number(r.basic_pay || 0),
-        Number(r.regular_allowances || 0),
-        Number(r.regular_deductions || 0),
-        Number(r.regular_net || 0),
-        Number(r.net_arrear || 0),
-        Number(r.net_payable || 0),
-        r.is_generated ? 'Generated' : 'Pending',
-    ]);
-
-    const sumField = (key) =>
-        Math.round(list.reduce((acc, r) => acc + Number(r[key] || 0), 0) * 100) / 100;
-
-    body.push([
-        '',
-        '',
-        `GRAND TOTAL (${list.length} employees)`,
-        '',
-        '',
-        '',
-        '',
-        '',
-        sumField('basic_pay'),
-        sumField('regular_allowances'),
-        sumField('regular_deductions'),
-        sumField('regular_net'),
-        sumField('net_arrear'),
-        sumField('net_payable'),
-        '',
-    ]);
-
-    const workbook = XLSX.utils.book_new();
-    const sheet = XLSX.utils.aoa_to_sheet([headers, ...body]);
-    sheet['!cols'] = [
-        { wch: 6 },
-        { wch: 11 },
-        { wch: 28 },
-        { wch: 22 },
-        { wch: 20 },
-        { wch: 18 },
-        { wch: 14 },
-        { wch: 10 },
-        { wch: 13 },
-        { wch: 15 },
-        { wch: 15 },
-        { wch: 14 },
-        { wch: 13 },
-        { wch: 14 },
-        { wch: 11 },
-    ];
-    XLSX.utils.book_append_sheet(workbook, sheet, 'Horizontal Bill');
-    const scopeSuffix = selectedIds.value.length > 0 ? 'selected' : 'all';
-    XLSX.writeFile(
-        workbook,
-        `KAU_Horizontal_Bill_${props.year}_${String(props.month).padStart(2, '0')}_${scopeSuffix}.xlsx`,
-    );
-};
-
-const exportHorizontalPdf = () => {
-    const list = rowsForExport.value;
-    if (!list.length) {
-        noticeTone.value = 'error';
-        notice.value = 'No employees available to export for the current filter.';
-        return;
-    }
-
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    const headers = [
-        'SL',
-        'Code',
-        'Name & Designation',
-        'Category / Grade',
-        'Basic',
-        'Reg. Allow.',
-        'Reg. Ded.',
-        'Regular Net',
-        'Net Arrear',
-        'Net Payable',
-        'Status',
-    ];
-
-    const body = list.map((r, idx) => [
-        idx + 1,
-        String(r.employee_code || ''),
-        `${r.name || ''}${r.designation_name ? `\n${r.designation_name}` : ''}`,
-        `${r.category_names || '—'}${r.grade_name ? ` / ${r.grade_name}` : ''}`,
-        formatMoney(r.basic_pay),
-        formatMoney(r.regular_allowances),
-        formatMoney(r.regular_deductions),
-        formatMoney(r.regular_net),
-        formatMoney(r.net_arrear),
-        formatMoney(r.net_payable),
-        r.is_generated ? 'Generated' : 'Pending',
-    ]);
-
-    const sumField = (key) => list.reduce((acc, r) => acc + Number(r[key] || 0), 0);
-    const footRow = [
-        {
-            content: `GRAND TOTAL (${list.length} employees)`,
-            colSpan: 4,
-            styles: { halign: 'right', fontStyle: 'bold' },
-        },
-        formatMoney(sumField('basic_pay')),
-        formatMoney(sumField('regular_allowances')),
-        formatMoney(sumField('regular_deductions')),
-        formatMoney(sumField('regular_net')),
-        formatMoney(sumField('net_arrear')),
-        formatMoney(sumField('net_payable')),
-        '',
-    ];
-
-    autoTable(doc, {
-        head: [headers],
-        body,
-        foot: [footRow],
-        showFoot: 'lastPage',
-        startY: 24,
-        margin: { top: 20, left: 8, right: 8, bottom: 12 },
-        styles: { fontSize: 7.2, cellPadding: 1.8, lineColor: [203, 213, 225], lineWidth: 0.15 },
-        headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' },
-        footStyles: { fillColor: [236, 253, 245], textColor: [6, 78, 59], fontStyle: 'bold' },
-        columnStyles: {
-            0: { cellWidth: 10 },
-            1: { cellWidth: 18 },
-            4: { halign: 'right' },
-            5: { halign: 'right' },
-            6: { halign: 'right' },
-            7: { halign: 'right' },
-            8: { halign: 'right' },
-            9: { halign: 'right', fontStyle: 'bold' },
-            10: { cellWidth: 18, halign: 'center' },
-        },
-        didDrawPage: (data) => {
-            const width = doc.internal.pageSize.getWidth();
-            const height = doc.internal.pageSize.getHeight();
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.text('Khulna Agricultural University — Monthly Horizontal Salary Bill', width / 2, 10, {
-                align: 'center',
+    const { year, month } = props;
+    exportingHorizontal.value = true;
+    notice.value = '';
+    try {
+        const { data } = await axios.get(route('reports.salary-official.index'), {
+            params: { ids: ids.join(','), year, month, kind: 'bulk', format: 'json', mode: 'preview', columns: 'full' },
+            headers: { Accept: 'application/json' },
+        });
+        if (!data.records?.length) throw new Error('No employees are eligible for this report.');
+        if (format === 'excel') {
+            const filename = `KAU_Horizontal_Bill_${year}_${String(month).padStart(2, '0')}.xlsx`;
+            downloadHorizontalBillExcel(data, data.horizontal_columns, filename);
+        } else {
+            await createHorizontalBillPdf({
+                records: data.records,
+                columns: data.horizontal_columns,
+                totals: data.horizontal_totals,
+                year,
+                month,
             });
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
-            doc.text(
-                `Payroll Period: ${periodLabel.value}${props.isLocked ? ' (Historical Locked)' : ''} · ${list.length} employees`,
-                width / 2,
-                16,
-                { align: 'center' },
-            );
-            doc.text(`Page ${data.pageNumber}`, width - 10, height - 6, { align: 'right' });
-        },
-    });
-
-    const scopeSuffix = selectedIds.value.length > 0 ? 'selected' : 'all';
-    doc.save(
-        `KAU_Horizontal_Bill_${props.year}_${String(props.month).padStart(2, '0')}_${scopeSuffix}.pdf`,
-    );
+        }
+    } catch (error) {
+        const response = error.response?.data;
+        const reportError = typeof response === 'string'
+            ? new DOMParser().parseFromString(response, 'text/html').querySelector('p')?.textContent
+            : response?.message;
+        noticeTone.value = 'error';
+        notice.value = reportError || error.message || 'Unable to export the Horizontal Bill.';
+    } finally {
+        exportingHorizontal.value = false;
+    }
 };
 </script>
 
@@ -906,8 +768,8 @@ const exportHorizontalPdf = () => {
 
                             <button
                                 type="button"
-                                :disabled="generating || !rowsForExport.length"
-                                @click="exportHorizontalExcel"
+                                :disabled="generating || exportingHorizontal || !rowsForExport.length"
+                                @click="exportHorizontalBill('excel')"
                                 class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-40"
                             >
                                 Horizontal Bill Excel
@@ -915,8 +777,8 @@ const exportHorizontalPdf = () => {
 
                             <button
                                 type="button"
-                                :disabled="generating || !rowsForExport.length"
-                                @click="exportHorizontalPdf"
+                                :disabled="generating || exportingHorizontal || !rowsForExport.length"
+                                @click="exportHorizontalBill('pdf')"
                                 class="rounded-lg border border-indigo-300 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 disabled:opacity-40"
                             >
                                 Horizontal Bill PDF
@@ -1056,6 +918,7 @@ const exportHorizontalPdf = () => {
                                         <!-- 1. Profile Edit (Pencil Icon) -->
                                         <button
                                             type="button"
+                                            :disabled="loadingProfile"
                                             @click="openProfileEdit(row)"
                                             title="Edit Employee Profile"
                                             aria-label="Edit Employee Profile"
@@ -1140,12 +1003,14 @@ const exportHorizontalPdf = () => {
             </section>
         </main>
 
-        <!-- 1. Employee Profile Quick Edit Modal -->
-        <EmployeeProfileQuickEditModal
-            :show="profileEditOpen"
+        <EditEmployeeProfileModal
             :employee="profileEditEmployee"
-            :filter-options="filterOptions"
-            @close="profileEditOpen = false"
+            :department-offices="profileEditOptions.departmentOffices"
+            :pay-scales="profileEditOptions.payScales"
+            :grades="profileEditOptions.grades"
+            :payroll-groups="profileEditOptions.payrollGroups"
+            :user-categories="profileEditOptions.userCategories"
+            @close="profileEditEmployee = null"
             @saved="onProfileSaved"
         />
 

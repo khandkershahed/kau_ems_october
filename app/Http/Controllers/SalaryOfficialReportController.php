@@ -36,6 +36,7 @@ final class SalaryOfficialReportController extends Controller
             'format' => ['nullable', 'in:html,pdf,json,csv'],
             'embed' => ['nullable', 'in:0,1'],
             'mode' => ['nullable', 'in:preview'],
+            'columns' => ['nullable', 'in:full'],
         ]);
         if ($validator->fails()) {
             abort(422, 'Salary report request rejected: '.$validator->errors()->first()
@@ -277,7 +278,7 @@ final class SalaryOfficialReportController extends Controller
                     ?: strnatcasecmp((string) $a['employee_code'], (string) $b['employee_code']);
             });
         }
-        $horizontal = $this->buildHorizontalPayload($rows);
+        $horizontal = $this->buildHorizontalPayload($rows, ($validated['columns'] ?? null) === 'full');
         $rows = $horizontal['rows'];
         $kind = $validated['kind'];
         $perPage = (int) ($validated['per_page'] ?? 15);
@@ -524,7 +525,7 @@ final class SalaryOfficialReportController extends Controller
      *     totals_formatted: array<string, string|null>
      * }
      */
-    private function buildHorizontalPayload(array $rows): array
+    private function buildHorizontalPayload(array $rows, bool $fullColumns): array
     {
         $allKeys = array_column(self::HORIZONTAL_COLUMN_DEFINITIONS, 'key');
         $totals = array_fill_keys($allKeys, 0.0);
@@ -661,7 +662,7 @@ final class SalaryOfficialReportController extends Controller
 
         $activeColumns = [];
         foreach (self::HORIZONTAL_COLUMN_DEFINITIONS as $def) {
-            if ($def['always'] || $hasNonZero[$def['key']]) {
+            if ($fullColumns || $def['always'] || $hasNonZero[$def['key']]) {
                 $activeColumns[] = [
                     'key' => $def['key'],
                     'label' => $def['label'],

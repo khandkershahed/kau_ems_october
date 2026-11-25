@@ -449,6 +449,22 @@ final class PayrollStep07ReportFormatTest extends TestCase
         $this->assertStringNotContainsString('DRAFT_REGULAR_ONLY_PREVIEW', $csv);
     }
 
+    public function test_workspace_preview_can_request_all_twenty_horizontal_columns(): void
+    {
+        $response = $this->actingAs($this->admin)->getJson(
+            '/dashboard/reports/salary-official?ids=11&year=2026&month=11&kind=bulk&format=json&mode=preview&columns=full'
+        );
+
+        $response->assertOk()->assertJsonCount(20, 'horizontal_columns');
+        $this->assertSame([
+            'Basic', 'HRA', 'MA', 'S. Benefit', 'Edu', 'Charge A.', 'Mobile', 'Tel.', 'Tiffin',
+            'Travel', 'Others A.', 'Gross', 'GPF', 'Income Tax', 'Veh. Ded.', 'Others D.',
+            'Rev. Stamp', 'Tot. Ded.', 'Net Arrear', 'Net Payable',
+        ], array_column($response->json('horizontal_columns'), 'label'));
+        $response->assertJsonPath('records.0.horizontal_formatted.charge_allowance', '0.00')
+            ->assertJsonPath('records.0.horizontal_formatted.revenue_stamp', '10.00');
+    }
+
     public function test_salary_summary_revenue_stamp_count_equals_payable_bill_count_with_two_decimal_totals(): void
     {
         $response = $this->actingAs($this->admin)->getJson(

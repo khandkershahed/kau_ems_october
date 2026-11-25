@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\EmployeeInfo;
 use App\Models\PayrollComponentType;
+use App\Models\SalaryGenerate;
 use App\Models\SalaryMonthlyComponentAdjustment;
 use App\Models\User;
 use DomainException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -19,6 +21,13 @@ final class MonthlySalarySetupService
 {
     /** Employee codes exempt from GPF (Vice Chancellor, Treasurer). */
     private const GPF_EXEMPT_CODES = ['20082', '20137'];
+
+    private const NOVEMBER_OCTOBER_FALLBACK_CODES = [
+        '10046', '10108', '20026', '20028', '20029', '20033', '20034', '20035',
+        '20037', '20062', '20069', '30098', '30254', '40033', '40158',
+    ];
+
+    private const NOVEMBER_AD_HOC_CODES = ['30036', '30043', '30073', '30075'];
 
     public static function classifyDirection(string $name): string
     {
@@ -71,7 +80,10 @@ final class MonthlySalarySetupService
                 ->keyBy('payroll_component_type_id')
             : collect();
 
-        return $this->computeSetupFromLoaded((int) $user->id, $profile, $types, $adjustments, $year, $month);
+        $userId = (int) $user->id;
+        $octoberBill = $this->octoberBillsForNovember([$userId], $year, $month)->get($userId);
+
+        return $this->computeSetupFromLoaded($userId, $profile, $types, $adjustments, $year, $month, $octoberBill);
     }
 
     /**
@@ -112,13 +124,16 @@ final class MonthlySalarySetupService
                 ->groupBy('user_id')
             : collect();
 
+        $octoberBills = $this->octoberBillsForNovember(array_keys($profilesByUser), $year, $month);
         $results = [];
         foreach ($userIds as $uid) {
             if (!isset($profilesByUser[$uid])) {
                 continue;
             }
             $userAdjustments = ($adjustmentsByUser->get($uid) ?? collect())->keyBy('payroll_component_type_id');
-            $setup = $this->computeSetupFromLoaded($uid, $profilesByUser[$uid], $types, $userAdjustments, $year, $month);
+            $setup = $this->computeSetupFromLoaded(
+                $uid, $profilesByUser[$uid], $types, $userAdjustments, $year, $month, $octoberBills->get($uid)
+            );
 
             $basicPay = 0.0;
             foreach ($setup['allowances'] as $row) {
@@ -161,7 +176,8 @@ final class MonthlySalarySetupService
         $types,
         $adjustments,
         int $year,
-        int $month
+        int $month,
+        ?SalaryGenerate $octoberBill
     ): array {
         $retainedOn2015Scale = $this->isRetainedOn2015Scale($profile);
         $fixation = $retainedOn2015Scale ? null : $this->resolveFixation($userId, $year, $month);
@@ -178,6 +194,17 @@ final class MonthlySalarySetupService
 
         $profileAdds = $this->safeNormalizeRows($profile->additionObjects);
         $profileDeds = $this->safeNormalizeRows($profile->substractionObjects);
+
+        $isNovember2026 = $year === 2026 && $month === 11;
+        $code = (string) $profile->employeeCode;
+        $useOctoberFallback = $isNovember2026 && in_array($code, self::NOVEMBER_OCTOBER_FALLBACK_CODES, true);
+        $isNovemberAdHoc = $isNovember2026 && in_array($code, self::NOVEMBER_AD_HOC_CODES, true);
+        $octoberAdds = $octoberBill && ($is2026Scale || $useOctoberFallback)
+            ? $this->octoberRegularRows($octoberBill->salaryAllowanceCalcObject)
+            : [];
+        $octoberDeds = $octoberBill && $useOctoberFallback
+            ? $this->octoberRegularRows($octoberBill->salaryDeductionCalcObject)
+            : [];
 
         // Pass 1: resolve effective Basic Pay so percentage components, SB, and GPF use it.
         $profileBasicRow = $this->findBasicRow($profileAdds);
@@ -223,6 +250,28 @@ final class MonthlySalarySetupService
                 $year,
                 $month
             );
+
+            $isGpf = SalaryCalculationService::isGpf(['name' => $name]);
+            $needsOctoberAmount = $useOctoberFallback
+                && !self::isBasicPay($name) && !self::isRevenueStamp($name)
+                && !(self::isSpecialBenefit($name) && ($is2026Scale || $autoCurrent !== 0.0))
+                && ($this->evaluateProfileRow($profileRow, $effectiveBasic) === 0.0);
+            $usesFrozenHra = $isNovember2026 && $is2026Scale && strcasecmp($name, 'House Rent Allowance') === 0;
+
+            if ($needsOctoberAmount || $usesFrozenHra) {
+                $octoberRows = $direction === 'allowance' ? $octoberAdds : $octoberDeds;
+                $octoberRow = $this->matchProfileRow($octoberRows, $typeId, $name);
+                if ($octoberRow === null && $isGpf) {
+                    $octoberRow = collect($octoberRows)->first(fn ($row) => SalaryCalculationService::isGpf($row));
+                }
+                $autoCurrent = $octoberRow['amount'] ?? $autoCurrent;
+            }
+            if ($isNovemberAdHoc && strcasecmp($name, 'Others Deduction') === 0 && $autoCurrent === 1270.50) {
+                $autoCurrent = 0.00;
+            }
+            if ($isGpf && $isNovemberAdHoc) {
+                $autoCurrent = 0.00;
+            }
 
             $adj = $adjustments->get($typeId);
             $ruleOverride = (bool) ($adj?->rule_override ?? false);
@@ -284,6 +333,42 @@ final class MonthlySalarySetupService
             'net_arrear' => $netArrearCents / 100,
             'net_payable' => $netPayableCents / 100,
         ];
+    }
+
+    private function octoberBillsForNovember(array $userIds, int $year, int $month): Collection
+    {
+        if ($year !== 2026 || $month !== 11 || $userIds === [] || !Schema::hasTable('salary_generates')) {
+            return collect();
+        }
+
+        return SalaryGenerate::query()
+            ->whereIn('user_id', $userIds)
+            ->where('salaryGenerationYear', 2026)
+            ->where('monthId', 10)
+            ->get()
+            ->groupBy('user_id')
+            ->filter(fn ($bills) => $bills->count() === 1)
+            ->map(fn ($bills) => $bills->first());
+    }
+
+    private function octoberRegularRows(mixed $payload): array
+    {
+        $regular = [];
+        foreach ($this->safeNormalizeRows($payload) as $row) {
+            if (!empty($row['arrear_phase5']) || !empty($row['arrear_snapshot_id'])
+                || !empty($row['arrear_rule_id']) || !empty($row['manual_adjustment_id'])
+                || stripos($row['name'], 'arrear') !== false) {
+                continue;
+            }
+
+            $amount = $row['calculated_amount'] ?? ($row['calcType'] === 'fixed' ? $row['amount'] : null);
+            if (is_numeric($amount) && is_finite((float) $amount) && $amount >= 0) {
+                $row['amount'] = round((float) $amount, 2);
+                $regular[] = $row;
+            }
+        }
+
+        return $regular;
     }
 
     /**
@@ -495,7 +580,9 @@ final class MonthlySalarySetupService
         }
 
         if (SalaryCalculationService::isGpf(['name' => $name])) {
-            if ($this->isGpfExempt($profile, $profileRow)) {
+            // Accounts sign-off for 20083 can be applied as a month-specific override.
+            if (((string) $profile->employeeCode === '20083' && !SalaryGenerationGuards::isMonthLocked($year, $month))
+                || $this->isGpfExempt($profile, $profileRow)) {
                 return 0.00;
             }
             return SalaryCalculationService::gpfAmount($effectiveBasic * 0.10, $year, $month);
@@ -514,8 +601,8 @@ final class MonthlySalarySetupService
             return true;
         }
 
-        $designation = (string) ($profile->payrollGroup?->payrollGroupType?->group_name ?? '');
-        if ($designation !== '' && preg_match('/\b(vice[\s-]*chancellor|vc|treasurer)\b/i', $designation) === 1) {
+        $designation = trim((string) ($profile->payrollGroup?->payrollGroupType?->group_name ?? ''));
+        if (preg_match('/^(?:vice[\s-]*chancellor|vc|treasurer)$/i', $designation) === 1) {
             return true;
         }
 

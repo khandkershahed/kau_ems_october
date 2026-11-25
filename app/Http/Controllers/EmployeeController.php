@@ -268,36 +268,47 @@ class EmployeeController extends Controller
         return back()->with('success', 'Employee created successfully.');
     }
 
+    private const EDIT_PROFILE_RELATIONS = [
+        'nid',
+        'bid',
+        'childCount',
+        'maritialStatus',
+        'religion',
+        'joiningDate',
+        'age',
+        'dormitory',
+        'employeeAttribute',
+        'tin',
+        'bankAccounts',
+        'leaveStatuses',
+        'promotions',
+        'phoneNumbers',
+        'addresses',
+        'employeeInfo.payScale',
+        'employeeInfo.payrollGroup.grade',
+        'employeeInfo.payrollGroup.payrollGroupType',
+        'employeeInfo.departmentOffice',
+        'departmentOffices',
+        'userCategories',
+    ];
+
     public function edit(Request $request)
     {
+        if ($request->wantsJson() && $request->has('profile_user_id')) {
+            $validated = $request->validate(['profile_user_id' => 'required|integer|min:1']);
+            $employee = User::query()->whereHas('employeeInfo')
+                ->with(self::EDIT_PROFILE_RELATIONS)->findOrFail($validated['profile_user_id']);
+
+            return response()->json(['employee' => $employee, 'options' => $this->editOptions()])
+                ->header('Cache-Control', 'private, no-store');
+        }
+
         if ($request->wantsJson()) {
             $query = User::where(function ($q) {
                 $q->whereHas('roles', function ($rq) {
                     $rq->where('role_name', 'user');
                 })->orWhereHas('employeeInfo');
-            })->with([
-                'nid',
-                'bid',
-                'childCount',
-                'maritialStatus',
-                'religion',
-                'joiningDate',
-                'age',
-                'dormitory',
-                'employeeAttribute',
-                'tin',
-                'bankAccounts',
-                'leaveStatuses',
-                'promotions',
-                'phoneNumbers',
-                'addresses',
-                'employeeInfo.payScale',
-                'employeeInfo.payrollGroup.grade',
-                'employeeInfo.payrollGroup.payrollGroupType',
-                'employeeInfo.departmentOffice',
-                'departmentOffices',
-                'userCategories',
-            ]);
+            })->with(self::EDIT_PROFILE_RELATIONS);
 
             // General Search (Name, Email, Employee Code, Phone Number, NID, TIN)
             // Supports comma-separated, newline, semicolon, or space-separated multi-user search
@@ -515,13 +526,18 @@ class EmployeeController extends Controller
             );
         }
 
-        return Inertia::render('Employee/Edit', [
+        return Inertia::render('Employee/Edit', $this->editOptions());
+    }
+
+    private function editOptions(): array
+    {
+        return [
             'departmentOffices' => \App\Models\DepartmentOffice::orderBy('name', 'asc')->get(),
             'payScales' => \App\Models\PayScale::all(),
             'grades' => \App\Models\Grade::all(),
             'payrollGroups' => \App\Models\PayrollGroup::with(['grade', 'payrollGroupType'])->get(),
             'userCategories' => \App\Models\UserCategory::all(),
-        ]);
+        ];
     }
 
     public function update(Request $request, User $user)
@@ -664,7 +680,8 @@ class EmployeeController extends Controller
             // Sync Bank Accounts
             $primaryBankAccountId = null;
             $keptBankAccountIds = [];
-            if ($request->has('bank_accounts') && is_array($request->bank_accounts)) {
+            $syncBankAccounts = is_array($request->input('bank_accounts'));
+            if ($syncBankAccounts) {
                 foreach ($request->bank_accounts as $idx => $ba) {
                     if (!empty($ba['bank_account_no'])) {
                         $bankAccount = $user->bankAccounts()->updateOrCreate(
@@ -684,7 +701,7 @@ class EmployeeController extends Controller
             // When saving other profile details, do not silently replace the
             // employee's linked salary bank with the first legacy account row.
             $previousBankAccountId = (int) ($user->employeeInfo?->bank_account_id ?? 0);
-            if ($previousBankAccountId > 0 && in_array($previousBankAccountId, $keptBankAccountIds, true)) {
+            if ($previousBankAccountId > 0 && (!$syncBankAccounts || in_array($previousBankAccountId, $keptBankAccountIds, true))) {
                 $primaryBankAccountId = $previousBankAccountId;
             }
             if (!$primaryBankAccountId) {
@@ -729,7 +746,7 @@ class EmployeeController extends Controller
             }
 
             if ($request->filled('employeeCode')) {
-                $user->employeeInfo()->updateOrCreate([], [
+                $profile = $user->employeeInfo()->updateOrCreate([], [
                     'employeeCode' => $request->employeeCode,
                     'jobStatus' => $request->jobStatus ?? 'permanent',
                     'incrementDate' => $request->incrementDate ?? now(),
@@ -747,14 +764,15 @@ class EmployeeController extends Controller
                     'payroll_group_id' => $payrollGroupId,
                 ]);
 
-                // Automatically update salary calculation components
-                if (function_exists('updateUserSalaryCalculationObjects')) {
+                // Keep employee-specific recurring amounts when editing profile details.
+                if (($profile->wasRecentlyCreated || $profile->wasChanged(['pay_scale_id', 'payroll_group_id']))
+                    && function_exists('updateUserSalaryCalculationObjects')) {
                     updateUserSalaryCalculationObjects($user->id);
                 }
             }
 
             // Cleanup old bank accounts that were removed, safely after employeeInfo is updated
-            if (isset($keptBankAccountIds)) {
+            if ($syncBankAccounts) {
                 $user->bankAccounts()->whereNotIn('id', $keptBankAccountIds)->delete();
             }
         });

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\EmployeeInfo;
 use App\Models\SalaryMonthlyComponentAdjustment;
 use App\Models\User;
+use App\Services\MonthlySalarySetupService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -628,5 +629,85 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $bill = DB::table('salary_generates')->where('user_id', 12)->where('salaryGenerationYear', 2026)->where('monthId', 11)->first();
         $this->assertNotNull($bill);
         $this->assertEquals(58198.00, (float) $bill->salaryTotal);
+    }
+
+    public function test_november_uses_posted_regular_components_without_carrying_october_arrears(): void
+    {
+        Schema::create('salary_generates', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->integer('salaryGenerationYear');
+            $table->integer('monthId');
+            $table->json('salaryAllowanceCalcObject');
+            $table->json('salaryDeductionCalcObject');
+        });
+
+        DB::table('pay_scales')->where('id', 1)->update(['scale_name' => 'Govt. Pay Scale 2026']);
+        $component = static fn ($name, $amount) => ['name' => $name, 'calcType' => 'fixed', 'amount' => $amount];
+        $profile = EmployeeInfo::findOrFail(12);
+        $profile->update([
+            'employeeCode' => '10046',
+            'additionObjects' => [
+                $component('Basic Pay', 59886),
+                $component('House Rent Allowance', 17268),
+                $component('Medical Allowance', 0),
+            ],
+            'substractionObjects' => [$component('General Provident Fund', 0), $component('Income Tax', 0)],
+        ]);
+        DB::table('salary_generates')->insert([
+            'user_id' => 12,
+            'salaryGenerationYear' => 2026,
+            'monthId' => 10,
+            'salaryAllowanceCalcObject' => json_encode([
+                $component('House Rent Allowance', 16444),
+                $component('Medical Allowance', 1500),
+                $component('Special Benefit', 100),
+                $component('Charge Allowance', 4500),
+                $component('Charge Allowance', 600) + ['arrear_phase5' => true],
+            ]),
+            'salaryDeductionCalcObject' => json_encode([
+                $component('General Provident Fund (GPF)', 5989),
+                $component('Income Tax', 300),
+                $component('Others Deduction', 500) + ['arrear_snapshot_id' => 1],
+            ]),
+        ]);
+
+        $setup = app(MonthlySalarySetupService::class);
+        $november = $setup->getSetupForEmployee($this->employee, 2026, 11);
+        $bulk = $setup->getSummariesForUsers([12], 2026, 11)[12];
+        $this->assertEquals(82330.00, $november['regular_allowances']);
+        $this->assertEquals(6299.00, $november['regular_deductions']);
+        $this->assertEquals(0.00, $november['net_arrear']);
+        $this->assertSame($november['allowances'], $bulk['allowances']);
+        $this->assertSame($november['deductions'], $bulk['deductions']);
+
+        $december = $setup->getSetupForEmployee($this->employee, 2026, 12);
+        $this->assertEquals(77154.00, $december['regular_allowances']);
+        $this->assertEquals(10.00, $december['regular_deductions']);
+    }
+
+    public function test_november_applies_the_verified_ad_hoc_and_gpf_exceptions(): void
+    {
+        $profile = EmployeeInfo::findOrFail(12);
+        $profile->update([
+            'employeeCode' => '30043',
+            'holdIncrement' => false,
+            'additionObjects' => [['name' => 'Basic Pay', 'calcType' => 'fixed', 'amount' => 38956]],
+            'substractionObjects' => [['name' => 'Others Deduction', 'calcType' => 'fixed', 'amount' => 1270.50]],
+        ]);
+        $setup = app(MonthlySalarySetupService::class);
+        $november = $setup->getSummariesForUsers([12], 2026, 11)[12];
+        $this->assertEquals(10.00, $november['regular_deductions']);
+
+        DB::table('payroll_group_types')->where('id', 1)->update(['group_name' => 'PS TO VC']);
+        $profile->update(['employeeCode' => '20045', 'substractionObjects' => []]);
+        $november = $setup->getSummariesForUsers([12], 2026, 11)[12];
+        $this->assertEquals(3895.60, collect($november['deductions'])->firstWhere('payroll_component_type_id', 16)['current_amount']);
+
+        $profile->update(['employeeCode' => '20083']);
+        $november = $setup->getSummariesForUsers([12], 2026, 11)[12];
+        $this->assertEquals(0.00, collect($november['deductions'])->firstWhere('payroll_component_type_id', 16)['current_amount']);
+        $december = $setup->getSummariesForUsers([12], 2026, 12)[12];
+        $this->assertEquals(0.00, collect($december['deductions'])->firstWhere('payroll_component_type_id', 16)['current_amount']);
     }
 }

@@ -38,10 +38,15 @@ class BankAccount extends Model
                 ]);
             }
 
+            if ($account->exists && !$account->isDirty(['account_no', 'user_id'])) {
+                return;
+            }
+
             $duplicate = self::query()
+                ->where('user_id', '!=', $account->user_id)
                 ->whereRaw("REPLACE(REPLACE(account_no, ' ', ''), '-', '') = ?", [$normalized]);
             if ($account->exists) {
-                $duplicate->where('id', '!=', $account->getKey());
+                $duplicate->whereKeyNot($account->getKey());
             }
             if ($duplicate->exists()) {
                 throw ValidationException::withMessages([
