@@ -127,6 +127,7 @@ Route::middleware(['auth'])->prefix('dashboard')->group(function () {
     Route::get('/salary/estimation/bulk-components', [\App\Http\Controllers\SalaryBulkComponentWorkspaceController::class, 'index'])->name('salary-estimation.bulk-components');
     Route::get('/salary/estimation/selection', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'selection'])->name('salary-estimation.selection');
     Route::get('/salary/estimation', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'index'])->name('salary-estimation.index');
+    Route::post('/salary/estimation/generate-bulk', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'generateBulk'])->name('salary-estimation.generate-bulk');
     Route::post('/salary/estimation/runs', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'start'])->name('salary-estimation.start');
     Route::post('/salary/estimation/runs/{run}/next', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'next'])->name('salary-estimation.next')->whereNumber('run');
     Route::get('/salary/estimation/runs/{run}/errors', [\App\Http\Controllers\SalaryEstimationWorkspaceController::class, 'errors'])->name('salary-estimation.errors')->whereNumber('run');

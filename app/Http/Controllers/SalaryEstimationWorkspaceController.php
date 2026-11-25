@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\HistoricalSalaryImmutableException;
+use App\Models\SalaryGenerate;
+use App\Models\User;
 use App\Services\MonthlySalarySetupService;
 use App\Services\SalaryBillPostingService;
+use App\Services\SalaryCalculationService;
 use App\Services\SalaryGenerationGuards;
 use App\Services\SalaryWorkflowRosterService;
 use App\Services\SalaryFinancialSourceFingerprint;
+use Carbon\CarbonImmutable;
+use DomainException;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -19,6 +25,29 @@ use Throwable;
 /** PATCH 05: resumable, read-only estimation. NEVER creates bill or approves payroll. */
 final class SalaryEstimationWorkspaceController extends Controller
 {
+    private const STANDARD_EMPLOYEE_TYPES = [
+        'Active',
+        'Study Leave With Pay',
+        'Study Leave Without Pay',
+        'Ad Hoc',
+        'Contractual',
+        'Deputation',
+        'Lean',
+        'PRL',
+        'Suspend',
+        'Inactive',
+        'Pension Half',
+        'Pension Full',
+    ];
+
+    private const DEFAULT_EMPLOYEE_TYPES = [
+        'Active',
+        'Study Leave With Pay',
+        'Ad Hoc',
+        'Contractual',
+        'Deputation',
+    ];
+
     private function hr(Request $request): void
     {
         abort_unless($request->user(), 401); // PATCH 06: role-free authenticated operator
@@ -48,7 +77,88 @@ final class SalaryEstimationWorkspaceController extends Controller
             'increment_status' => 'nullable|in:available,hold,adhoc,study_with,study_without,other',
             'component_type_id' => 'nullable|integer|min:1',
             'fixation_status' => 'nullable|in:approved,not_approved,missing',
+            'employee_types' => 'nullable|array',
+            'employee_types.*' => 'string|max:60',
         ]);
+    }
+
+    private function mapJobStatusToLabel(?string $jobStatus): ?string
+    {
+        $raw = trim((string) ($jobStatus ?? ''));
+        if ($raw === '') {
+            return null;
+        }
+        $norm = strtolower(str_replace(['-', '_', ' '], '', $raw));
+        return match ($norm) {
+            'permanent', 'active', 'regular' => 'Active',
+            'studyleavewithpay', 'leavewithpay' => 'Study Leave With Pay',
+            'studyleavewithoutpay', 'leavewithoutpay' => 'Study Leave Without Pay',
+            'adhoc' => 'Ad Hoc',
+            'contract', 'contractual' => 'Contractual',
+            'deputation' => 'Deputation',
+            'lean', 'lien' => 'Lean',
+            'prl' => 'PRL',
+            'suspend', 'suspended' => 'Suspend',
+            'inactive' => 'Inactive',
+            'pensionhalf' => 'Pension Half',
+            'pensionfull' => 'Pension Full',
+            'temporary', 'others' => null,
+            default => $raw,
+        };
+    }
+
+    /**
+     * Resolve canonical Employee Type (Employment Status) label for workspace filtering and badges.
+     *
+     * @param array<string, bool> $studyLeaveCodes
+     * @param array<string, bool> $adhocCodes
+     * @param array<int, array{on_leave: bool, is_paid: bool}> $leaveMap
+     */
+    private function resolveEmployeeType(object $row, array $studyLeaveCodes, array $adhocCodes, array $leaveMap): string
+    {
+        if (!(bool) ($row->is_active ?? true)) {
+            return 'Inactive';
+        }
+
+        $mapped = $this->mapJobStatusToLabel($row->job_status ?? null);
+        if ($mapped !== null && $mapped !== 'Active') {
+            return $mapped;
+        }
+
+        $code = trim((string) ($row->employee_code ?? ''));
+        if ($code !== '' && isset($studyLeaveCodes[$code])) {
+            return 'Study Leave With Pay';
+        }
+        if ($code !== '' && isset($adhocCodes[$code])) {
+            return 'Ad Hoc';
+        }
+
+        $uid = (int) $row->user_id;
+        if (isset($leaveMap[$uid]) && $leaveMap[$uid]['on_leave']) {
+            return $leaveMap[$uid]['is_paid'] ? 'Study Leave With Pay' : 'Study Leave Without Pay';
+        }
+
+        return 'Active';
+    }
+
+    /** @return array<int, string> */
+    private function buildEmployeeTypeOptions(): array
+    {
+        $options = self::STANDARD_EMPLOYEE_TYPES;
+        if (Schema::hasTable('employee_infos') && Schema::hasColumn('employee_infos', 'jobStatus')) {
+            $distinct = DB::table('employee_infos')
+                ->whereNotNull('jobStatus')
+                ->where('jobStatus', '!=', '')
+                ->distinct()
+                ->pluck('jobStatus');
+            foreach ($distinct as $raw) {
+                $label = $this->mapJobStatusToLabel((string) $raw);
+                if ($label !== null && !in_array($label, $options, true)) {
+                    $options[] = $label;
+                }
+            }
+        }
+        return $options;
     }
 
     private function eligibilityCodes(): array
@@ -193,7 +303,14 @@ final class SalaryEstimationWorkspaceController extends Controller
         $status = in_array($rawStatus, ['ALL', 'PENDING', 'GENERATED'], true) ? $rawStatus : 'ALL';
         $search = trim((string) ($data['search'] ?? ''));
         $categoryId = !empty($data['category_id']) ? (int) $data['category_id'] : null;
+        $departmentId = !empty($data['department_id']) ? (int) $data['department_id'] : null;
+        $designation = trim((string) ($data['designation'] ?? ''));
         $perPage = (int) ($data['per_page'] ?? 50);
+
+        $selectedEmployeeTypes = $request->has('employee_types')
+            ? array_values(array_unique(array_filter(array_map('trim', (array) ($data['employee_types'] ?? [])))))
+            : self::DEFAULT_EMPLOYEE_TYPES;
+        $includeInactive = in_array('Inactive', $selectedEmployeeTypes, true);
 
         $profiles = DB::table('employee_infos')
             ->select('user_id')
@@ -202,13 +319,24 @@ final class SalaryEstimationWorkspaceController extends Controller
 
         $query = DB::query()->fromSub($profiles, 'ep')
             ->join('users as u', 'u.id', '=', 'ep.user_id')
-            ->where('u.isActive', 1)
             ->leftJoin('employee_infos as ei', 'ei.id', '=', 'ep.profile_id')
             ->leftJoin('department_offices as dep', 'dep.id', '=', 'ei.department_office_id')
             ->leftJoin('pay_scales as ps', 'ps.id', '=', 'ei.pay_scale_id')
             ->leftJoin('payroll_groups as pg_info', 'pg_info.id', '=', 'ei.payroll_group_id')
             ->leftJoin('grades as gr', 'gr.id', '=', 'pg_info.grade_id')
             ->leftJoin('payroll_group_types as pgt_info', 'pgt_info.id', '=', 'pg_info.payroll_group_type_id');
+
+        if (!$includeInactive) {
+            $query->where('u.isActive', 1);
+        }
+
+        if ($departmentId !== null) {
+            $query->where('ei.department_office_id', $departmentId);
+        }
+
+        if ($designation !== '') {
+            $query->where('pgt_info.group_name', $designation);
+        }
 
         if ($categoryId !== null && Schema::hasTable('user_user_categories')) {
             $query->whereExists(function ($q) use ($categoryId) {
@@ -228,12 +356,18 @@ final class SalaryEstimationWorkspaceController extends Controller
             });
         }
 
-        $baseRows = $query->select(
+        $candidateRows = $query->select(
             'ep.user_id',
             'ep.employee_code',
             'ep.profile_count',
             'u.name',
             'u.email',
+            'u.isActive as is_active',
+            'ei.department_office_id',
+            'ei.pay_scale_id',
+            'ei.payroll_group_id',
+            'ei.jobStatus as job_status',
+            'ei.holdIncrement as hold_increment',
             'dep.name as department_name',
             'ps.scale_name as pay_scale_name',
             'gr.grade_name',
@@ -243,18 +377,70 @@ final class SalaryEstimationWorkspaceController extends Controller
             ->orderBy('ep.user_id')
             ->get();
 
+        $eligibilityConfig = config('kau_fixation_eligibility', []);
+        $studyLeaveCodes = array_fill_keys(array_map('strval', array_keys($eligibilityConfig['study_leave'] ?? [])), true);
+        $adhocCodes = array_fill_keys(array_map('strval', array_keys($eligibilityConfig['adhoc'] ?? [])), true);
+
+        $leaveMap = [];
+        if ($candidateRows->isNotEmpty() && Schema::hasTable('leave_statuses')) {
+            $candIds = $candidateRows->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+            $leaveRows = DB::table('leave_statuses')
+                ->whereIn('user_id', $candIds)
+                ->where('onLeave', 1)
+                ->where('isActive', 1)
+                ->get(['user_id', 'onLeave', 'isPaid']);
+            foreach ($leaveRows as $lr) {
+                $leaveMap[(int) $lr->user_id] = [
+                    'on_leave' => (bool) $lr->onLeave,
+                    'is_paid' => (bool) ($lr->isPaid ?? false),
+                ];
+            }
+        }
+
+        $selectedTypeSet = array_flip($selectedEmployeeTypes);
+        $baseRows = $candidateRows->filter(function ($row) use ($selectedEmployeeTypes, $selectedTypeSet, $studyLeaveCodes, $adhocCodes, $leaveMap) {
+            $empType = $this->resolveEmployeeType($row, $studyLeaveCodes, $adhocCodes, $leaveMap);
+            $row->employee_type = $empType;
+            if ($selectedEmployeeTypes === []) {
+                return true;
+            }
+            return isset($selectedTypeSet[$empType]);
+        })->values();
+
         $allUserIds = $baseRows->pluck('user_id')->map(fn ($id) => (int) $id)->all();
 
         $categoryMap = [];
+        $primaryCategoryIdMap = [];
         if ($allUserIds !== [] && Schema::hasTable('user_user_categories') && Schema::hasTable('user_categories')) {
             $catRows = DB::table('user_user_categories as uc')
                 ->join('user_categories as cat', 'cat.id', '=', 'uc.user_category_id')
                 ->whereIn('uc.user_id', $allUserIds)
                 ->orderBy('cat.name')
-                ->get(['uc.user_id', 'cat.name']);
+                ->get(['uc.user_id', 'cat.id', 'cat.name']);
             foreach ($catRows as $cr) {
                 $uid = (int) $cr->user_id;
                 $categoryMap[$uid][] = (string) $cr->name;
+                if (!isset($primaryCategoryIdMap[$uid])) {
+                    $primaryCategoryIdMap[$uid] = (int) $cr->id;
+                }
+            }
+        }
+
+        $bankMap = [];
+        if ($allUserIds !== [] && Schema::hasTable('bank_accounts')) {
+            $bankRows = DB::table('bank_accounts')
+                ->whereIn('user_id', $allUserIds)
+                ->orderByDesc('isSalaryAccount')
+                ->orderBy('id')
+                ->get(['user_id', 'account_no', 'address']);
+            foreach ($bankRows as $br) {
+                $uid = (int) $br->user_id;
+                if (!isset($bankMap[$uid])) {
+                    $bankMap[$uid] = [
+                        'account_no' => (string) ($br->account_no ?? ''),
+                        'address' => (string) ($br->address ?? ''),
+                    ];
+                }
             }
         }
 
@@ -307,11 +493,21 @@ final class SalaryEstimationWorkspaceController extends Controller
                 'profile_count' => (int) $row->profile_count,
                 'name' => (string) $row->name,
                 'email' => $row->email,
+                'is_active' => (bool) $row->is_active,
+                'job_status' => $row->job_status,
+                'employee_type' => (string) ($row->employee_type ?? 'Active'),
+                'hold_increment' => (bool) ($row->hold_increment ?? false),
+                'department_office_id' => $row->department_office_id ? (int) $row->department_office_id : null,
+                'pay_scale_id' => $row->pay_scale_id ? (int) $row->pay_scale_id : null,
+                'payroll_group_id' => $row->payroll_group_id ? (int) $row->payroll_group_id : null,
+                'category_id' => $primaryCategoryIdMap[$uid] ?? null,
                 'department_name' => $row->department_name,
                 'designation_name' => $row->designation_name,
                 'pay_scale_name' => $fin['pay_scale'] ?? $row->pay_scale_name,
                 'grade_name' => $fin['grade'] ?? $row->grade_name,
                 'category_names' => isset($categoryMap[$uid]) ? implode(', ', array_unique($categoryMap[$uid])) : null,
+                'bank_account_no' => $bankMap[$uid]['account_no'] ?? null,
+                'bank_address' => $bankMap[$uid]['address'] ?? null,
                 'basic_pay' => $basicPay,
                 'regular_allowances' => (float) ($fin['regular_allowances'] ?? 0.0),
                 'regular_deductions' => (float) ($fin['regular_deductions'] ?? 0.0),
@@ -333,11 +529,13 @@ final class SalaryEstimationWorkspaceController extends Controller
 
             $enriched[] = $item;
 
-            if (!$isGenerated && (int) $row->profile_count === 1) {
+            if (!$isGenerated && (bool) $row->is_active && (int) $row->profile_count === 1) {
                 $eligiblePending[] = [
                     'user_id' => $uid,
                     'employee_code' => (string) $row->employee_code,
                     'name' => (string) $row->name,
+                    'regular_net' => $regularNet,
+                    'net_arrear' => $netArrear,
                     'net_payable' => $netPayable,
                 ];
             }
@@ -363,15 +561,49 @@ final class SalaryEstimationWorkspaceController extends Controller
             'net_payable_total' => $netPayableCents / 100,
         ];
 
+        $payrollGroupOptions = [];
+        if (Schema::hasTable('payroll_groups') && Schema::hasTable('payroll_group_types')) {
+            $pgQuery = DB::table('payroll_groups as pg')
+                ->leftJoin('payroll_group_types as pgt', 'pgt.id', '=', 'pg.payroll_group_type_id');
+            if (Schema::hasTable('grades')) {
+                $pgQuery->leftJoin('grades as g', 'g.id', '=', 'pg.grade_id')
+                    ->select('pg.id', 'pgt.group_name', 'g.grade_name');
+            } else {
+                $pgQuery->select('pg.id', 'pgt.group_name');
+            }
+            $payrollGroupOptions = $pgQuery->orderBy('pgt.group_name')->get()->map(function ($pg) {
+                $gName = property_exists($pg, 'grade_name') && $pg->grade_name ? " ({$pg->grade_name})" : '';
+                return [
+                    'id' => (int) $pg->id,
+                    'label' => trim((string) ($pg->group_name ?? "Group #{$pg->id}") . $gName),
+                ];
+            })->all();
+        }
+
         $filterOptions = [
+            'employee_types' => $this->buildEmployeeTypeOptions(),
+            'default_employee_types' => self::DEFAULT_EMPLOYEE_TYPES,
             'categories' => Schema::hasTable('user_categories')
                 ? DB::table('user_categories')->orderBy('name')->get(['id', 'name'])
                 : [],
+            'departments' => Schema::hasTable('department_offices')
+                ? DB::table('department_offices')->orderBy('name')->get(['id', 'name'])
+                : [],
+            'designations' => Schema::hasTable('payroll_group_types')
+                ? DB::table('payroll_group_types')->whereNotNull('group_name')->where('group_name', '!=', '')->distinct()->orderBy('group_name')->pluck('group_name')->all()
+                : [],
+            'pay_scales' => Schema::hasTable('pay_scales')
+                ? DB::table('pay_scales')->orderBy('scale_name')->get(['id', 'scale_name'])
+                : [],
+            'payroll_groups' => $payrollGroupOptions,
         ];
 
         $filters = [
             'search' => $search,
             'category_id' => $categoryId ? (string) $categoryId : '',
+            'department_id' => $departmentId ? (string) $departmentId : '',
+            'designation' => $designation,
+            'employee_types' => $selectedEmployeeTypes,
             'status' => $status,
             'per_page' => (string) $perPage,
         ];
@@ -386,6 +618,212 @@ final class SalaryEstimationWorkspaceController extends Controller
             'isLocked' => $isLocked,
             'filters' => $filters,
             'filterOptions' => $filterOptions,
+        ]);
+    }
+
+    /**
+     * Verified Bulk Calculate & Generate Salary for mutable periods (>= 2026-11).
+     * Persists authoritative MonthlySalarySetupService breakdowns into salary_generates.
+     * Strictly blocks <= 2026-10 via SalaryGenerationGuards::assertMonthMutable.
+     */
+    public function generateBulk(Request $request, MonthlySalarySetupService $setupService): JsonResponse
+    {
+        $this->hr($request);
+        $validated = $request->validate([
+            'year' => 'required|integer|between:2020,2100',
+            'month' => 'required|integer|between:1,12',
+            'user_ids' => 'required|array|min:1|max:50',
+            'user_ids.*' => 'required|integer|min:1|distinct',
+        ]);
+
+        $year = (int) $validated['year'];
+        $month = (int) $validated['month'];
+        $userIds = array_values(array_unique(array_map('intval', $validated['user_ids'])));
+
+        try {
+            SalaryGenerationGuards::assertMonthMutable($year, $month, 'generated');
+        } catch (HistoricalSalaryImmutableException|DomainException $e) {
+            return response()->json([
+                'status' => 422,
+                'is_locked' => true,
+                'message' => $e->getMessage(),
+                'errors' => [$e->getMessage()],
+            ], 422);
+        }
+
+        if (!Schema::hasTable('salary_generates')) {
+            return response()->json([
+                'status' => 422,
+                'message' => 'salary_generates table is missing.',
+                'errors' => ['salary_generates table is missing.'],
+            ], 422);
+        }
+
+        $summaries = $setupService->getSummariesForUsers($userIds, $year, $month);
+        $salaryDate = CarbonImmutable::create($year, $month, 1)->endOfMonth()->toDateString();
+
+        $successCount = 0;
+        $skippedCount = 0;
+        $failedCount = 0;
+        $errors = [];
+
+        foreach ($userIds as $uid) {
+            try {
+                DB::transaction(function () use (
+                    $uid,
+                    $year,
+                    $month,
+                    $salaryDate,
+                    $summaries,
+                    &$successCount,
+                    &$skippedCount
+                ): void {
+                    $existing = SalaryGenerate::query()
+                        ->where('user_id', $uid)
+                        ->where('salaryGenerationYear', $year)
+                        ->where('monthId', $month)
+                        ->exists();
+                    if ($existing) {
+                        $skippedCount++;
+                        return;
+                    }
+
+                    $user = User::query()->whereKey($uid)->first();
+                    if (!$user || !(bool) $user->isActive) {
+                        throw new DomainException('Employee account is inactive or missing.');
+                    }
+
+                    $profiles = DB::table('employee_infos')->where('user_id', $uid)->get();
+                    if ($profiles->count() !== 1) {
+                        throw new DomainException('Employee must have exactly one payroll profile.');
+                    }
+                    $profile = $profiles->first();
+
+                    if (!isset($summaries[$uid])) {
+                        throw new DomainException('Unable to compute monthly salary breakdown.');
+                    }
+                    $fin = $summaries[$uid];
+
+                    $designation = Schema::hasTable('payroll_groups') && Schema::hasTable('payroll_group_types') && $profile->payroll_group_id
+                        ? (string) (DB::table('payroll_groups as pg')
+                            ->join('payroll_group_types as pgt', 'pgt.id', '=', 'pg.payroll_group_type_id')
+                            ->where('pg.id', $profile->payroll_group_id)
+                            ->value('pgt.group_name') ?? 'N/A')
+                        : 'N/A';
+
+                    $bankRow = Schema::hasTable('bank_accounts')
+                        ? DB::table('bank_accounts')->where('user_id', $uid)->orderByDesc('isSalaryAccount')->orderBy('id')->first()
+                        : null;
+                    $phoneNo = Schema::hasTable('phone_numbers')
+                        ? (string) (DB::table('phone_numbers')->where('user_id', $uid)->value('phoneNumber') ?? 'N/A')
+                        : 'N/A';
+                    $ageVal = Schema::hasTable('ages')
+                        ? (string) (DB::table('ages')->where('user_id', $uid)->value('age') ?? 'N/A')
+                        : 'N/A';
+                    $joiningDate = Schema::hasTable('joining_dates')
+                        ? (string) (DB::table('joining_dates')->where('user_id', $uid)->value('joining_date') ?? $salaryDate)
+                        : $salaryDate;
+
+                    $allowancesObj = [];
+                    foreach ($fin['allowances'] as $row) {
+                        if (abs((float) $row['total_amount']) < 0.005 && abs((float) $row['current_amount']) < 0.005) {
+                            continue;
+                        }
+                        $allowancesObj[] = [
+                            'payroll_component_type_id' => (int) $row['payroll_component_type_id'],
+                            'name' => (string) $row['name'],
+                            'calcType' => 'fixed',
+                            'amount' => (float) $row['current_amount'],
+                            'current_amount' => (float) $row['current_amount'],
+                            'arrear_amount' => (float) $row['arrear_amount'],
+                            'calculated_amount' => (float) $row['total_amount'],
+                            'component_type' => 'allowance',
+                        ];
+                    }
+
+                    $deductionsObj = [];
+                    $taxDeduction = 0.0;
+                    $gpfDeduction = 0.0;
+                    foreach ($fin['deductions'] as $row) {
+                        $totalAmt = (float) $row['total_amount'];
+                        $lowerName = strtolower((string) $row['name']);
+                        if (str_contains($lowerName, 'income tax')) {
+                            $taxDeduction += $totalAmt;
+                        }
+                        if (SalaryCalculationService::isGpf(['name' => $row['name']])) {
+                            $gpfDeduction += $totalAmt;
+                        }
+                        if (abs($totalAmt) < 0.005 && abs((float) $row['current_amount']) < 0.005) {
+                            continue;
+                        }
+                        $deductionsObj[] = [
+                            'payroll_component_type_id' => (int) $row['payroll_component_type_id'],
+                            'name' => (string) $row['name'],
+                            'calcType' => 'fixed',
+                            'amount' => (float) $row['current_amount'],
+                            'current_amount' => (float) $row['current_amount'],
+                            'arrear_amount' => (float) $row['arrear_amount'],
+                            'calculated_amount' => $totalAmt,
+                            'component_type' => 'deduction',
+                        ];
+                    }
+
+                    SalaryGenerate::create([
+                        'user_id' => $uid,
+                        'reviewStatus' => 'pending',
+                        'name' => (string) $user->name,
+                        'age' => $ageVal,
+                        'gender' => (string) ($user->gender ?? 'N/A'),
+                        'payScale' => (string) ($fin['pay_scale'] ?? 'Govt. Pay Scale 2015'),
+                        'grade' => (string) ($fin['grade'] ?? 'N/A'),
+                        'designation' => $designation,
+                        'employeeCode' => (string) $profile->employeeCode,
+                        'bankAccountNo' => (string) ($bankRow->account_no ?? 'N/A'),
+                        'bankAddress' => (string) ($bankRow->address ?? 'N/A'),
+                        'employeePhoneNumber' => $phoneNo,
+                        'joiningDate' => $joiningDate ?: $salaryDate,
+                        'salaryGenerationDate' => $salaryDate,
+                        'monthId' => $month,
+                        'salaryGenerationYear' => $year,
+                        'salaryAllowanceCalcObject' => $allowancesObj,
+                        'salaryDeductionCalcObject' => $deductionsObj,
+                        'totalAllowance' => round((float) $fin['total_allowances'], 2),
+                        'totalDeduction' => round((float) $fin['total_deductions'], 2),
+                        'taxDeduction' => round($taxDeduction, 2),
+                        'gpfDeduction' => round($gpfDeduction, 2),
+                        'salaryTotal' => round((float) $fin['net_payable'], 2),
+                        'bonusAllowanceCalcObject' => [],
+                        'bonusDeductionCalcObject' => [],
+                        'bonusAllowance' => 0,
+                        'bonusDeduction' => 0,
+                        'bonusTaxDeduction' => 0,
+                        'bonusTotal' => 0,
+                        'loanInstallmentDeduction' => 0,
+                        'loanInstallmentCount' => null,
+                        'loanInstallmentRemaining' => null,
+                    ]);
+
+                    $successCount++;
+                });
+            } catch (Throwable $e) {
+                $failedCount++;
+                $userName = User::query()->whereKey($uid)->value('name') ?? "User #{$uid}";
+                $errors[] = "{$userName}: {$e->getMessage()}";
+            }
+        }
+
+        return response()->json([
+            'status' => 200,
+            'success_count' => $successCount,
+            'skipped_count' => $skippedCount,
+            'failed_count' => $failedCount,
+            'errors' => $errors,
+            'message' => sprintf(
+                'Generated %d salary bill(s)%s%s.',
+                $successCount,
+                $skippedCount > 0 ? " ({$skippedCount} already existed)" : '',
+                $failedCount > 0 ? " ({$failedCount} failed)" : ''
+            ),
         ]);
     }
 

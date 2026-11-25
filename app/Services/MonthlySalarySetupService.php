@@ -163,14 +163,18 @@ final class MonthlySalarySetupService
         int $year,
         int $month
     ): array {
-        $fixation = $this->resolveFixation($userId, $year, $month);
+        $retainedOn2015Scale = $this->isRetainedOn2015Scale($profile);
+        $fixation = $retainedOn2015Scale ? null : $this->resolveFixation($userId, $year, $month);
 
+        $rawProfileScale = (string) ($profile->payScale?->scale_name ?? '');
         $scaleName = $fixation !== null
             ? 'Govt. Pay Scale 2026'
-            : (string) ($profile->payScale?->scale_name ?? '');
+            : ($retainedOn2015Scale && ($rawProfileScale === '' || str_contains($rawProfileScale, '2026'))
+                ? 'Govt. Pay Scale 2015'
+                : $rawProfileScale);
         $gradeName = $fixation['grade'] ?? ($profile->payrollGroup?->grade?->grade_name ?? null);
-        $is2026Scale = $fixation !== null || str_contains($scaleName, '2026');
-        $is2015Scale = !$is2026Scale && str_contains($scaleName, '2015');
+        $is2026Scale = !$retainedOn2015Scale && ($fixation !== null || str_contains($scaleName, '2026'));
+        $is2015Scale = $retainedOn2015Scale || (!$is2026Scale && str_contains($scaleName, '2015'));
 
         $profileAdds = $this->safeNormalizeRows($profile->additionObjects);
         $profileDeds = $this->safeNormalizeRows($profile->substractionObjects);
@@ -616,6 +620,32 @@ final class MonthlySalarySetupService
         }
 
         return $profile;
+    }
+
+    /**
+     * Leave-With-Pay-Without-Increment / 2015-retained employees stay on their
+     * 2015 June Basic from employee_infos and receive 2015 Special Benefit
+     * (10% Grades 1-9, 15% Grades 10-20), even if a 2026 fixation schedule exists.
+     */
+    private function isRetainedOn2015Scale(EmployeeInfo $profile): bool
+    {
+        $code = trim((string) $profile->employeeCode);
+        if ($code !== '') {
+            $studyLeave = config('kau_fixation_eligibility.study_leave', []);
+            if (isset($studyLeave[$code]) && ($studyLeave[$code]['first_increment_allowed'] ?? false) === false) {
+                return true;
+            }
+        }
+
+        $normalizedJobStatus = strtolower(str_replace(['-', ' ', '_'], '', (string) $profile->jobStatus));
+        if (
+            (str_contains($normalizedJobStatus, 'leavewithpay') || str_contains($normalizedJobStatus, 'studyleavewithpay'))
+            && (bool) $profile->holdIncrement
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /** @return array<string, mixed>|null */

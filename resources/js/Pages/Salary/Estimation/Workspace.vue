@@ -2,9 +2,11 @@
 import { computed, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SalarySetupModal from '@/Components/SalarySetupModal.vue';
-import Modal from '@/Components/Modal.vue';
+import EmployeeProfileQuickEditModal from '@/Components/EmployeeProfileQuickEditModal.vue';
+import SalaryBillPreviewModal from '@/Components/SalaryBillPreviewModal.vue';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -18,7 +20,18 @@ const props = defineProps({
     month: { type: Number, default: 11 },
     isLocked: { type: Boolean, default: false },
     filters: { type: Object, default: () => ({}) },
-    filterOptions: { type: Object, default: () => ({ categories: [] }) },
+    filterOptions: {
+        type: Object,
+        default: () => ({
+            employee_types: [],
+            default_employee_types: [],
+            categories: [],
+            departments: [],
+            designations: [],
+            pay_scales: [],
+            payroll_groups: [],
+        }),
+    },
 });
 
 const routePath = '/dashboard/salary/estimation';
@@ -50,10 +63,35 @@ const years = computed(() => {
     return list;
 });
 
+const defaultEmployeeTypes = computed(
+    () =>
+        props.filterOptions?.default_employee_types || [
+            'Active',
+            'Study Leave With Pay',
+            'Ad Hoc',
+            'Contractual',
+            'Deputation',
+        ],
+);
+
 const search = ref(props.filters?.search || '');
 const categoryId = ref(props.filters?.category_id || '');
+const departmentId = ref(props.filters?.department_id || '');
+const designation = ref(props.filters?.designation || '');
 const statusFilter = ref(props.filters?.status || 'ALL');
 const perPage = ref(props.filters?.per_page || '50');
+const selectedEmployeeTypes = ref(
+    Array.isArray(props.filters?.employee_types) && props.filters.employee_types.length
+        ? [...props.filters.employee_types]
+        : [...defaultEmployeeTypes.value],
+);
+const employeeTypeToAdd = ref('');
+
+const availableEmployeeTypesToAdd = computed(() =>
+    (props.filterOptions?.employee_types || []).filter(
+        (type) => !selectedEmployeeTypes.value.includes(type),
+    ),
+);
 
 watch(
     () => [props.year, props.month],
@@ -70,7 +108,11 @@ const periodLabel = computed(() => {
 });
 
 const selectedIds = ref([]);
-const canSelectRow = (row) => !props.isLocked && !row.is_generated && Number(row.profile_count) === 1;
+const canSelectRow = (row) =>
+    !props.isLocked &&
+    !row.is_generated &&
+    row.is_active !== false &&
+    Number(row.profile_count) === 1;
 
 const selectablePageRows = computed(() => pageRows.value.filter(canSelectRow));
 const allPageSelected = computed(
@@ -87,28 +129,56 @@ const toggleSelectAllPage = (checked) => {
     }
 };
 
-watch(() => [props.year, props.month, props.rows?.current_page], () => {
-    selectedIds.value = [];
-});
+watch(
+    () => [props.year, props.month, props.rows?.current_page],
+    () => {
+        selectedIds.value = [];
+    },
+);
 
-// Salary Setup Modal state
+// Row Action Modals (3 Icons)
+const profileEditOpen = ref(false);
+const profileEditEmployee = ref(null);
+const openProfileEdit = (row) => {
+    profileEditEmployee.value = row;
+    profileEditOpen.value = true;
+};
+const onProfileSaved = () => {
+    router.reload({
+        only: ['rows', 'exportRows', 'summary', 'eligiblePending'],
+        preserveScroll: true,
+    });
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Employee profile updated',
+        showConfirmButton: false,
+        timer: 2200,
+    });
+};
+
 const setupModalOpen = ref(false);
 const setupModalUserId = ref(null);
-
 const openSalarySetup = (row) => {
     setupModalUserId.value = row.user_id;
     setupModalOpen.value = true;
 };
-
 const closeSalarySetup = () => {
     setupModalOpen.value = false;
 };
-
 const onSalarySetupSaved = () => {
     router.reload({
         only: ['rows', 'exportRows', 'summary', 'eligiblePending'],
         preserveScroll: true,
     });
+};
+
+const billPreviewOpen = ref(false);
+const billPreviewEmployee = ref(null);
+const openBillPreview = (row) => {
+    billPreviewEmployee.value = row;
+    billPreviewOpen.value = true;
 };
 
 // Navigation & filtering
@@ -120,9 +190,12 @@ const buildQuery = () => {
         month: selectedMonth.value,
         status: statusFilter.value || 'ALL',
         per_page: perPage.value || '50',
+        employee_types: selectedEmployeeTypes.value,
     };
     if (search.value.trim() !== '') q.search = search.value.trim();
     if (categoryId.value !== '') q.category_id = categoryId.value;
+    if (departmentId.value !== '') q.department_id = departmentId.value;
+    if (designation.value !== '') q.designation = designation.value;
     return q;
 };
 
@@ -135,6 +208,19 @@ const reloadWorkspace = () => {
     });
 };
 
+const addEmployeeType = () => {
+    const val = employeeTypeToAdd.value;
+    if (!val || selectedEmployeeTypes.value.includes(val)) return;
+    selectedEmployeeTypes.value = [...selectedEmployeeTypes.value, val];
+    employeeTypeToAdd.value = '';
+    reloadWorkspace();
+};
+
+const removeEmployeeType = (type) => {
+    selectedEmployeeTypes.value = selectedEmployeeTypes.value.filter((t) => t !== type);
+    reloadWorkspace();
+};
+
 const onSearchInput = () => {
     if (searchTimer) clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
@@ -145,8 +231,12 @@ const onSearchInput = () => {
 const resetFilters = () => {
     search.value = '';
     categoryId.value = '';
+    departmentId.value = '';
+    designation.value = '';
     statusFilter.value = 'ALL';
     perPage.value = '50';
+    selectedEmployeeTypes.value = [...defaultEmployeeTypes.value];
+    employeeTypeToAdd.value = '';
     reloadWorkspace();
 };
 
@@ -159,12 +249,10 @@ const formatMoney = (val) => {
     });
 };
 
-// Bulk Calculate & Generate confirmation & execution
-const confirmGenerateOpen = ref(false);
+// Bulk Calculate & Generate with SweetAlert2
 const generating = ref(false);
-const progressText = ref('');
 const notice = ref('');
-const noticeTone = ref('info'); // 'info' | 'success' | 'error'
+const noticeTone = ref('info');
 
 const generationTargets = computed(() => {
     if (selectedIds.value.length > 0) {
@@ -175,6 +263,12 @@ const generationTargets = computed(() => {
 });
 
 const generationTargetCount = computed(() => generationTargets.value.length);
+const generationTargetRegularNet = computed(() =>
+    generationTargets.value.reduce((sum, item) => sum + Number(item.regular_net || 0), 0),
+);
+const generationTargetNetArrear = computed(() =>
+    generationTargets.value.reduce((sum, item) => sum + Number(item.net_arrear || 0), 0),
+);
 const generationTargetNetPayable = computed(() =>
     generationTargets.value.reduce((sum, item) => sum + Number(item.net_payable || 0), 0),
 );
@@ -184,76 +278,145 @@ const generationScopeLabel = computed(() =>
         : `${generationTargetCount.value} All Eligible`,
 );
 
-const openConfirmGenerate = () => {
+const openConfirmGenerate = async () => {
     if (props.isLocked || generating.value || generationTargetCount.value === 0) return;
     notice.value = '';
-    confirmGenerateOpen.value = true;
-};
 
-const endOfMonthDate = (year, month) => {
-    const lastDay = new Date(year, month, 0).getDate();
-    return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    const arrearSign = generationTargetNetArrear.value > 0 ? '+' : '';
+    const confirm = await Swal.fire({
+        title: 'Confirm Bulk Salary Generation',
+        icon: 'question',
+        html: `
+            <div style="text-align:left;font-size:13px;line-height:1.5;color:#334155;">
+                <p style="margin-bottom:10px;">
+                    Generate and persist official salary bills into <code>salary_generates</code> for <strong>${periodLabel.value}</strong>?
+                </p>
+                <div style="border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;padding:10px 12px;">
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                        <span>Target Month:</span>
+                        <strong>${periodLabel.value}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                        <span>Employees (${selectedIds.value.length > 0 ? 'Selected' : 'All Eligible'}):</span>
+                        <strong>${generationTargetCount.value}</strong>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px dashed #cbd5e1;margin-top:4px;padding-top:6px;">
+                        <span>Regular Net (BDT):</span>
+                        <span style="font-family:monospace;font-weight:600;">৳${formatMoney(generationTargetRegularNet.value)}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                        <span>Net Arrears (BDT):</span>
+                        <span style="font-family:monospace;font-weight:600;color:#4338ca;">${arrearSign}৳${formatMoney(generationTargetNetArrear.value)}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:5px 0 0;border-top:1px solid #cbd5e1;margin-top:4px;font-size:14px;">
+                        <span style="font-weight:700;color:#065f46;">Total Net Payable:</span>
+                        <span style="font-family:monospace;font-weight:800;color:#065f46;">৳${formatMoney(generationTargetNetPayable.value)}</span>
+                    </div>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Confirm & Generate',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#64748b',
+        reverseButtons: true,
+    });
+
+    if (!confirm.isConfirmed) return;
+    await executeBulkGenerate();
 };
 
 const executeBulkGenerate = async () => {
     if (props.isLocked || generating.value || generationTargetCount.value === 0) return;
-    confirmGenerateOpen.value = false;
     generating.value = true;
     notice.value = '';
-    noticeTone.value = 'info';
 
     const targetIds = generationTargets.value.map((item) => Number(item.user_id));
-    const salaryDate = endOfMonthDate(props.year, props.month);
-    const chunkSize = 20;
+    const chunkSize = 25;
 
     let totalSuccess = 0;
+    let totalSkipped = 0;
     let totalFailed = 0;
     const allErrors = [];
+
+    Swal.fire({
+        title: `Generating ${periodLabel.value} Salary Bills...`,
+        html: `<p style="font-size:13px;color:#475569;">Processing 0 of ${targetIds.length} employees. Please wait.</p>`,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        },
+    });
 
     try {
         for (let i = 0; i < targetIds.length; i += chunkSize) {
             const batch = targetIds.slice(i, i + chunkSize);
-            progressText.value = `Generating ${Math.min(i + batch.length, targetIds.length)} of ${targetIds.length} employees...`;
+            const processed = Math.min(i + batch.length, targetIds.length);
+            Swal.update({
+                html: `<p style="font-size:13px;color:#475569;">Processing ${processed} of ${targetIds.length} employees...</p>`,
+            });
 
             const { data } = await axios.post(
-                '/dashboard/salary/generate-bulk',
+                '/dashboard/salary/estimation/generate-bulk',
                 {
-                    userIds: batch,
-                    monthId: props.month,
-                    salaryGenerationYear: props.year,
-                    salaryGenerationDate: salaryDate,
+                    year: props.year,
+                    month: props.month,
+                    user_ids: batch,
                 },
                 { headers: { Accept: 'application/json' } },
             );
 
             totalSuccess += Number(data?.success_count || 0);
+            totalSkipped += Number(data?.skipped_count || 0);
             totalFailed += Number(data?.failed_count || 0);
             if (Array.isArray(data?.errors) && data.errors.length) {
                 allErrors.push(...data.errors);
             }
         }
 
+        const summaryParts = [`Generated ${totalSuccess} bill(s) for ${periodLabel.value}.`];
+        if (totalSkipped > 0) summaryParts.push(`${totalSkipped} already existed.`);
+        if (totalFailed > 0) summaryParts.push(`${totalFailed} failed.`);
+
         if (totalFailed > 0) {
             noticeTone.value = 'error';
-            notice.value =
-                `Generated ${totalSuccess} salary bill(s) for ${periodLabel.value}; ${totalFailed} failed.` +
-                (allErrors.length ? ` ${allErrors.slice(0, 5).join(' | ')}` : '');
+            notice.value = `${summaryParts.join(' ')} ${allErrors.slice(0, 4).join(' | ')}`;
+            await Swal.fire({
+                icon: 'warning',
+                title: 'Bulk Generation Completed with Errors',
+                text: `${summaryParts.join(' ')} ${allErrors.slice(0, 3).join(' | ')}`,
+                confirmButtonColor: '#4f46e5',
+            });
         } else {
             noticeTone.value = 'success';
-            notice.value = `Successfully generated ${totalSuccess} salary bill(s) for ${periodLabel.value}.`;
+            notice.value = summaryParts.join(' ');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Salary Bills Generated',
+                text: summaryParts.join(' '),
+                confirmButtonColor: '#059669',
+            });
         }
     } catch (err) {
-        noticeTone.value = 'error';
         const errData = err.response?.data;
         const msg =
             errData?.message ||
             (Array.isArray(errData?.errors) ? errData.errors.join(' | ') : '') ||
             err.message ||
             'Bulk salary generation failed.';
+        noticeTone.value = 'error';
         notice.value = `Generation stopped after ${totalSuccess} succeeded: ${msg}`;
+        await Swal.fire({
+            icon: 'error',
+            title: 'Bulk Salary Generation Failed',
+            text: msg,
+            confirmButtonColor: '#dc2626',
+        });
     } finally {
         generating.value = false;
-        progressText.value = '';
         selectedIds.value = [];
         router.reload({
             only: ['rows', 'exportRows', 'summary', 'eligiblePending'],
@@ -262,7 +425,7 @@ const executeBulkGenerate = async () => {
     }
 };
 
-// Horizontal Bill Excel & PDF export (works on both open and locked historical months)
+// Horizontal Bill Excel & PDF export
 const rowsForExport = computed(() => {
     const source = props.exportRows?.length ? props.exportRows : pageRows.value;
     if (selectedIds.value.length > 0) {
@@ -285,6 +448,8 @@ const exportHorizontalExcel = () => {
         'Code',
         'Name',
         'Designation',
+        'Department',
+        'Employee Type',
         'Category',
         'Grade',
         'Basic Pay',
@@ -301,6 +466,8 @@ const exportHorizontalExcel = () => {
         String(r.employee_code || ''),
         r.name || '',
         r.designation_name || '',
+        r.department_name || '',
+        r.employee_type || 'Active',
         r.category_names || '',
         r.grade_name || '',
         Number(r.basic_pay || 0),
@@ -322,6 +489,8 @@ const exportHorizontalExcel = () => {
         '',
         '',
         '',
+        '',
+        '',
         sumField('basic_pay'),
         sumField('regular_allowances'),
         sumField('regular_deductions'),
@@ -335,18 +504,20 @@ const exportHorizontalExcel = () => {
     const sheet = XLSX.utils.aoa_to_sheet([headers, ...body]);
     sheet['!cols'] = [
         { wch: 6 },
-        { wch: 12 },
-        { wch: 30 },
-        { wch: 24 },
-        { wch: 16 },
-        { wch: 12 },
+        { wch: 11 },
+        { wch: 28 },
+        { wch: 22 },
+        { wch: 20 },
+        { wch: 18 },
         { wch: 14 },
-        { wch: 16 },
-        { wch: 16 },
+        { wch: 10 },
+        { wch: 13 },
+        { wch: 15 },
         { wch: 15 },
         { wch: 14 },
-        { wch: 15 },
-        { wch: 12 },
+        { wch: 13 },
+        { wch: 14 },
+        { wch: 11 },
     ];
     XLSX.utils.book_append_sheet(workbook, sheet, 'Horizontal Bill');
     const scopeSuffix = selectedIds.value.length > 0 ? 'selected' : 'all';
@@ -481,7 +652,6 @@ const exportHorizontalPdf = () => {
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- Month & Year Dropdowns -->
                     <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
                         <label class="text-xs font-semibold text-slate-600" for="payroll-month-select">
                             Period:
@@ -533,13 +703,13 @@ const exportHorizontalPdf = () => {
             <!-- 4 Compact Top Summary Cards -->
             <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Monthly payroll summary">
                 <div class="rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm">
-                    <div class="text-xs font-medium text-slate-500">Active Eligible Employees</div>
+                    <div class="text-xs font-medium text-slate-500">Matching Employees</div>
                     <div class="mt-1 flex items-baseline justify-between">
                         <span class="text-2xl font-bold text-slate-900">
                             {{ Number(summary?.active_eligible || 0) }}
                         </span>
                         <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                            {{ Number(summary?.generated_count || 0) }} Already Generated
+                            {{ Number(summary?.generated_count || 0) }} Generated
                         </span>
                     </div>
                 </div>
@@ -575,13 +745,50 @@ const exportHorizontalPdf = () => {
                 </div>
             </section>
 
-            <!-- Simple Filter Bar + Clean Action Bar -->
+            <!-- Upgraded 2-Row Filter Bar + Clean Action Bar -->
             <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 px-4 py-3.5">
-                    <!-- Simple Filters -->
-                    <div class="flex flex-wrap items-end gap-3">
-                        <div class="w-56">
-                            <label class="mb-1 block text-xs font-medium text-slate-600" for="filter-search">
+                <div class="space-y-3 border-b border-slate-200 px-4 py-3.5">
+                    <!-- Row 1: Multi-Select Employee Type (Tag-Chip Selector) -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-semibold text-slate-600">Employee Type:</span>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span
+                                v-for="empType in selectedEmployeeTypes"
+                                :key="empType"
+                                class="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-800"
+                            >
+                                <span>{{ empType }}</span>
+                                <button
+                                    type="button"
+                                    @click="removeEmployeeType(empType)"
+                                    class="ml-0.5 rounded-full p-0.5 text-indigo-500 hover:bg-indigo-200/70 hover:text-indigo-900"
+                                    :aria-label="`Remove ${empType}`"
+                                >
+                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </span>
+
+                            <select
+                                v-if="availableEmployeeTypesToAdd.length"
+                                v-model="employeeTypeToAdd"
+                                @change="addEmployeeType"
+                                aria-label="Add employee type filter"
+                                class="rounded-full border-slate-300 bg-white py-0.5 pl-2.5 pr-7 text-xs font-medium text-slate-600 focus:border-indigo-500 focus:ring-indigo-500"
+                            >
+                                <option value="">+ Add Type</option>
+                                <option v-for="t in availableEmployeeTypesToAdd" :key="t" :value="t">
+                                    {{ t }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Full Filters + Action Buttons -->
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-12">
+                        <div class="xl:col-span-3">
+                            <label class="mb-1 block text-[11px] font-semibold text-slate-600" for="filter-search">
                                 Search (Code / Name)
                             </label>
                             <input
@@ -590,20 +797,20 @@ const exportHorizontalPdf = () => {
                                 @input="onSearchInput"
                                 @keyup.enter="reloadWorkspace"
                                 type="text"
-                                placeholder="e.g. 10012 or name..."
-                                class="w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="e.g. 10012 or Nigar..."
+                                class="w-full rounded-lg border-slate-300 py-1.5 text-xs focus:border-indigo-500 focus:ring-indigo-500"
                             />
                         </div>
 
-                        <div class="w-44">
-                            <label class="mb-1 block text-xs font-medium text-slate-600" for="filter-category">
-                                Category
+                        <div class="xl:col-span-2">
+                            <label class="mb-1 block text-[11px] font-semibold text-slate-600" for="filter-category">
+                                Category / Class
                             </label>
                             <select
                                 id="filter-category"
                                 v-model="categoryId"
                                 @change="reloadWorkspace"
-                                class="w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full rounded-lg border-slate-300 py-1.5 text-xs focus:border-indigo-500 focus:ring-indigo-500"
                             >
                                 <option value="">All Categories</option>
                                 <option
@@ -616,15 +823,57 @@ const exportHorizontalPdf = () => {
                             </select>
                         </div>
 
-                        <div class="w-36">
-                            <label class="mb-1 block text-xs font-medium text-slate-600" for="filter-status">
+                        <div class="xl:col-span-2">
+                            <label class="mb-1 block text-[11px] font-semibold text-slate-600" for="filter-department">
+                                Department
+                            </label>
+                            <select
+                                id="filter-department"
+                                v-model="departmentId"
+                                @change="reloadWorkspace"
+                                class="w-full rounded-lg border-slate-300 py-1.5 text-xs focus:border-indigo-500 focus:ring-indigo-500"
+                            >
+                                <option value="">All Departments</option>
+                                <option
+                                    v-for="dept in filterOptions?.departments || []"
+                                    :key="dept.id"
+                                    :value="String(dept.id)"
+                                >
+                                    {{ dept.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="xl:col-span-2">
+                            <label class="mb-1 block text-[11px] font-semibold text-slate-600" for="filter-designation">
+                                Designation
+                            </label>
+                            <select
+                                id="filter-designation"
+                                v-model="designation"
+                                @change="reloadWorkspace"
+                                class="w-full rounded-lg border-slate-300 py-1.5 text-xs focus:border-indigo-500 focus:ring-indigo-500"
+                            >
+                                <option value="">All Designations</option>
+                                <option
+                                    v-for="desig in filterOptions?.designations || []"
+                                    :key="desig"
+                                    :value="desig"
+                                >
+                                    {{ desig }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="xl:col-span-2">
+                            <label class="mb-1 block text-[11px] font-semibold text-slate-600" for="filter-status">
                                 Status
                             </label>
                             <select
                                 id="filter-status"
                                 v-model="statusFilter"
                                 @change="reloadWorkspace"
-                                class="w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full rounded-lg border-slate-300 py-1.5 text-xs focus:border-indigo-500 focus:ring-indigo-500"
                             >
                                 <option value="ALL">All</option>
                                 <option value="PENDING">Pending</option>
@@ -632,44 +881,57 @@ const exportHorizontalPdf = () => {
                             </select>
                         </div>
 
-                        <button
-                            type="button"
-                            @click="resetFilters"
-                            class="rounded-lg border border-slate-300 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                            Reset
-                        </button>
+                        <div class="flex items-end xl:col-span-1">
+                            <button
+                                type="button"
+                                @click="resetFilters"
+                                class="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                                Reset
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Clean Action Bar -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            type="button"
-                            :disabled="isLocked || generating || generationTargetCount === 0"
-                            @click="openConfirmGenerate"
-                            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            <span v-if="generating">{{ progressText || 'Generating...' }}</span>
-                            <span v-else>Bulk Calculate &amp; Generate Salary ({{ generationScopeLabel }})</span>
-                        </button>
+                    <!-- Action Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div class="text-xs text-slate-500">
+                            <span v-if="selectedIds.length > 0" class="font-semibold text-indigo-700">
+                                {{ selectedIds.length }} employee(s) selected on this page
+                            </span>
+                            <span v-else>
+                                Showing {{ rows?.from || 0 }}–{{ rows?.to || 0 }} of {{ rows?.total || 0 }} matching employees
+                            </span>
+                        </div>
 
-                        <button
-                            type="button"
-                            :disabled="generating || !rowsForExport.length"
-                            @click="exportHorizontalExcel"
-                            class="rounded-lg border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-40"
-                        >
-                            Horizontal Bill Excel
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                :disabled="isLocked || generating || generationTargetCount === 0"
+                                @click="openConfirmGenerate"
+                                class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                <span v-if="generating">Generating...</span>
+                                <span v-else>Bulk Calculate &amp; Generate Salary ({{ generationScopeLabel }})</span>
+                            </button>
 
-                        <button
-                            type="button"
-                            :disabled="generating || !rowsForExport.length"
-                            @click="exportHorizontalPdf"
-                            class="rounded-lg border border-indigo-300 bg-white px-3.5 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 disabled:opacity-40"
-                        >
-                            Horizontal Bill PDF
-                        </button>
+                            <button
+                                type="button"
+                                :disabled="generating || !rowsForExport.length"
+                                @click="exportHorizontalExcel"
+                                class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-40"
+                            >
+                                Horizontal Bill Excel
+                            </button>
+
+                            <button
+                                type="button"
+                                :disabled="generating || !rowsForExport.length"
+                                @click="exportHorizontalPdf"
+                                class="rounded-lg border border-indigo-300 bg-white px-3 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50 disabled:opacity-40"
+                            >
+                                Horizontal Bill PDF
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -689,76 +951,89 @@ const exportHorizontalPdf = () => {
                     {{ notice }}
                 </div>
 
-                <!-- Employee Payroll Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[1120px] text-left text-sm">
+                <!-- Responsive Employee Payroll Table (No clipping at 1280px+) -->
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full table-auto text-left text-xs">
                         <thead class="bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                             <tr>
-                                <th class="w-10 px-3 py-3 text-center">
+                                <th class="w-9 px-2.5 py-2.5 text-center">
                                     <input
                                         type="checkbox"
                                         :checked="allPageSelected"
                                         :disabled="isLocked || !selectablePageRows.length"
                                         @change="toggleSelectAllPage($event.target.checked)"
-                                        class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-40"
+                                        class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-40"
                                         aria-label="Select all pending employees on page"
                                     />
                                 </th>
-                                <th class="px-3 py-3">Code</th>
-                                <th class="px-3 py-3">Name &amp; Designation</th>
-                                <th class="px-3 py-3">Category / Grade</th>
-                                <th class="px-3 py-3 text-right">Basic</th>
-                                <th class="px-3 py-3 text-right">Regular Net</th>
-                                <th class="px-3 py-3 text-right">Net Arrear</th>
-                                <th class="px-3 py-3 text-right">Net Payable</th>
-                                <th class="px-3 py-3 text-center">Status</th>
-                                <th class="px-3 py-3 text-right">Action</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5">Code</th>
+                                <th class="px-2.5 py-2.5">Name &amp; Designation</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5">Category / Grade</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Basic</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Regular Net</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Net Arrear</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5 text-right">Net Payable</th>
+                                <th class="whitespace-nowrap px-2.5 py-2.5 text-center">Status</th>
+                                <th class="sticky right-0 z-10 whitespace-nowrap border-l border-slate-200 bg-slate-50 px-2.5 py-2.5 text-center">
+                                    Action
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr
                                 v-for="row in pageRows"
                                 :key="row.user_id"
-                                class="align-middle transition hover:bg-slate-50/80"
+                                class="group align-middle transition hover:bg-slate-50/80"
                             >
-                                <td class="px-3 py-2.5 text-center">
+                                <td class="px-2.5 py-2.5 text-center">
                                     <input
                                         v-model="selectedIds"
                                         type="checkbox"
                                         :value="row.user_id"
                                         :disabled="!canSelectRow(row)"
-                                        class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-40"
+                                        class="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-40"
                                         :aria-label="`Select ${row.employee_code}`"
                                     />
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 font-mono text-xs font-semibold text-slate-800">
+                                <td class="whitespace-nowrap px-2.5 py-2.5 font-mono text-xs font-semibold text-slate-800">
                                     {{ row.employee_code }}
                                 </td>
-                                <td class="px-3 py-2.5">
-                                    <div class="font-semibold text-slate-900">{{ row.name }}</div>
-                                    <div class="text-xs text-slate-500">
+                                <td class="max-w-[240px] px-2.5 py-2.5">
+                                    <div class="truncate font-semibold text-slate-900" :title="row.name">
+                                        {{ row.name }}
+                                    </div>
+                                    <div
+                                        class="truncate text-[11px] text-slate-500"
+                                        :title="`${row.designation_name || 'No designation'}${row.department_name ? ' · ' + row.department_name : ''}`"
+                                    >
                                         {{ row.designation_name || 'No designation' }}
                                         <span v-if="row.department_name"> · {{ row.department_name }}</span>
                                     </div>
                                 </td>
-                                <td class="px-3 py-2.5">
-                                    <div class="text-xs font-medium text-slate-800">
+                                <td class="whitespace-nowrap px-2.5 py-2.5">
+                                    <div class="font-medium text-slate-800">
                                         {{ row.category_names || '—' }}
                                     </div>
-                                    <div class="text-xs text-slate-500">
+                                    <div class="text-[11px] text-slate-500">
                                         {{ row.grade_name || 'No grade' }}
+                                        <span
+                                            v-if="row.employee_type && row.employee_type !== 'Active'"
+                                            class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800"
+                                        >
+                                            {{ row.employee_type }}
+                                        </span>
                                     </div>
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-xs text-slate-700">
+                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono text-slate-700">
                                     {{ formatMoney(row.basic_pay) }}
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-xs font-medium text-slate-800">
+                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono font-medium text-slate-800">
                                     {{ formatMoney(row.regular_net) }}
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-xs">
+                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono">
                                     <span
                                         v-if="Math.abs(Number(row.net_arrear || 0)) >= 0.005"
-                                        class="inline-flex items-center rounded-md px-2 py-0.5 font-semibold"
+                                        class="inline-flex items-center rounded px-1.5 py-0.5 font-semibold"
                                         :class="
                                             Number(row.net_arrear) > 0
                                                 ? 'bg-indigo-100 text-indigo-800'
@@ -769,31 +1044,64 @@ const exportHorizontalPdf = () => {
                                     </span>
                                     <span v-else class="text-slate-400">0.00</span>
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 text-right font-mono text-sm font-bold text-slate-900">
+                                <td class="whitespace-nowrap px-2.5 py-2.5 text-right font-mono text-xs font-bold text-slate-900">
                                     {{ formatMoney(row.net_payable) }}
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 text-center">
+                                <td class="whitespace-nowrap px-2.5 py-2.5 text-center">
                                     <span
                                         v-if="row.is_generated"
-                                        class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800"
+                                        class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800"
                                     >
                                         Generated
                                     </span>
                                     <span
                                         v-else
-                                        class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800"
+                                        class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800"
                                     >
                                         Pending
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap px-3 py-2.5 text-right">
-                                    <button
-                                        type="button"
-                                        @click="openSalarySetup(row)"
-                                        class="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
-                                    >
-                                        Salary Setup
-                                    </button>
+                                <td class="sticky right-0 z-10 whitespace-nowrap border-l border-slate-100 bg-white px-2.5 py-2 text-center group-hover:bg-slate-50">
+                                    <div class="inline-flex items-center justify-center gap-1">
+                                        <!-- 1. Profile Edit (Pencil Icon) -->
+                                        <button
+                                            type="button"
+                                            @click="openProfileEdit(row)"
+                                            title="Edit Employee Profile"
+                                            aria-label="Edit Employee Profile"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
+                                        >
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- 2. Salary Setup (Banknote / Wallet Icon) -->
+                                        <button
+                                            type="button"
+                                            @click="openSalarySetup(row)"
+                                            title="Monthly Salary Setup"
+                                            aria-label="Monthly Salary Setup"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 transition hover:bg-indigo-100"
+                                        >
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </button>
+
+                                        <!-- 3. Salary Bill / Certificate View (Document / Magnifying Glass Icon) -->
+                                        <button
+                                            type="button"
+                                            @click="openBillPreview(row)"
+                                            title="View / Print Salary Bill"
+                                            aria-label="View / Print Salary Bill"
+                                            class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100"
+                                        >
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <tr v-if="!pageRows.length">
@@ -842,7 +1150,16 @@ const exportHorizontalPdf = () => {
             </section>
         </main>
 
-        <!-- Monthly Salary Setup Modal -->
+        <!-- 1. Employee Profile Quick Edit Modal -->
+        <EmployeeProfileQuickEditModal
+            :show="profileEditOpen"
+            :employee="profileEditEmployee"
+            :filter-options="filterOptions"
+            @close="profileEditOpen = false"
+            @saved="onProfileSaved"
+        />
+
+        <!-- 2. Monthly Salary Setup Modal -->
         <SalarySetupModal
             :show="setupModalOpen"
             :user-id="setupModalUserId"
@@ -852,47 +1169,13 @@ const exportHorizontalPdf = () => {
             @saved="onSalarySetupSaved"
         />
 
-        <!-- Bulk Generate Confirmation Modal -->
-        <Modal :show="confirmGenerateOpen" max-width="md" @close="confirmGenerateOpen = false">
-            <div class="p-6">
-                <h2 class="text-lg font-bold text-slate-900">
-                    Confirm Bulk Salary Generation
-                </h2>
-                <p class="mt-2 text-sm text-slate-600">
-                    You are about to calculate and generate official salary bills for
-                    <strong>{{ periodLabel }}</strong>.
-                </p>
-
-                <div class="mt-4 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-slate-600">Employees to Generate:</span>
-                        <span class="font-bold text-slate-900">{{ generationTargetCount }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-slate-600">Total Net Payable (BDT):</span>
-                        <span class="font-mono text-base font-extrabold text-emerald-700">
-                            ৳{{ formatMoney(generationTargetNetPayable) }}
-                        </span>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end gap-2">
-                    <button
-                        type="button"
-                        @click="confirmGenerateOpen = false"
-                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        @click="executeBulkGenerate"
-                        class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-                    >
-                        Generate {{ generationTargetCount }} Bills
-                    </button>
-                </div>
-            </div>
-        </Modal>
+        <!-- 3. Printable Salary Bill / Pay Certificate Modal -->
+        <SalaryBillPreviewModal
+            :show="billPreviewOpen"
+            :employee="billPreviewEmployee"
+            :year="year"
+            :month="month"
+            @close="billPreviewOpen = false"
+        />
     </AuthenticatedLayout>
 </template>

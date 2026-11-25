@@ -360,4 +360,200 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $this->assertSame(10, $octProps['month']);
         $this->assertTrue($octProps['isLocked']);
     }
+
+    public function test_leave_with_pay_10012_keeps_2015_june_basic_and_employee_type_filter_works(): void
+    {
+        // Create fixation tables and insert an approved 2026 fixation schedule for 10012 (52,208.00)
+        // to prove Leave-With-Pay-Without-Increment stays on 2015 June Basic (37,280.00).
+        Schema::create('salary_fixations', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('user_id');
+            $t->string('status')->default('approved');
+            $t->timestamps();
+        });
+        Schema::create('salary_fixation_pay_schedules', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('salary_fixation_id');
+            $t->unsignedBigInteger('user_id');
+            $t->date('effective_date');
+            $t->unsignedTinyInteger('grade_number');
+            $t->decimal('payable_basic', 12, 2);
+            $t->timestamps();
+        });
+        Schema::create('salary_generates', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('user_id');
+            $t->string('reviewStatus')->default('pending');
+            $t->string('name');
+            $t->string('age')->nullable();
+            $t->string('gender')->nullable();
+            $t->string('payScale')->nullable();
+            $t->string('grade')->nullable();
+            $t->string('designation')->nullable();
+            $t->string('employeeCode')->nullable();
+            $t->string('bankAccountNo')->nullable();
+            $t->string('bankAddress')->nullable();
+            $t->string('employeePhoneNumber')->nullable();
+            $t->date('joiningDate')->nullable();
+            $t->date('salaryGenerationDate')->nullable();
+            $t->unsignedTinyInteger('monthId');
+            $t->unsignedSmallInteger('salaryGenerationYear');
+            $t->longText('salaryAllowanceCalcObject')->nullable();
+            $t->longText('salaryDeductionCalcObject')->nullable();
+            $t->decimal('totalAllowance', 12, 2)->default(0);
+            $t->decimal('totalDeduction', 12, 2)->default(0);
+            $t->decimal('taxDeduction', 12, 2)->default(0);
+            $t->decimal('gpfDeduction', 12, 2)->default(0);
+            $t->decimal('salaryTotal', 12, 2)->default(0);
+            $t->longText('bonusAllowanceCalcObject')->nullable();
+            $t->longText('bonusDeductionCalcObject')->nullable();
+            $t->decimal('bonusAllowance', 12, 2)->default(0);
+            $t->decimal('bonusDeduction', 12, 2)->default(0);
+            $t->decimal('bonusTaxDeduction', 12, 2)->default(0);
+            $t->decimal('bonusTotal', 12, 2)->default(0);
+            $t->decimal('loanInstallmentDeduction', 12, 2)->default(0);
+            $t->integer('loanInstallmentCount')->nullable();
+            $t->integer('loanInstallmentRemaining')->nullable();
+            $t->timestamps();
+        });
+
+        DB::table('salary_fixations')->insert([
+            ['id' => 1, 'user_id' => 12, 'status' => 'approved'],
+        ]);
+        DB::table('salary_fixation_pay_schedules')->insert([
+            [
+                'id' => 1,
+                'salary_fixation_id' => 1,
+                'user_id' => 12,
+                'effective_date' => '2026-07-01',
+                'grade_number' => 6,
+                'payable_basic' => 52208.00,
+            ],
+        ]);
+
+        // Add Nov 2026 Special Benefit arrear (+3,728.00) for 10012.
+        DB::table('salary_monthly_component_adjustments')->insert([
+            'user_id' => 12,
+            'year' => 2026,
+            'month' => 11,
+            'payroll_component_type_id' => 11,
+            'arrear_amount' => 3728.00,
+            'rule_override' => 0,
+            'comment' => 'Oct 2026 SB arrear',
+        ]);
+
+        // Add a Grade 13 LWP employee (20070) to verify 15% Special Benefit (2,646.00) on 17,640.00 Basic.
+        DB::table('grades')->insert([
+            ['id' => 2, 'pay_scale_id' => 1, 'grade_name' => 'Grade 13'],
+        ]);
+        DB::table('payroll_groups')->insert([
+            ['id' => 2, 'grade_id' => 2, 'payroll_group_type_id' => 1],
+        ]);
+        DB::table('users')->insert([
+            ['id' => 70, 'name' => 'SHEKHORE BISWAS', 'email' => 'emp70@kau.ac.bd', 'isActive' => 1],
+            ['id' => 99, 'name' => 'Regular Active Employee', 'email' => 'emp99@kau.ac.bd', 'isActive' => 1],
+            ['id' => 100, 'name' => 'Inactive Employee', 'email' => 'emp100@kau.ac.bd', 'isActive' => 0],
+        ]);
+        DB::table('employee_infos')->insert([
+            [
+                'id' => 70,
+                'user_id' => 70,
+                'department_office_id' => 1,
+                'pay_scale_id' => 1,
+                'payroll_group_id' => 2,
+                'employeeCode' => '20070',
+                'jobStatus' => 'permanent',
+                'holdIncrement' => 1,
+                'additionObjects' => json_encode([
+                    ['payroll_component_type_id' => 2, 'name' => 'Basic Pay', 'calcType' => 'fixed', 'amount' => 17640.00],
+                ]),
+                'substractionObjects' => json_encode([
+                    ['payroll_component_type_id' => 16, 'name' => 'General Provident Fund', 'calcType' => 'percentage', 'amount' => 10],
+                    ['payroll_component_type_id' => 19, 'name' => 'Revenue Stamp', 'calcType' => 'fixed', 'amount' => 10.00],
+                ]),
+            ],
+            [
+                'id' => 99,
+                'user_id' => 99,
+                'department_office_id' => 1,
+                'pay_scale_id' => 1,
+                'payroll_group_id' => 1,
+                'employeeCode' => '10099',
+                'jobStatus' => 'permanent',
+                'holdIncrement' => 0,
+                'additionObjects' => json_encode([
+                    ['payroll_component_type_id' => 2, 'name' => 'Basic Pay', 'calcType' => 'fixed', 'amount' => 35500.00],
+                ]),
+                'substractionObjects' => json_encode([
+                    ['payroll_component_type_id' => 16, 'name' => 'General Provident Fund', 'calcType' => 'percentage', 'amount' => 10],
+                    ['payroll_component_type_id' => 19, 'name' => 'Revenue Stamp', 'calcType' => 'fixed', 'amount' => 10.00],
+                ]),
+            ],
+            [
+                'id' => 100,
+                'user_id' => 100,
+                'department_office_id' => 1,
+                'pay_scale_id' => 1,
+                'payroll_group_id' => 1,
+                'employeeCode' => '30235',
+                'jobStatus' => 'permanent',
+                'holdIncrement' => 0,
+                'additionObjects' => json_encode([
+                    ['payroll_component_type_id' => 2, 'name' => 'Basic Pay', 'calcType' => 'fixed', 'amount' => 20000.00],
+                ]),
+                'substractionObjects' => json_encode([]),
+            ],
+        ]);
+
+        // 1. Verify 10012 gets 2015 Basic 37,280.00 (NOT 52,208.00), Regular Net 54,470.00, Net Arrear +3,728.00, Net Payable 58,198.00.
+        $setup10012 = $this->actingAs($this->admin)->getJson('/salary-setup/12?year=2026&month=11');
+        $setup10012->assertOk();
+        $j12 = $setup10012->json();
+        $basic12 = collect($j12['allowances'])->firstWhere('payroll_component_type_id', 2);
+        $this->assertEquals(37280.00, $basic12['current_amount']);
+        $this->assertNotEquals(52208.00, $basic12['current_amount']);
+        $this->assertEquals(54470.00, $j12['regular_net']);
+        $this->assertEquals(3728.00, $j12['net_arrear']);
+        $this->assertEquals(58198.00, $j12['net_payable']);
+
+        // 2. Verify 20070 (Grade 13) gets 15% Special Benefit = 2,646.00.
+        $setup20070 = $this->actingAs($this->admin)->getJson('/salary-setup/70?year=2026&month=11');
+        $setup20070->assertOk();
+        $sb70 = collect($setup20070->json('allowances'))->firstWhere('payroll_component_type_id', 11);
+        $this->assertEquals(2646.00, $sb70['current_amount']);
+
+        // 3. Verify Employee Type multi-select filter works.
+        $lwpOnly = $this->actingAs($this->admin)
+            ->get('/dashboard/salary/estimation?year=2026&month=11&employee_types[]=Study+Leave+With+Pay');
+        $lwpOnly->assertOk();
+        $lwpCodes = collect($lwpOnly->viewData('page')['props']['rows']['data'])->pluck('employee_code')->all();
+        $this->assertSame(['10012', '20070'], $lwpCodes);
+
+        $activeAndInactive = $this->actingAs($this->admin)
+            ->get('/dashboard/salary/estimation?year=2026&month=11&employee_types[]=Active&employee_types[]=Inactive');
+        $activeAndInactive->assertOk();
+        $aiCodes = collect($activeAndInactive->viewData('page')['props']['rows']['data'])->pluck('employee_code')->all();
+        $this->assertSame(['10099', '30235'], $aiCodes);
+
+        // 4. Verify Bulk Generate persists into salary_generates for 2026-11 and blocks 2026-10.
+        $blockedBulk = $this->actingAs($this->admin)
+            ->postJson('/dashboard/salary/estimation/generate-bulk', [
+                'year' => 2026,
+                'month' => 10,
+                'user_ids' => [12],
+            ]);
+        $blockedBulk->assertStatus(422)->assertJsonPath('is_locked', true);
+        $this->assertSame(0, DB::table('salary_generates')->count());
+
+        $okBulk = $this->actingAs($this->admin)
+            ->postJson('/dashboard/salary/estimation/generate-bulk', [
+                'year' => 2026,
+                'month' => 11,
+                'user_ids' => [12],
+            ]);
+        $okBulk->assertOk()->assertJsonPath('success_count', 1);
+        $bill = DB::table('salary_generates')->where('user_id', 12)->where('salaryGenerationYear', 2026)->where('monthId', 11)->first();
+        $this->assertNotNull($bill);
+        $this->assertEquals(58198.00, (float) $bill->salaryTotal);
+    }
 }
