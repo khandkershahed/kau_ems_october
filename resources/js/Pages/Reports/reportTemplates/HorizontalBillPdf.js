@@ -106,13 +106,15 @@ export async function createHorizontalBillPdf({
         3: { halign: 'left', cellWidth: 21 },
     };
     for (let c = numericColStart; c <= numericColEnd; c++) {
-        // Let AutoTable resize monetary columns within the page margins,
-        // including when the final page contains wider grand totals.
         columnStyles[c] = { halign: 'right' };
     }
     columnStyles[numericColEnd + 1] = { halign: 'center', cellWidth: 13 };
 
     const fontSize = activeCols.length >= 16 ? 5.3 : activeCols.length >= 13 ? 5.8 : 6.3;
+    const margin = { left: 7, right: 7, bottom: 12 };
+    const cellPadding = 0.8;
+    const fixedWidth = Object.values(columnStyles).reduce((sum, style) => sum + (style.cellWidth || 0), 0);
+    const availableMoneyWidth = pageWidth - margin.left - margin.right - fixedWidth;
 
     const drawHeader = (pageIdx) => {
         if (logoBase64) {
@@ -204,16 +206,28 @@ export async function createHorizontalBillPdf({
             footRows.push(grandTotalRow);
         }
 
+        // Fit monetary columns into the space left by the fixed columns,
+        // including Signature. Measure bold text to cover the totals as well.
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(fontSize);
+        const tableRows = [headRow, ...bodyRows, ...footRows];
+        const preferredWidths = activeCols.map((_, index) => {
+            const column = numericColStart + index;
+            return Math.max(...tableRows.map((row) => doc.getTextWidth(row[column]))) + cellPadding * 2;
+        });
+        const preferredTotal = preferredWidths.reduce((sum, width) => sum + width, 0);
+        const columnWidths = preferredWidths.map((width) => width * availableMoneyWidth / preferredTotal);
+
         autoTable(doc, {
             head: [headRow],
             body: bodyRows,
             foot: footRows,
             startY: 22,
-            margin: { left: 7, right: 7, bottom: 12 },
+            margin,
             theme: 'grid',
             styles: {
                 fontSize,
-                cellPadding: 0.8,
+                cellPadding,
                 lineColor: [148, 163, 184],
                 lineWidth: 0.15,
                 overflow: 'linebreak',
@@ -232,6 +246,20 @@ export async function createHorizontalBillPdf({
                 fontStyle: 'bold',
             },
             columnStyles,
+            didParseCell: ({ cell, column, section }) => {
+                if (column.index < numericColStart || column.index > numericColEnd) return;
+                const width = columnWidths[column.index - numericColStart];
+                cell.styles.cellWidth = width;
+                if (section === 'head') return;
+
+                doc.setFont('helvetica', cell.styles.fontStyle);
+                doc.setFontSize(fontSize);
+                const textWidth = doc.getTextWidth(cell.text[0]);
+                const contentWidth = width - cellPadding * 2;
+                if (textWidth > contentWidth) {
+                    cell.styles.fontSize = fontSize * contentWidth / textWidth;
+                }
+            },
         });
 
         doc.setFont('helvetica', 'normal');

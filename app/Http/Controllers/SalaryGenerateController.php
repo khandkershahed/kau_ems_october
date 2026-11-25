@@ -13,6 +13,7 @@ use App\Models\SalaryGenerate;
 use App\Models\User;
 use App\Models\UserCategory;
 use App\Services\GeneralProvidentFundService;
+use App\Services\SalaryGenerationGuards;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -731,6 +732,8 @@ class SalaryGenerateController extends Controller
         $userIds = $request->input('userIds', []);
         $monthId = (int) ($request->input('monthId') ?? date('n'));
         $year = (int) ($request->input('salaryGenerationYear') ?? date('Y'));
+        SalaryGenerationGuards::assertMonthMutable($year, $monthId, 'generated');
+
         $salaryDate = $request->input('salaryGenerationDate') ?? \Carbon\Carbon::createFromDate($year, $monthId, 1)->endOfMonth()->toDateString();
 
         if (empty($userIds) && $request->boolean('all_filtered_unbilled')) {
