@@ -27,6 +27,7 @@ final class SalaryEstimationWorkspaceController extends Controller
 {
     private const NON_PAYABLE_EMPLOYEE_TYPES = [
         'Inactive',
+        'Inactive Employment',
         'Suspend',
         'Study Leave Without Pay',
     ];
@@ -73,7 +74,8 @@ final class SalaryEstimationWorkspaceController extends Controller
         }
         $norm = strtolower(str_replace(['-', '_', ' '], '', $raw));
         return match ($norm) {
-            'permanent', 'active', 'regular' => 'Active',
+            'permanent', 'active', 'regular' => 'Permanent',
+            'studyleavewithpaywithincrement' => 'Study Leave With Pay With Increment',
             'studyleavewithpay', 'leavewithpay' => 'Study Leave With Pay',
             'studyleavewithoutpay', 'leavewithoutpay' => 'Study Leave Without Pay',
             'adhoc' => 'Ad Hoc',
@@ -82,64 +84,13 @@ final class SalaryEstimationWorkspaceController extends Controller
             'lean', 'lien' => 'Lean',
             'prl' => 'PRL',
             'suspend', 'suspended' => 'Suspend',
-            'inactive' => 'Inactive',
+            'inactive' => 'Inactive Employment',
             'pensionhalf' => 'Pension Half',
             'pensionfull' => 'Pension Full',
             'temporary' => 'Temporary',
             'others' => 'Others',
             default => $raw,
         };
-    }
-
-    /**
-     * Resolve canonical Employee Type (Employment Status) label for workspace filtering and badges.
-     *
-     * @param array<string, bool|null> $studyLeaveIncrements
-     * @param array<string, string> $adhocCodes
-     */
-    private function resolveEmployeeType(object $row, array $studyLeaveIncrements, array $adhocCodes, ?bool $leavePaid): string
-    {
-        if (!(bool) $row->is_active) {
-            return 'Inactive';
-        }
-
-        $mapped = $this->mapJobStatusToLabel($row->job_status);
-        if (in_array($mapped, self::NON_PAYABLE_EMPLOYEE_TYPES, true)) {
-            return $mapped;
-        }
-
-        if ($leavePaid === false) {
-            return 'Study Leave Without Pay';
-        }
-
-        $code = trim((string) $row->employee_code);
-        $firstIncrementAllowed = $studyLeaveIncrements[$code] ?? null;
-        if ($firstIncrementAllowed === false
-            || ($firstIncrementAllowed !== true && ($leavePaid === true || $mapped === 'Study Leave With Pay'))) {
-            return 'Study Leave With Pay';
-        }
-        if (isset($adhocCodes[$code])) {
-            return 'Ad Hoc';
-        }
-
-        return $mapped === 'Study Leave With Pay' ? 'Active' : ($mapped ?? 'Active');
-    }
-
-    private function eligibilityCodes(): array
-    {
-        $config = config('kau_fixation_eligibility', []);
-        $studyWith = [];
-        $studyWithout = [];
-        foreach (($config['study_leave'] ?? []) as $code => $row) {
-            if (($row['first_increment_allowed'] ?? false) === true) $studyWith[] = (string)$code;
-            else $studyWithout[] = (string)$code;
-        }
-        return [
-            'hold' => array_map('strval', array_keys($config['increment_hold'] ?? [])),
-            'adhoc' => array_map('strval', array_keys($config['adhoc'] ?? [])),
-            'study_with' => $studyWith,
-            'study_without' => $studyWithout,
-        ];
     }
 
     /** A single query builder is shared by the table, counts and cursor selection. */
@@ -210,33 +161,33 @@ final class SalaryEstimationWorkspaceController extends Controller
                     ->where('ov.payroll_component_type_id', $data['component_type_id']));
             });
         }
-        $codes = $this->eligibilityCodes();
-        $special = array_values(array_unique(array_merge(...array_values($codes))));
         if (!empty($data['increment_status'])) {
+            $jobStatus = DB::raw("LOWER(REPLACE(REPLACE(REPLACE(COALESCE(ei.jobStatus, ''), '-', ''), '_', ''), ' ', ''))");
+            $studyWithoutIncrement = ['studyleavewithpay', 'leavewithpay'];
+            $studyWithIncrement = 'studyleavewithpaywithincrement';
+            $restrictedStatuses = ['adhoc', ...$studyWithoutIncrement];
+            $specialStatuses = [...$restrictedStatuses, $studyWithIncrement];
+
             switch ($data['increment_status']) {
-                case 'adhoc': $query->whereIn('ep.employee_code', $codes['adhoc']); break;
-                case 'study_with': $query->whereIn('ep.employee_code', $codes['study_with']); break;
-                case 'study_without': $query->whereIn('ep.employee_code', $codes['study_without']); break;
+                case 'adhoc': $query->where($jobStatus, 'adhoc'); break;
+                case 'study_with': $query->where($jobStatus, $studyWithIncrement); break;
+                case 'study_without': $query->whereIn($jobStatus, $studyWithoutIncrement); break;
                 case 'hold':
-                    $query->where(function ($q) use ($codes, $special) {
-                        $q->whereIn('ep.employee_code', $codes['hold'])
-                            ->orWhere(fn ($s) => $s->whereNotIn('ep.employee_code', $special)
-                                ->where(fn ($h) => $h->where('ei.holdIncrement', 1)
-                                    ->orWhere('fa.increment_2026', 'hold')));
-                    });
+                    $query->whereNotIn($jobStatus, $specialStatuses)
+                        ->where(fn ($q) => $q->where('ei.holdIncrement', 1)->orWhere('fa.increment_2026', 'hold'));
                     break;
                 case 'available':
-                    $query->whereNotIn('ep.employee_code', array_unique(array_merge($codes['hold'], $codes['adhoc'], $codes['study_without'])))
+                    $query->whereNotIn($jobStatus, $restrictedStatuses)
                         ->where(fn ($q) => $q->whereNull('sf.id')
-                            ->orWhereRaw("JSON_VALID(sf.calculation) AND CAST(JSON_UNQUOTE(JSON_EXTRACT(sf.calculation, '$.increment_2026')) AS DECIMAL(12,2)) > 0") )
-                        ->where(fn ($q) => $q->whereIn('ep.employee_code', $codes['study_with'])
+                            ->orWhereRaw("JSON_VALID(sf.calculation) AND CAST(JSON_UNQUOTE(JSON_EXTRACT(sf.calculation, '$.increment_2026')) AS DECIMAL(12,2)) > 0"))
+                        ->where(fn ($q) => $q->where($jobStatus, $studyWithIncrement)
                             ->orWhere(fn ($s) => $s->where('ei.holdIncrement', 0)
-                                ->where('ei.jobStatus', '!=', 'others')
+                                ->where($jobStatus, '!=', 'others')
                                 ->where(fn ($h) => $h->whereNull('fa.increment_2026')->orWhere('fa.increment_2026', '!=', 'hold'))));
                     break;
                 case 'other':
-                    $query->whereNotIn('ep.employee_code', $special)
-                        ->where(fn ($q) => $q->whereNull('ei.holdIncrement')->orWhere('ei.jobStatus', 'others')
+                    $query->whereNotIn($jobStatus, $specialStatuses)
+                        ->where(fn ($q) => $q->whereNull('ei.holdIncrement')->orWhere($jobStatus, 'others')
                             ->orWhereRaw("JSON_VALID(sf.calculation) AND CAST(JSON_UNQUOTE(JSON_EXTRACT(sf.calculation, '$.increment_2026')) AS DECIMAL(12,2)) <= 0"));
                     break;
             }
@@ -280,32 +231,26 @@ final class SalaryEstimationWorkspaceController extends Controller
             ->join('users as u', 'u.id', '=', 'ep.user_id')
             ->leftJoin('employee_infos as ei', 'ei.id', '=', 'ep.profile_id');
 
-        $eligibility = config('kau_fixation_eligibility', []);
-        $studyLeaveIncrements = array_map(fn ($entry) => $entry['first_increment_allowed'] ?? null, $eligibility['study_leave'] ?? []);
-        $adhocCodes = $eligibility['adhoc'] ?? [];
-        $leavePaidByUser = Schema::hasTable('leave_statuses')
-            ? DB::table('leave_statuses')->where('onLeave', 1)->where('isActive', 1)
-                ->groupBy('user_id')->selectRaw('user_id, MIN(isPaid) as is_paid')->pluck('is_paid', 'user_id')
-            : collect();
-
-        $employeeTypesByUser = [];
+        $filterTypeByUser = [];
         $employeeTypeCounts = [];
-        foreach ((clone $roster)->get(['ep.user_id', 'ep.employee_code', 'u.isActive as is_active', 'ei.jobStatus as job_status']) as $row) {
-            $leavePaid = $leavePaidByUser->get($row->user_id);
-            $type = $this->resolveEmployeeType($row, $studyLeaveIncrements, $adhocCodes, $leavePaid === null ? null : (bool) $leavePaid);
-            $employeeTypesByUser[$row->user_id] = $type;
+        foreach ((clone $roster)->get(['ep.user_id', 'u.isActive as is_active', 'ei.jobStatus as job_status']) as $row) {
+            $type = $row->is_active ? ($this->mapJobStatusToLabel($row->job_status) ?? 'Permanent') : 'Inactive';
+            $filterTypeByUser[$row->user_id] = $type;
             $employeeTypeCounts[$type] = ($employeeTypeCounts[$type] ?? 0) + 1;
         }
         ksort($employeeTypeCounts, SORT_NATURAL | SORT_FLAG_CASE);
 
         $defaultEmployeeTypes = array_values(array_diff(array_keys($employeeTypeCounts), self::NON_PAYABLE_EMPLOYEE_TYPES));
         $selectedEmployeeTypes = $request->has('employee_types')
-            ? array_values(array_unique(array_filter(array_map('trim', (array) ($data['employee_types'] ?? [])))))
+            ? array_values(array_unique(array_filter(array_map(
+                fn (string $type) => trim($type) === 'Active' ? 'Permanent' : trim($type),
+                $data['employee_types'] ?? []
+            ))))
             : $defaultEmployeeTypes;
         $selectedTypeSet = array_fill_keys($selectedEmployeeTypes, true);
         $allActiveTypesSelected = $selectedEmployeeTypes === [] && $request->has('employee_types');
         $selectedUserIds = array_keys(array_filter(
-            $employeeTypesByUser,
+            $filterTypeByUser,
             fn ($type) => $allActiveTypesSelected ? $type !== 'Inactive' : isset($selectedTypeSet[$type])
         ));
 
@@ -451,7 +396,7 @@ final class SalaryEstimationWorkspaceController extends Controller
                 'email' => $row->email,
                 'is_active' => (bool) $row->is_active,
                 'job_status' => $row->job_status,
-                'employee_type' => $employeeTypesByUser[$uid],
+                'employee_type' => $this->mapJobStatusToLabel($row->job_status) ?? 'Permanent',
                 'hold_increment' => (bool) ($row->hold_increment ?? false),
                 'department_office_id' => $row->department_office_id ? (int) $row->department_office_id : null,
                 'pay_scale_id' => $row->pay_scale_id ? (int) $row->pay_scale_id : null,

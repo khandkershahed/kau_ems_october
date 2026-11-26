@@ -67,6 +67,60 @@ final class EmployeeBankAccountEditTest extends TestCase
         $details->assertOk()->assertJsonPath('employee.id', $employee->id)
             ->assertJsonCount(2, 'employee.bank_accounts')->assertJsonCount(1, 'options.payrollGroups');
 
+        $jobStatusValues = collect($details->json('options.jobStatuses'))->pluck('value')->all();
+        $this->assertContains('ad_hoc', $jobStatusValues);
+        $this->assertContains('study_leave_with_pay', $jobStatusValues);
+        $this->assertContains('study_leave_with_pay_with_increment', $jobStatusValues);
+
+        foreach (['ad_hoc', 'study_leave_with_pay', 'study_leave_with_pay_with_increment'] as $status) {
+            $this->putJson($url, array_replace($payload, ['jobStatus' => $status]))->assertOk();
+            $this->assertDatabaseHas('employee_infos', ['user_id' => $employee->id, 'jobStatus' => $status]);
+        }
+
+        $this->putJson($url, $payload)->assertOk();
+
+        $this->putJson($url, array_replace($payload, [
+            'jobStatus' => 'study_leave_with_pay_with_increment',
+            'holdIncrement' => true,
+            'gpf_exempt' => true,
+        ]))->assertOk();
+        $this->assertDatabaseHas('employee_infos', [
+            'user_id' => $employee->id,
+            'jobStatus' => 'study_leave_with_pay_with_increment',
+            'holdIncrement' => 1,
+            'gpf_exempt' => 1,
+        ]);
+
+        $this->getJson(route('employees.edit', ['profile_user_id' => $employee->id]))
+            ->assertOk()
+            ->assertJsonPath('employee.employee_info.holdIncrement', true)
+            ->assertJsonPath('employee.employee_info.gpf_exempt', true);
+
+        $this->putJson($url, array_replace($payload, ['gpf_exempt' => 'invalid']))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['gpf_exempt']);
+
+        $this->patchJson(route('employees.bulkProfileUpdateSingle', $employee), [
+            'fields' => ['jobStatus', 'holdIncrement', 'gpf_exempt'],
+            'jobStatus' => 'study_leave_with_pay',
+            'holdIncrement' => false,
+            'gpf_exempt' => false,
+        ])->assertOk();
+        $this->assertDatabaseHas('employee_infos', [
+            'user_id' => $employee->id,
+            'jobStatus' => 'study_leave_with_pay',
+            'holdIncrement' => 0,
+            'gpf_exempt' => 0,
+        ]);
+
+        $this->patchJson(route('employees.bulkProfileUpdateSingle', $employee), [
+            'fields' => ['gpf_exempt'],
+            'gpf_exempt' => 'not-a-boolean',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['gpf_exempt']);
+
+        $this->putJson($url, $payload)->assertOk();
+
         $payload['name'] = 'Should Roll Back';
         $payload['bank_accounts'][0]['bank_account_no'] = '987-654-3210';
         $this->putJson($url, $payload)->assertUnprocessable()

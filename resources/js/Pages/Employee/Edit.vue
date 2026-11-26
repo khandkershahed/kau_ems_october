@@ -37,6 +37,10 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
+    jobStatuses: {
+        type: Array,
+        default: () => []
+    },
 });
 
 const employeeStore = useEmployeeStore();
@@ -74,13 +78,7 @@ const filterGenders = [
     { label: 'Other', value: 'other' },
 ];
 
-const filterJobStatuses = [
-    { label: 'Permanent', value: 'permanent' },
-    { label: 'Ad-Hoc', value: 'ad_hoc' },
-    { label: 'Contract', value: 'contract' },
-    { label: 'Temporary', value: 'temporary' },
-    { label: 'Others', value: 'others' },
-];
+const filterJobStatuses = computed(() => props.jobStatuses || []);
 
 const filterAccountStatuses = [
     { label: 'Active Only', value: 'true' },
@@ -194,7 +192,7 @@ const activeFilterChips = computed(() => {
         chips.push({ key: 'payroll_group_id', label: `Designation: ${name}` });
     }
     if (localFilters.value.jobStatus) {
-        const item = filterJobStatuses.find(j => j.value === localFilters.value.jobStatus);
+        const item = filterJobStatuses.value.find(j => j.value === localFilters.value.jobStatus);
         chips.push({ key: 'jobStatus', label: `Job: ${item ? item.label : localFilters.value.jobStatus}` });
     }
     if (localFilters.value.gender) {
@@ -1276,6 +1274,7 @@ const changePage = (page) => {
             :grades="grades"
             :payroll-groups="payrollGroups"
             :user-categories="userCategories"
+            :job-statuses="jobStatuses"
             @close="editingEmployee = null"
             @saved="onEmployeeSaved"
         />

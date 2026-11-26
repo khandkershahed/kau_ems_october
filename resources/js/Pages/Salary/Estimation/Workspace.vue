@@ -156,7 +156,7 @@ const openProfileEdit = async (row) => {
 };
 const onProfileSaved = () => {
     router.reload({
-        only: ['rows', 'exportRows', 'summary', 'eligiblePending'],
+        only: ['rows', 'exportRows', 'summary', 'eligiblePending', 'filterOptions'],
         preserveScroll: true,
     });
     Swal.fire({
@@ -1010,6 +1010,7 @@ const exportHorizontalBill = async (format) => {
             :grades="profileEditOptions.grades"
             :payroll-groups="profileEditOptions.payrollGroups"
             :user-categories="profileEditOptions.userCategories"
+            :job-statuses="profileEditOptions.jobStatuses"
             @close="profileEditEmployee = null"
             @saved="onProfileSaved"
         />

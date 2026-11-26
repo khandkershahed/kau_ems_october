@@ -87,6 +87,7 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             $t->longText('substractionObjects')->nullable();
             $t->timestamps();
         });
+        (require database_path('migrations/2026_11_26_000002_add_gpf_exempt_to_employee_infos.php'))->up();
         Schema::create('salary_monthly_component_adjustments', function (Blueprint $t) {
             $t->id();
             $t->unsignedBigInteger('user_id')->index();
@@ -372,7 +373,7 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             91 => ['30091', 'contract', true],
             92 => ['30092', 'suspend', true],
             93 => ['30093', 'permanent', false],
-            94 => ['30094', 'permanent', true],
+            94 => ['30094', 'study_leave_without_pay', true],
             95 => ['30095', 'permanent', true],
         ];
         foreach ($employees as $id => [$code, $status, $active]) {
@@ -403,18 +404,20 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             'arrear_amount' => 2821.50,
         ]);
 
+        $this->artisan('kau:backfill-job-statuses --apply')->assertSuccessful();
+
         $url = '/dashboard/salary/estimation?year=2026&month=11';
         $response = $this->actingAs($this->admin)->get($url)->assertOk();
         $props = $response->viewData('page')['props'];
         $this->assertSame(
-            ['Active', 'Ad Hoc', 'Contractual', 'Study Leave With Pay', 'Temporary'],
+            ['Ad Hoc', 'Contractual', 'Study Leave With Pay', 'Study Leave With Pay With Increment', 'Temporary'],
             $props['filters']['employee_types']
         );
         $this->assertSame(6, $props['summary']['active_eligible']);
         $this->assertEquals(2821.50, $props['summary']['net_arrear_total']);
         $this->assertSame([
             10012 => 'Study Leave With Pay',
-            10037 => 'Active',
+            10037 => 'Study Leave With Pay With Increment',
             20023 => 'Ad Hoc',
             30090 => 'Temporary',
             30091 => 'Contractual',
@@ -424,11 +427,11 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $adHoc = $this->get($url . '&employee_types[]=Ad+Hoc&search=20023')->assertOk()->viewData('page')['props'];
         $this->assertSame(['20023'], collect($adHoc['exportRows'])->pluck('employee_code')->all());
         $this->assertEquals([
-            'Active' => 1,
             'Ad Hoc' => 1,
             'Contractual' => 1,
             'Inactive' => 1,
             'Study Leave With Pay' => 2,
+            'Study Leave With Pay With Increment' => 1,
             'Study Leave Without Pay' => 1,
             'Suspend' => 1,
             'Temporary' => 1,
@@ -579,6 +582,8 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             ],
         ]);
 
+        $this->artisan('kau:backfill-job-statuses --apply')->assertSuccessful();
+
         // 1. Verify 10012 gets 2015 Basic 37,280.00 (NOT 52,208.00), Regular Net 54,470.00, Net Arrear +3,728.00, Net Payable 58,198.00.
         $setup10012 = $this->actingAs($this->admin)->getJson('/salary-setup/12?year=2026&month=11');
         $setup10012->assertOk();
@@ -604,7 +609,7 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $this->assertSame(['10012', '20070'], $lwpCodes);
 
         $activeAndInactive = $this->actingAs($this->admin)
-            ->get('/dashboard/salary/estimation?year=2026&month=11&employee_types[]=Active&employee_types[]=Inactive');
+            ->get('/dashboard/salary/estimation?year=2026&month=11&employee_types[]=Permanent&employee_types[]=Inactive');
         $activeAndInactive->assertOk();
         $aiCodes = collect($activeAndInactive->viewData('page')['props']['rows']['data'])->pluck('employee_code')->all();
         $this->assertSame(['10099', '30235'], $aiCodes);
@@ -672,6 +677,17 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             ]),
         ]);
 
+        $before = DB::table('employee_infos')->where('id', 12)->first();
+        $postedBill = DB::table('salary_generates')->first();
+        $this->artisan('kau:backfill-job-statuses')->expectsOutputToContain('Planned profile updates: 1')->assertSuccessful();
+        $this->assertEquals($before, DB::table('employee_infos')->where('id', 12)->first());
+        $this->artisan('kau:backfill-job-statuses --apply')->expectsOutputToContain('Applied profile updates: 1')->assertSuccessful();
+        $this->artisan('kau:backfill-job-statuses --apply')->expectsOutputToContain('Applied profile updates: 0')->assertSuccessful();
+        $this->assertEquals($postedBill, DB::table('salary_generates')->first());
+        $gpf = collect($profile->fresh()->substractionObjects)->firstWhere('payroll_component_type_id', 16);
+        $this->assertSame('percentage', $gpf['calcType']);
+        $this->assertEquals(10, $gpf['amount']);
+
         $setup = app(MonthlySalarySetupService::class);
         $november = $setup->getSetupForEmployee($this->employee, 2026, 11);
         $bulk = $setup->getSummariesForUsers([12], 2026, 11)[12];
@@ -683,10 +699,10 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         $this->assertSame($november['deductions'], $bulk['deductions']);
 
         $december = $setup->getSetupForEmployee($this->employee, 2026, 12);
-        $this->assertEquals(53664.00, $december['regular_allowances']);
-        $this->assertEquals(3649.60, $december['regular_deductions']);
+        $this->assertEquals(59664.00, $december['regular_allowances']);
+        $this->assertEquals(3949.60, $december['regular_deductions']);
 
-        $profile->update(['substractionObjects' => []]);
+        $profile->update(['substractionObjects' => [$component('Income Tax', 300)]]);
         $novemberWithoutGpfRow = $setup->getSetupForEmployee($this->employee, 2026, 11);
         $this->assertSame($november['deductions'], $novemberWithoutGpfRow['deductions']);
     }
@@ -700,16 +716,23 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             'additionObjects' => [['name' => 'Basic Pay', 'calcType' => 'fixed', 'amount' => 38956]],
             'substractionObjects' => [['name' => 'Others Deduction', 'calcType' => 'fixed', 'amount' => 1270.50]],
         ]);
+        $this->artisan('kau:backfill-job-statuses --apply')->assertSuccessful();
+        $this->assertEquals(1, $profile->fresh()->gpf_exempt);
+        $this->assertEquals(0, $profile->fresh()->substractionObjects[0]['amount']);
         $setup = app(MonthlySalarySetupService::class);
         $november = $setup->getSummariesForUsers([12], 2026, 11)[12];
         $this->assertEquals(10.00, $november['regular_deductions']);
 
         DB::table('payroll_group_types')->where('id', 1)->update(['group_name' => 'PS TO VC']);
-        $profile->update(['employeeCode' => '20045', 'substractionObjects' => []]);
+        $profile->refresh()->update(['employeeCode' => '20045', 'jobStatus' => 'permanent', 'substractionObjects' => []]);
+        DB::table('employee_infos')->where('id', 12)->update(['gpf_exempt' => false]);
         $november = $setup->getSummariesForUsers([12], 2026, 11)[12];
         $this->assertEquals(3895.60, collect($november['deductions'])->firstWhere('payroll_component_type_id', 16)['current_amount']);
 
         $profile->update(['employeeCode' => '20083']);
+        $this->artisan('kau:backfill-job-statuses --apply')->assertSuccessful();
+        $this->assertEquals(1, $profile->fresh()->gpf_exempt);
+        $this->assertTrue($profile->fresh()->holdIncrement);
         $november = $setup->getSummariesForUsers([12], 2026, 11)[12];
         $this->assertEquals(0.00, collect($november['deductions'])->firstWhere('payroll_component_type_id', 16)['current_amount']);
         $december = $setup->getSummariesForUsers([12], 2026, 12)[12];

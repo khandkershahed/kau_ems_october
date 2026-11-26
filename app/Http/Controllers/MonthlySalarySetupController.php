@@ -207,7 +207,9 @@ final class MonthlySalarySetupController extends Controller
             $isOnLeave = DB::table('leave_statuses')
                 ->where('user_id', $user->id)
                 ->where(function ($q): void {
-                    if (Schema::hasColumn('leave_statuses', 'status')) {
+                    if (Schema::hasColumn('leave_statuses', 'onLeave') && Schema::hasColumn('leave_statuses', 'isActive')) {
+                        $q->where('onLeave', true)->where('isActive', true);
+                    } elseif (Schema::hasColumn('leave_statuses', 'status')) {
                         $q->where('status', 'active')->orWhere('status', 'approved');
                     } elseif (Schema::hasColumn('leave_statuses', 'is_active')) {
                         $q->where('is_active', true);

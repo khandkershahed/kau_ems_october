@@ -299,6 +299,11 @@ class EmployeeController extends Controller
             $employee = User::query()->whereHas('employeeInfo')
                 ->with(self::EDIT_PROFILE_RELATIONS)->findOrFail($validated['profile_user_id']);
 
+            if ($employee->employeeInfo) {
+                $employee->employeeInfo->holdIncrement = (bool) $employee->employeeInfo->holdIncrement;
+                $employee->employeeInfo->gpf_exempt = (bool) $employee->employeeInfo->gpf_exempt;
+            }
+
             return response()->json(['employee' => $employee, 'options' => $this->editOptions()])
                 ->header('Cache-Control', 'private, no-store');
         }
@@ -529,6 +534,46 @@ class EmployeeController extends Controller
         return Inertia::render('Employee/Edit', $this->editOptions());
     }
 
+    private function jobStatusOptions(): array
+    {
+        $canonicalLabels = [
+            'permanent' => 'Permanent',
+            'ad_hoc' => 'Ad Hoc',
+            'temporary' => 'Temporary',
+            'contract' => 'Contractual',
+            'study_leave_with_pay' => 'Study Leave With Pay',
+            'study_leave_with_pay_with_increment' => 'Study Leave With Pay With Increment',
+            'study_leave_without_pay' => 'Study Leave Without Pay',
+            'deputation' => 'Deputation',
+            'lean' => 'Lean',
+            'prl' => 'PRL',
+            'suspend' => 'Suspend',
+            'inactive' => 'Inactive',
+            'pension_half' => 'Pension Half',
+            'pension_full' => 'Pension Full',
+            'others' => 'Others',
+        ];
+
+        $dbValues = DB::table('employee_infos')
+            ->whereNotNull('jobStatus')
+            ->where('jobStatus', '!=', '')
+            ->distinct()
+            ->pluck('jobStatus')
+            ->map(fn ($val) => trim((string) $val))
+            ->filter()
+            ->values()
+            ->all();
+
+        $allValues = array_values(array_unique(array_merge(array_keys($canonicalLabels), $dbValues)));
+
+        return array_map(function (string $value) use ($canonicalLabels) {
+            return [
+                'value' => $value,
+                'label' => $canonicalLabels[$value] ?? ucwords(str_replace(['_', '-'], ' ', $value)),
+            ];
+        }, $allValues);
+    }
+
     private function editOptions(): array
     {
         return [
@@ -537,6 +582,7 @@ class EmployeeController extends Controller
             'grades' => \App\Models\Grade::all(),
             'payrollGroups' => \App\Models\PayrollGroup::with(['grade', 'payrollGroupType'])->get(),
             'userCategories' => \App\Models\UserCategory::all(),
+            'jobStatuses' => $this->jobStatusOptions(),
         ];
     }
 
@@ -547,7 +593,10 @@ class EmployeeController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:users,email,' . $user->id,
             'gender' => 'required|string|in:male,female,other',
             'employeeCode' => 'required|numeric|unique:employee_infos,employeeCode,' . ($user->employeeInfo ? $user->employeeInfo->id : ''),
+            'jobStatus' => 'nullable|string|max:64',
             'isActive' => 'boolean',
+            'holdIncrement' => 'nullable|boolean',
+            'gpf_exempt' => 'nullable|boolean',
             'pay_scale_id' => 'required|exists:pay_scales,id',
             'payroll_group_id' => 'required|exists:payroll_groups,id',
             'department_offices' => 'required|array|min:1',
@@ -746,11 +795,18 @@ class EmployeeController extends Controller
             }
 
             if ($request->filled('employeeCode')) {
+                $holdIncrement = $request->has('holdIncrement')
+                    ? filter_var($request->input('holdIncrement'), FILTER_VALIDATE_BOOLEAN)
+                    : (bool) ($user->employeeInfo?->holdIncrement ?? false);
+                $gpfExempt = $request->has('gpf_exempt')
+                    ? filter_var($request->input('gpf_exempt'), FILTER_VALIDATE_BOOLEAN)
+                    : (bool) ($user->employeeInfo?->gpf_exempt ?? false);
+
                 $profile = $user->employeeInfo()->updateOrCreate([], [
                     'employeeCode' => $request->employeeCode,
                     'jobStatus' => $request->jobStatus ?? 'permanent',
                     'incrementDate' => $request->incrementDate ?? now(),
-                    'holdIncrement' => $request->has('holdIncrement') ? (bool)$request->holdIncrement : false,
+                    'holdIncrement' => $holdIncrement,
                     'department_office_id' => $primaryDeptId,
                     'phone_number_id' => $primaryPhoneNumberId,
                     'address_id' => $primaryAddressId,
@@ -763,6 +819,7 @@ class EmployeeController extends Controller
                     'pay_scale_id' => $payScaleId,
                     'payroll_group_id' => $payrollGroupId,
                 ]);
+                $profile->forceFill(['gpf_exempt' => $gpfExempt])->save();
 
                 // Keep employee-specific recurring amounts when editing profile details.
                 if (($profile->wasRecentlyCreated || $profile->wasChanged(['pay_scale_id', 'payroll_group_id']))
@@ -820,11 +877,12 @@ class EmployeeController extends Controller
                 'fields' => 'required|array|min:1',
                 'isActive' => 'nullable|boolean',
                 'gender' => 'nullable|string|in:male,female,other',
-                'jobStatus' => 'nullable|string|in:permanent,contract,temporary,others',
+                'jobStatus' => 'nullable|string|max:64',
                 'pay_scale_id' => 'nullable|exists:pay_scales,id',
                 'payroll_group_id' => 'nullable|exists:payroll_groups,id',
                 'incrementDate' => 'nullable|date',
                 'holdIncrement' => 'nullable|boolean',
+                'gpf_exempt' => 'nullable|boolean',
                 'department_office_id' => 'nullable|exists:department_offices,id',
                 'user_category_id' => 'nullable|exists:user_categories,id',
                 'maritial_status' => 'nullable|string|max:50',
@@ -944,6 +1002,11 @@ class EmployeeController extends Controller
                     $changesSummary[] = 'Increment: ' . ($hold ? 'Withheld' : 'Normal/Released');
                     $shouldUpdateSalaryCalc = true;
                 }
+                if (in_array('gpf_exempt', $fields) && $request->has('gpf_exempt')) {
+                    $gpfExempt = filter_var($request->gpf_exempt, FILTER_VALIDATE_BOOLEAN);
+                    $empInfoUpdates['gpf_exempt'] = $gpfExempt;
+                    $changesSummary[] = 'GPF: ' . ($gpfExempt ? 'Exempt (0.00)' : 'Normal');
+                }
                 if (in_array('pay_scale_id', $fields) && $request->filled('pay_scale_id')) {
                     $empInfoUpdates['pay_scale_id'] = $request->pay_scale_id;
                     $scale = \App\Models\PayScale::find($request->pay_scale_id);
@@ -959,8 +1022,18 @@ class EmployeeController extends Controller
                 }
 
                 if (!empty($empInfoUpdates)) {
+                    $gpfExemptUpdate = array_key_exists('gpf_exempt', $empInfoUpdates)
+                        ? (bool) $empInfoUpdates['gpf_exempt']
+                        : null;
+                    unset($empInfoUpdates['gpf_exempt']);
+
                     if ($user->employeeInfo) {
-                        $user->employeeInfo->update($empInfoUpdates);
+                        if (!empty($empInfoUpdates)) {
+                            $user->employeeInfo->update($empInfoUpdates);
+                        }
+                        if ($gpfExemptUpdate !== null) {
+                            $user->employeeInfo->forceFill(['gpf_exempt' => $gpfExemptUpdate])->save();
+                        }
                     } else {
                         $defaultDept = \App\Models\DepartmentOffice::first();
                         $defaultScale = \App\Models\PayScale::first();
@@ -990,7 +1063,8 @@ class EmployeeController extends Controller
                             'jobStatus' => 'permanent',
                         ];
 
-                        $user->employeeInfo()->create(array_merge($fullDefaults, $empInfoUpdates));
+                        $createdInfo = $user->employeeInfo()->create(array_merge($fullDefaults, $empInfoUpdates));
+                        $createdInfo->forceFill(['gpf_exempt' => $gpfExemptUpdate ?? false])->save();
                     }
                 }
 
