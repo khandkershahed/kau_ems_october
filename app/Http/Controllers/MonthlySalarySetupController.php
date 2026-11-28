@@ -141,6 +141,12 @@ final class MonthlySalarySetupController extends Controller
             'components.*.rule_override' => ['nullable', 'boolean'],
             'components.*.comment' => ['nullable', 'string', 'max:1000'],
             'components.*.comments' => ['nullable', 'string', 'max:1000'],
+            'monthly_components' => ['sometimes', 'array'],
+            'monthly_components.*.payroll_component_type_id' => ['required', 'integer', 'min:1'],
+            'monthly_components.*.arrear_amount' => ['nullable', 'numeric'],
+            'monthly_components.*.rule_override' => ['nullable', 'boolean'],
+            'monthly_components.*.override_current_amount' => ['nullable', 'numeric', 'min:0'],
+            'monthly_components.*.comment' => ['nullable', 'string', 'max:1000'],
         ]);
 
         // Strip any month-only fields before passing to recurring save.
@@ -162,14 +168,20 @@ final class MonthlySalarySetupController extends Controller
 
         $year = (int) ($validated['year'] ?? now()->year);
         $month = (int) ($validated['month'] ?? now()->month);
+        $monthlyComponents = $validated['monthly_components'] ?? [];
+        $updatedBy = $request->user()?->id;
 
         try {
             SalaryGenerationGuards::assertMonthMutable($year, $month, 'used to save recurring defaults');
 
-            $payload = DB::transaction(function () use ($user, $cleanComponents, $year, $month): array {
+            $payload = DB::transaction(function () use ($user, $cleanComponents, $monthlyComponents, $year, $month, $updatedBy): array {
                 $this->setupService->saveAsRecurringDefault($user, $cleanComponents);
 
-                return $this->enrichPayload($user, $this->setupService->getSetupForEmployee($user, $year, $month));
+                $setup = $monthlyComponents === []
+                    ? $this->setupService->getSetupForEmployee($user, $year, $month)
+                    : $this->setupService->saveForMonth($user, $year, $month, $monthlyComponents, $updatedBy);
+
+                return $this->enrichPayload($user, $setup);
             });
         } catch (DomainException $e) {
             return response()->json([

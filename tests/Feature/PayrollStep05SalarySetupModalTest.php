@@ -340,18 +340,23 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
 
     public function test_recurring_defaults_carry_current_amounts_to_december_and_preserve_october(): void
     {
+        $this->seedApprovedFixation();
         Schema::create('salary_generates', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->integer('salaryGenerationYear');
             $table->integer('monthId');
             $table->decimal('salaryTotal', 12, 2);
+            $table->text('salaryAllowanceCalcObject');
         });
         DB::table('salary_generates')->insert([
             'user_id' => $this->employee->id,
             'salaryGenerationYear' => 2026,
             'monthId' => 10,
             'salaryTotal' => 54470.00,
+            'salaryAllowanceCalcObject' => json_encode([
+                ['payroll_component_type_id' => 7, 'name' => 'House Rent Allowance', 'calcType' => 'fixed', 'amount' => 15700],
+            ]),
         ]);
         $octoberBill = DB::table('salary_generates')->first();
 
@@ -368,18 +373,16 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             ]],
         ])->assertOk()->json();
         $monthlyAdjustment = SalaryMonthlyComponentAdjustment::sole()->getAttributes();
+        $originalAllowances = collect($november['allowances'])->keyBy('payroll_component_type_id');
+        $this->assertEquals(52208.00, $originalAllowances[2]['current_amount']);
+        $this->assertEquals(15700.00, $originalAllowances[7]['current_amount']);
 
+        $recurringAmounts = [2 => 59886.12, 4 => 850.75, 7 => 0, 8 => 1750, 9 => 450, 12 => 325];
         $components = collect([...$november['allowances'], ...$november['deductions']])
             ->map(static fn (array $row): array => [
                 'payroll_component_type_id' => $row['payroll_component_type_id'],
-                'current_amount' => match ($row['payroll_component_type_id']) {
-                    2 => 38000.12,
-                    4 => 850.75,
-                    16 => 0,
-                    17 => 60.25,
-                    19 => 25,
-                    default => $row['current_amount'],
-                },
+                'current_amount' => ($recurringAmounts + [16 => 0, 17 => 60.25, 19 => 25])[$row['payroll_component_type_id']]
+                    ?? $row['current_amount'],
             ])->all();
         $this->assertCount(19, $components);
 
@@ -398,9 +401,33 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             'rule_override' => true,
             'comments' => 'Request-only monthly metadata',
         ];
-        $saved = $this->postJson($recurringUrl, ['year' => 2026, 'month' => 11, 'components' => $withMonthlyFields])
+        $payload = [
+            'year' => 2026,
+            'month' => 11,
+            'components' => $withMonthlyFields,
+            'monthly_components' => [[
+                'payroll_component_type_id' => 2,
+                'arrear_amount' => 19.25,
+                'rule_override' => true,
+                'override_current_amount' => 59886.12,
+                'comment' => '',
+            ]],
+        ];
+        $this->postJson($recurringUrl, $payload)->assertUnprocessable();
+        $this->assertSame($profileBefore, $profile->refresh()->getAttributes());
+        $this->assertSame(1, SalaryMonthlyComponentAdjustment::count());
+
+        $payload['monthly_components'][0]['comment'] = 'PHD increment';
+        foreach ([16, 19] as $typeId) {
+            $payload['monthly_components'][] = [
+                'payroll_component_type_id' => $typeId,
+                'rule_override' => true,
+                'override_current_amount' => 25,
+            ];
+        }
+        $saved = $this->postJson($recurringUrl, $payload)
             ->assertOk()
-            ->assertJsonPath('net_arrear', 125.50)
+            ->assertJsonPath('net_arrear', 144.75)
             ->json();
 
         $profile->refresh();
@@ -411,12 +438,13 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             'name' => 'Charge Allowance',
             'calcType' => 'fixed',
             'amount' => 850.75,
+            'recurring_default' => true,
         ], $additions[4]);
         $this->assertSame(60.25, $deductions[17]['amount']);
         $this->assertSame('percentage', $deductions[16]['calcType']);
         $this->assertEquals(10.00, $deductions[16]['amount']);
         $this->assertEquals(10.00, $deductions[19]['amount']);
-        $this->assertSame($monthlyAdjustment, SalaryMonthlyComponentAdjustment::sole()->getAttributes());
+        $this->assertSame($monthlyAdjustment, SalaryMonthlyComponentAdjustment::where('payroll_component_type_id', 4)->sole()->getAttributes());
 
         $november = $this->getJson($setupUrl.'?year=2026&month=11')->assertOk()->json();
         $december = $this->getJson($setupUrl.'?year=2026&month=12')->assertOk()->json();
@@ -425,11 +453,20 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         foreach ([$november, $december] as $preview) {
             $allowances = collect($preview['allowances'])->keyBy('payroll_component_type_id');
             $deductions = collect($preview['deductions'])->keyBy('payroll_component_type_id');
-            $this->assertSame(850.75, $allowances[4]['current_amount']);
-            $this->assertSame(3800.01, $deductions[16]['current_amount']);
+            foreach ($recurringAmounts as $typeId => $amount) {
+                $this->assertEquals($amount, $allowances[$typeId]['current_amount']);
+            }
+            $this->assertSame(5988.61, $deductions[16]['current_amount']);
+            $this->assertFalse($deductions[16]['rule_override']);
             $this->assertSame(60.25, $deductions[17]['current_amount']);
             $this->assertEquals(10.00, $deductions[19]['current_amount']);
+            $this->assertFalse($deductions[19]['rule_override']);
         }
+        $novemberBasic = collect($november['allowances'])->firstWhere('payroll_component_type_id', 2);
+        $this->assertTrue($novemberBasic['rule_override']);
+        $this->assertSame(59886.12, $novemberBasic['override_current_amount']);
+        $this->assertSame(19.25, $novemberBasic['arrear_amount']);
+        $this->assertSame('PHD increment', $novemberBasic['comment']);
         foreach ([...$december['allowances'], ...$december['deductions']] as $row) {
             $this->assertEquals(0.00, $row['arrear_amount']);
             $this->assertFalse($row['rule_override']);
@@ -540,10 +577,8 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         ], collect($adHoc['filterOptions']['employee_types'])->pluck('count', 'value')->all());
     }
 
-    public function test_leave_with_pay_10012_keeps_2015_june_basic_and_employee_type_filter_works(): void
+    private function seedApprovedFixation(): void
     {
-        // Create fixation tables and insert an approved 2026 fixation schedule for 10012 (52,208.00)
-        // to prove Leave-With-Pay-Without-Increment stays on 2015 June Basic (37,280.00).
         Schema::create('salary_fixations', function (Blueprint $t) {
             $t->id();
             $t->unsignedBigInteger('user_id');
@@ -559,6 +594,22 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             $t->decimal('payable_basic', 12, 2);
             $t->timestamps();
         });
+        DB::table('salary_fixations')->insert([
+            ['id' => 1, 'user_id' => 12, 'status' => 'approved'],
+        ]);
+        DB::table('salary_fixation_pay_schedules')->insert([
+            'id' => 1,
+            'salary_fixation_id' => 1,
+            'user_id' => 12,
+            'effective_date' => '2026-07-01',
+            'grade_number' => 6,
+            'payable_basic' => 52208.00,
+        ]);
+    }
+
+    public function test_leave_with_pay_10012_keeps_2015_june_basic_and_employee_type_filter_works(): void
+    {
+        $this->seedApprovedFixation();
         Schema::create('salary_generates', function (Blueprint $t) {
             $t->id();
             $t->unsignedBigInteger('user_id');
@@ -595,20 +646,6 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
             $t->integer('loanInstallmentRemaining')->nullable();
             $t->timestamps();
         });
-
-        DB::table('salary_fixations')->insert([
-            ['id' => 1, 'user_id' => 12, 'status' => 'approved'],
-        ]);
-        DB::table('salary_fixation_pay_schedules')->insert([
-            [
-                'id' => 1,
-                'salary_fixation_id' => 1,
-                'user_id' => 12,
-                'effective_date' => '2026-07-01',
-                'grade_number' => 6,
-                'payable_basic' => 52208.00,
-            ],
-        ]);
 
         // Add Nov 2026 Special Benefit arrear (+3,728.00) for 10012.
         DB::table('salary_monthly_component_adjustments')->insert([

@@ -95,6 +95,7 @@ const hydrateRows = (rows = []) =>
         auto_current_amount: toNumber(r.current_amount),
         current_amount: toNumber(r.current_amount),
         arrear_amount: toNumber(r.arrear_amount),
+        can_override_current: r.can_override_current !== false,
         rule_override: Boolean(r.rule_override),
         comment: r.comment ? String(r.comment) : '',
     }));
@@ -208,6 +209,14 @@ const periodLabel = computed(() => {
     return `${m ? m.label : selectedMonth.value} ${selectedYear.value}`;
 });
 
+const buildMonthlyComponents = () => [...allowances.value, ...deductions.value].map((row) => ({
+    payroll_component_type_id: row.payroll_component_type_id,
+    arrear_amount: toNumber(row.arrear_amount),
+    rule_override: Boolean(row.rule_override),
+    override_current_amount: row.rule_override ? toNumber(row.current_amount) : null,
+    comment: String(row.comment || '').trim() || null,
+}));
+
 const handleSaveMonth = async () => {
     if (cannotSave.value || !props.userId) return;
     errorMessage.value = '';
@@ -219,14 +228,6 @@ const handleSaveMonth = async () => {
         return;
     }
 
-    const components = [...allowances.value, ...deductions.value].map((r) => ({
-        payroll_component_type_id: r.payroll_component_type_id,
-        arrear_amount: toNumber(r.arrear_amount),
-        rule_override: Boolean(r.rule_override),
-        override_current_amount: r.rule_override ? toNumber(r.current_amount) : null,
-        comment: String(r.comment || '').trim() || null,
-    }));
-
     savingMonth.value = true;
     try {
         const { data } = await axios.post(
@@ -234,7 +235,7 @@ const handleSaveMonth = async () => {
             {
                 year: Number(selectedYear.value),
                 month: Number(selectedMonth.value),
-                components,
+                components: buildMonthlyComponents(),
             },
             { headers: { Accept: 'application/json' } },
         );
@@ -264,6 +265,13 @@ const handleSaveMonth = async () => {
 const handleSaveRecurring = async (event) => {
     if (cannotSave.value || !props.userId) return;
 
+    if (basicPayMissingComment.value) {
+        successMessage.value = '';
+        errorMessage.value =
+            'A non-empty comment is required when manually overriding Basic Pay.';
+        return;
+    }
+
     const dialog = event.currentTarget.closest('dialog');
     savingRecurring.value = true;
     try {
@@ -272,7 +280,7 @@ const handleSaveRecurring = async (event) => {
             target: dialog,
             keydownListenerCapture: true,
             title: 'Save as Recurring Default?',
-            text: 'Save the Current amounts as recurring defaults. Arrears, rule override flags, and comments stay with their month.',
+            text: 'Save the Current amounts as recurring defaults and save arrears, rule overrides, and comments for the selected month.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, Save Recurring Default',
@@ -294,6 +302,7 @@ const handleSaveRecurring = async (event) => {
                 year: Number(selectedYear.value),
                 month: Number(selectedMonth.value),
                 components,
+                monthly_components: buildMonthlyComponents(),
             },
             { headers: { Accept: 'application/json' } },
         );
@@ -522,7 +531,7 @@ const closeModal = () => {
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                :disabled="isLocked || !row.rule_override"
+                                                :disabled="isLocked || isSaving || !row.can_override_current || !row.rule_override"
                                                 class="w-28 rounded border px-2 py-1 text-right font-mono text-xs focus:border-indigo-500 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600 dark:border-gray-600 dark:bg-gray-900 dark:disabled:bg-gray-800 dark:disabled:text-gray-400"
                                             />
                                         </td>
@@ -531,7 +540,7 @@ const closeModal = () => {
                                                 v-model.number="row.arrear_amount"
                                                 type="number"
                                                 step="0.01"
-                                                :disabled="isLocked"
+                                                :disabled="isLocked || isSaving"
                                                 class="w-28 rounded border border-gray-300 px-2 py-1 text-right font-mono text-xs focus:border-indigo-500 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:disabled:bg-gray-800"
                                             />
                                         </td>
@@ -542,7 +551,7 @@ const closeModal = () => {
                                             <input
                                                 v-model="row.rule_override"
                                                 type="checkbox"
-                                                :disabled="isLocked"
+                                                :disabled="isLocked || isSaving || !row.can_override_current"
                                                 @change="toggleRuleOverride(row)"
                                                 class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
                                             />
@@ -551,7 +560,7 @@ const closeModal = () => {
                                             <input
                                                 v-model="row.comment"
                                                 type="text"
-                                                :disabled="isLocked"
+                                                :disabled="isLocked || isSaving"
                                                 :placeholder="
                                                     isBasicPayName(row.name) && row.rule_override
                                                         ? 'Required: reason for Basic Pay override'
@@ -613,7 +622,7 @@ const closeModal = () => {
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
-                                                :disabled="isLocked || !row.rule_override"
+                                                :disabled="isLocked || isSaving || !row.can_override_current || !row.rule_override"
                                                 class="w-28 rounded border px-2 py-1 text-right font-mono text-xs focus:border-indigo-500 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-600 dark:border-gray-600 dark:bg-gray-900 dark:disabled:bg-gray-800 dark:disabled:text-gray-400"
                                             />
                                         </td>
@@ -622,7 +631,7 @@ const closeModal = () => {
                                                 v-model.number="row.arrear_amount"
                                                 type="number"
                                                 step="0.01"
-                                                :disabled="isLocked"
+                                                :disabled="isLocked || isSaving"
                                                 class="w-28 rounded border border-gray-300 px-2 py-1 text-right font-mono text-xs focus:border-indigo-500 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:disabled:bg-gray-800"
                                             />
                                         </td>
@@ -633,7 +642,7 @@ const closeModal = () => {
                                             <input
                                                 v-model="row.rule_override"
                                                 type="checkbox"
-                                                :disabled="isLocked"
+                                                :disabled="isLocked || isSaving || !row.can_override_current"
                                                 @change="toggleRuleOverride(row)"
                                                 class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
                                             />
@@ -642,7 +651,7 @@ const closeModal = () => {
                                             <input
                                                 v-model="row.comment"
                                                 type="text"
-                                                :disabled="isLocked"
+                                                :disabled="isLocked || isSaving"
                                                 placeholder="Optional note (e.g. GPF refund)..."
                                                 class="w-full rounded border border-gray-300 px-2 py-1 text-xs focus:border-indigo-500 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:disabled:bg-gray-800"
                                             />

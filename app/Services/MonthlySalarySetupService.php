@@ -185,6 +185,7 @@ final class MonthlySalarySetupService
 
         $profileAdds = self::safeNormalizeRows($profile->additionObjects);
         $profileDeds = self::safeNormalizeRows($profile->substractionObjects);
+        $isMutableMonth = !SalaryGenerationGuards::isMonthLocked($year, $month);
 
         $isNovember2026 = $year === 2026 && $month === 11;
         $octoberAdds = $octoberBill && $is2026Scale
@@ -193,7 +194,8 @@ final class MonthlySalarySetupService
 
         // Pass 1: resolve effective Basic Pay so percentage components, SB, and GPF use it.
         $profileBasicRow = $this->findBasicRow($profileAdds);
-        $autoBasic = $fixation !== null
+        $hasRecurringBasic = $isMutableMonth && ($profileBasicRow['recurring_default'] ?? false) === true;
+        $autoBasic = $fixation !== null && !$hasRecurringBasic
             ? round((float) $fixation['basic'], 2)
             : round((float) ($profileBasicRow['amount'] ?? 0.0), 2);
 
@@ -223,25 +225,29 @@ final class MonthlySalarySetupService
             $direction = self::classifyDirection($name);
             $sourceRows = $direction === 'allowance' ? $profileAdds : $profileDeds;
             $profileRow = self::matchProfileRow($sourceRows, $typeId, $name);
-            $autoCurrent = $this->computeAutoCurrentAmount(
-                $name,
-                $profile,
-                $profileRow,
-                $effectiveBasic,
-                $is2015Scale,
-                $is2026Scale,
-                $gradeName,
-                $year,
-                $month
-            );
+            $canOverrideCurrent = !self::isStatutoryDeduction($name);
+            $hasRecurringDefault = $isMutableMonth && ($profileRow['recurring_default'] ?? false) === true;
+            $autoCurrent = $hasRecurringDefault && self::isSpecialBenefit($name)
+                ? $this->evaluateProfileRow($profileRow, $effectiveBasic)
+                : $this->computeAutoCurrentAmount(
+                    $name,
+                    $profile,
+                    $profileRow,
+                    $effectiveBasic,
+                    $is2015Scale,
+                    $is2026Scale,
+                    $gradeName,
+                    $year,
+                    $month
+                );
 
-            if ($isNovember2026 && $is2026Scale && strcasecmp($name, 'House Rent Allowance') === 0) {
+            if ($isNovember2026 && $is2026Scale && !$hasRecurringDefault && strcasecmp($name, 'House Rent Allowance') === 0) {
                 $octoberRow = self::matchProfileRow($octoberAdds, $typeId, $name);
                 $autoCurrent = $octoberRow['amount'] ?? $autoCurrent;
             }
 
             $adj = $adjustments->get($typeId);
-            $ruleOverride = (bool) ($adj?->rule_override ?? false);
+            $ruleOverride = (!$isMutableMonth || $canOverrideCurrent) && (bool) ($adj?->rule_override ?? false);
             $overrideAmount = ($ruleOverride && $adj?->override_current_amount !== null)
                 ? round((float) $adj->override_current_amount, 2)
                 : null;
@@ -257,6 +263,7 @@ final class MonthlySalarySetupService
                 'current_amount' => $currentAmount,
                 'arrear_amount' => $arrearAmount,
                 'total_amount' => $totalAmount,
+                'can_override_current' => $canOverrideCurrent,
                 'rule_override' => $ruleOverride,
                 'override_current_amount' => $overrideAmount,
                 'comment' => $comment,
@@ -375,7 +382,7 @@ final class MonthlySalarySetupService
             }
             $arrearAmount = round((float) $rawArrear, 2);
 
-            $ruleOverride = (bool) ($item['rule_override'] ?? false);
+            $ruleOverride = !self::isStatutoryDeduction($typeName) && (bool) ($item['rule_override'] ?? false);
             $overrideCurrent = null;
             if ($ruleOverride) {
                 $rawOverride = $item['override_current_amount'] ?? $item['current_amount'] ?? null;
@@ -501,7 +508,8 @@ final class MonthlySalarySetupService
                 $amount = 10.0;
             }
 
-            $keepZero = $isGpf || self::isBasicPay($name);
+            $keepZero = $isGpf || self::isBasicPay($name) || self::isSpecialBenefit($name)
+                || strcasecmp($name, 'House Rent Allowance') === 0;
             if ($amount <= 0.0 && !$keepZero) {
                 continue;
             }
@@ -512,6 +520,9 @@ final class MonthlySalarySetupService
                 'calcType' => $calcType,
                 'amount' => $amount,
             ];
+            if (!self::isStatutoryDeduction($name)) {
+                $entry['recurring_default'] = true;
+            }
 
             if ($direction === 'allowance') {
                 $additions[] = $entry;
@@ -525,6 +536,11 @@ final class MonthlySalarySetupService
         $profile->save();
 
         return $profile->fresh();
+    }
+
+    private static function isStatutoryDeduction(string $name): bool
+    {
+        return self::isRevenueStamp($name) || SalaryCalculationService::isGpf(['name' => $name]);
     }
 
     private function computeAutoCurrentAmount(
