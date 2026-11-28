@@ -7,6 +7,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SalarySetupModal from '@/Components/SalarySetupModal.vue';
 import EditEmployeeProfileModal from '@/Pages/Employee/Modal/EditEmployeeProfileModal.vue';
 import SalaryBillPreviewModal from '@/Components/SalaryBillPreviewModal.vue';
+import SalaryNoteSummaryModal from '@/Components/SalaryNoteSummaryModal.vue';
 import { createHorizontalBillPdf } from '@/Pages/Reports/reportTemplates/HorizontalBillPdf';
 import { downloadHorizontalBillExcel } from '@/Pages/Reports/reportTemplates/HorizontalBillExcel';
 
@@ -484,6 +485,52 @@ const exportHorizontalBill = async (format) => {
         exportingHorizontal.value = false;
     }
 };
+
+// Note & Salary Summary Modal (Excel & Word only — NO PDF)
+const noteSummaryOpen = ref(false);
+const loadingNoteSummary = ref(false);
+const noteSummaryRecords = ref([]);
+
+const activeCategoryName = computed(() => {
+    if (!categoryId.value) return '';
+    const found = (props.filterOptions?.categories || []).find(
+        (cat) => String(cat.id) === String(categoryId.value),
+    );
+    return found?.name || '';
+});
+
+const noteSummaryScopeLabel = computed(() =>
+    selectedIds.value.length > 0
+        ? `${selectedIds.value.length} Selected`
+        : 'All Matching Filtered',
+);
+
+const openNoteSummaryModal = async () => {
+    const ids = [...new Set(rowsForExport.value.map((row) => row.user_id))];
+    if (!ids.length || loadingNoteSummary.value) return;
+
+    const { year, month } = props;
+    loadingNoteSummary.value = true;
+    notice.value = '';
+    try {
+        const { data } = await axios.get(route('reports.salary-official.index'), {
+            params: { ids: ids.join(','), year, month, kind: 'bulk', format: 'json', mode: 'preview', columns: 'full' },
+            headers: { Accept: 'application/json' },
+        });
+        if (!data.records?.length) throw new Error('No employees are eligible for the Note & Salary Summary.');
+        noteSummaryRecords.value = data.records;
+        noteSummaryOpen.value = true;
+    } catch (error) {
+        const response = error.response?.data;
+        const reportError = typeof response === 'string'
+            ? new DOMParser().parseFromString(response, 'text/html').querySelector('p')?.textContent
+            : response?.message;
+        noticeTone.value = 'error';
+        notice.value = reportError || error.message || 'Unable to load Note & Salary Summary.';
+    } finally {
+        loadingNoteSummary.value = false;
+    }
+};
 </script>
 
 <template>
@@ -783,6 +830,16 @@ const exportHorizontalBill = async (format) => {
                             >
                                 Horizontal Bill PDF
                             </button>
+
+                            <button
+                                type="button"
+                                :disabled="generating || exportingHorizontal || loadingNoteSummary || !rowsForExport.length"
+                                @click="openNoteSummaryModal"
+                                class="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800 transition hover:bg-blue-100 disabled:opacity-40"
+                            >
+                                <span v-if="loadingNoteSummary">Loading Summary...</span>
+                                <span v-else>Note &amp; Salary Summary</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1032,6 +1089,17 @@ const exportHorizontalBill = async (format) => {
             :year="year"
             :month="month"
             @close="billPreviewOpen = false"
+        />
+
+        <!-- 4. Note & Salary Summary Customization Modal (Excel & Word) -->
+        <SalaryNoteSummaryModal
+            :show="noteSummaryOpen"
+            :records="noteSummaryRecords"
+            :year="year"
+            :month="month"
+            :category-name="activeCategoryName"
+            :selection-scope-label="noteSummaryScopeLabel"
+            @close="noteSummaryOpen = false"
         />
     </AuthenticatedLayout>
 </template>
