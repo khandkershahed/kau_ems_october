@@ -5,6 +5,9 @@ import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Swal from 'sweetalert2';
+import { useRoute } from '../../../vendor/tightenco/ziggy';
+
+const route = useRoute();
 
 const props = defineProps({
     show: {
@@ -64,6 +67,8 @@ const isLocked = ref(false);
 const employee = ref(null);
 const allowances = ref([]);
 const deductions = ref([]);
+const isSaving = computed(() => savingMonth.value || savingRecurring.value);
+const cannotSave = computed(() => loading.value || isSaving.value || isLocked.value || !employee.value);
 
 const isBasicPayName = (name) => /\bbasic(?:\s+pay|\s+salary)?\b/i.test(String(name || ''));
 
@@ -107,7 +112,7 @@ const loadSetup = async () => {
     errorMessage.value = '';
     successMessage.value = '';
     try {
-        const { data } = await axios.get(`/salary-setup/${props.userId}`, {
+        const { data } = await axios.get(route('monthly-salary-setup.show', { user: props.userId }, false), {
             params: {
                 year: selectedYear.value,
                 month: selectedMonth.value,
@@ -116,6 +121,7 @@ const loadSetup = async () => {
         });
         applyPayload(data);
     } catch (err) {
+        applyPayload(null);
         errorMessage.value =
             err.response?.data?.message ||
             err.message ||
@@ -203,7 +209,7 @@ const periodLabel = computed(() => {
 });
 
 const handleSaveMonth = async () => {
-    if (isLocked.value || savingMonth.value || !props.userId) return;
+    if (cannotSave.value || !props.userId) return;
     errorMessage.value = '';
     successMessage.value = '';
 
@@ -224,7 +230,7 @@ const handleSaveMonth = async () => {
     savingMonth.value = true;
     try {
         const { data } = await axios.post(
-            `/salary-setup/${props.userId}/month`,
+            route('monthly-salary-setup.save-month', { user: props.userId }, false),
             {
                 year: Number(selectedYear.value),
                 month: Number(selectedMonth.value),
@@ -255,35 +261,35 @@ const handleSaveMonth = async () => {
     }
 };
 
-const handleSaveRecurring = async () => {
-    if (isLocked.value || savingRecurring.value || !props.userId) return;
+const handleSaveRecurring = async (event) => {
+    if (cannotSave.value || !props.userId) return;
 
-    const confirm = await Swal.fire({
-        title: 'Save as Recurring Default?',
-        html:
-            '<p class="text-sm">This updates the employee\'s permanent recurring salary profile using the <strong>Current</strong> amounts only.</p>' +
-            '<p class="mt-2 text-xs text-amber-700">Monthly <strong>Arrear</strong> amounts and <strong>Rule Override</strong> flags are never copied to recurring defaults.</p>',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Save Recurring Default',
-        confirmButtonColor: '#4f46e5',
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    errorMessage.value = '';
-    successMessage.value = '';
-
-    const components = [...allowances.value, ...deductions.value].map((r) => ({
-        payroll_component_type_id: r.payroll_component_type_id,
-        calcType: 'fixed',
-        amount: Math.max(0, toNumber(r.current_amount)),
-    }));
-
+    const dialog = event.currentTarget.closest('dialog');
     savingRecurring.value = true;
     try {
+        const confirm = await Swal.fire({
+            // A native modal dialog sits above alerts appended to document.body.
+            target: dialog,
+            keydownListenerCapture: true,
+            title: 'Save as Recurring Default?',
+            text: 'Save the Current amounts as recurring defaults. Arrears, rule override flags, and comments stay with their month.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Save Recurring Default',
+            confirmButtonColor: '#4f46e5',
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        errorMessage.value = '';
+        successMessage.value = '';
+
+        const components = [...allowances.value, ...deductions.value].map((row) => ({
+            payroll_component_type_id: row.payroll_component_type_id,
+            current_amount: toNumber(row.current_amount),
+        }));
         const { data } = await axios.post(
-            `/salary-setup/${props.userId}/recurring`,
+            route('monthly-salary-setup.save-recurring', { user: props.userId }, false),
             {
                 year: Number(selectedYear.value),
                 month: Number(selectedMonth.value),
@@ -291,6 +297,9 @@ const handleSaveRecurring = async () => {
             },
             { headers: { Accept: 'application/json' } },
         );
+        if (!Array.isArray(data?.allowances) || !Array.isArray(data?.deductions)) {
+            throw new Error('The server returned an unexpected response. Reload the salary setup and check whether the defaults were saved.');
+        }
         applyPayload(data);
         successMessage.value =
             data?.message || 'Saved recurring profile defaults.';
@@ -302,20 +311,20 @@ const handleSaveRecurring = async () => {
             setup: data,
         });
     } catch (err) {
+        successMessage.value = '';
         errorMessage.value =
-            err.response?.data?.message ||
             Object.values(err.response?.data?.errors || {})
                 .flat()
                 .join(' ') ||
-            err.message ||
-            'Failed to save recurring defaults.';
+            err.response?.data?.message ||
+            `Failed to save recurring defaults. ${err.message || 'Try again.'}`;
     } finally {
         savingRecurring.value = false;
     }
 };
 
 const closeModal = () => {
-    emit('close');
+    if (!isSaving.value) emit('close');
 };
 </script>
 
@@ -398,7 +407,7 @@ const closeModal = () => {
                             <select
                                 v-model.number="selectedMonth"
                                 @change="onPeriodChange"
-                                :disabled="loading"
+                                :disabled="loading || isSaving"
                                 class="rounded border-gray-300 bg-white py-1 pl-2 pr-7 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                                 aria-label="Salary Month"
                             >
@@ -409,7 +418,7 @@ const closeModal = () => {
                             <select
                                 v-model.number="selectedYear"
                                 @change="onPeriodChange"
-                                :disabled="loading"
+                                :disabled="loading || isSaving"
                                 class="rounded border-gray-300 bg-white py-1 pl-2 pr-7 text-xs font-medium text-gray-800 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                                 aria-label="Salary Year"
                             >
@@ -421,6 +430,7 @@ const closeModal = () => {
 
                         <button
                             type="button"
+                            :disabled="isSaving"
                             @click="closeModal"
                             class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-200"
                             aria-label="Close modal"
@@ -448,12 +458,14 @@ const closeModal = () => {
                 <!-- Feedback banners -->
                 <div
                     v-if="errorMessage"
+                    role="alert"
                     class="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-medium text-rose-700 dark:border-rose-800 dark:bg-rose-950/50 dark:text-rose-200"
                 >
                     {{ errorMessage }}
                 </div>
                 <div
                     v-if="successMessage"
+                    role="status"
                     class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-medium text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200"
                 >
                     {{ successMessage }}
@@ -685,13 +697,13 @@ const closeModal = () => {
 
                     <!-- Action Buttons -->
                     <div class="flex flex-wrap items-center gap-2">
-                        <SecondaryButton type="button" @click="closeModal">
+                        <SecondaryButton type="button" :disabled="isSaving" @click="closeModal">
                             Cancel
                         </SecondaryButton>
 
                         <button
                             type="button"
-                            :disabled="isLocked || loading || savingMonth || savingRecurring"
+                            :disabled="cannotSave"
                             @click="handleSaveRecurring"
                             class="inline-flex items-center rounded-md border border-indigo-300 bg-indigo-50 px-3.5 py-2 text-xs font-semibold uppercase tracking-widest text-indigo-700 shadow-sm transition hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 dark:border-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-200 dark:hover:bg-indigo-900/60"
                         >
@@ -700,7 +712,7 @@ const closeModal = () => {
 
                         <PrimaryButton
                             type="button"
-                            :disabled="isLocked || loading || savingMonth || savingRecurring"
+                            :disabled="cannotSave"
                             @click="handleSaveMonth"
                         >
                             {{ savingMonth ? 'Saving...' : 'Save This Month' }}

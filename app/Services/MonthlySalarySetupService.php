@@ -464,6 +464,7 @@ final class MonthlySalarySetupService
     {
         $profile = $this->loadProfile($user);
         $typeNames = PayrollComponentType::query()->pluck('name', 'id')->all();
+        $profileDeductions = self::safeNormalizeRows($profile->substractionObjects);
 
         $additions = [];
         $deductions = [];
@@ -490,7 +491,17 @@ final class MonthlySalarySetupService
             $amount = round((float) $rawAmount, 2);
 
             $isGpf = SalaryCalculationService::isGpf(['name' => $name]);
-            $keepZero = $isGpf || self::isBasicPay($name) || self::isRevenueStamp($name);
+            if ($isGpf) {
+                $profileRow = self::matchProfileRow($profileDeductions, $typeId, $name);
+                $exempt = $this->isGpfExempt($profile, $profileRow);
+                $calcType = $exempt ? 'fixed' : 'percentage';
+                $amount = $exempt ? 0.0 : 10.0;
+            } elseif (self::isRevenueStamp($name)) {
+                $calcType = 'fixed';
+                $amount = 10.0;
+            }
+
+            $keepZero = $isGpf || self::isBasicPay($name);
             if ($amount <= 0.0 && !$keepZero) {
                 continue;
             }

@@ -137,6 +137,10 @@ final class MonthlySalarySetupController extends Controller
             'components.*.calcType' => ['nullable', 'string', 'in:fixed,percentage'],
             'components.*.amount' => ['nullable', 'numeric', 'min:0'],
             'components.*.current_amount' => ['nullable', 'numeric', 'min:0'],
+            'components.*.arrear_amount' => ['nullable', 'numeric'],
+            'components.*.rule_override' => ['nullable', 'boolean'],
+            'components.*.comment' => ['nullable', 'string', 'max:1000'],
+            'components.*.comments' => ['nullable', 'string', 'max:1000'],
         ]);
 
         // Strip any month-only fields before passing to recurring save.
@@ -156,19 +160,27 @@ final class MonthlySalarySetupController extends Controller
             return $payload;
         }, $validated['components']);
 
-        try {
-            $this->setupService->saveAsRecurringDefault($user, $cleanComponents);
+        $year = (int) ($validated['year'] ?? now()->year);
+        $month = (int) ($validated['month'] ?? now()->month);
 
-            $year = (int) ($validated['year'] ?? now()->year);
-            $month = (int) ($validated['month'] ?? now()->month);
-            $setup = $this->setupService->getSetupForEmployee($user, $year, $month);
+        try {
+            SalaryGenerationGuards::assertMonthMutable($year, $month, 'used to save recurring defaults');
+
+            $payload = DB::transaction(function () use ($user, $cleanComponents, $year, $month): array {
+                $this->setupService->saveAsRecurringDefault($user, $cleanComponents);
+
+                return $this->enrichPayload($user, $this->setupService->getSetupForEmployee($user, $year, $month));
+            });
         } catch (DomainException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
+            return response()->json([
+                'message' => $e->getMessage(),
+                'is_locked' => $e instanceof HistoricalSalaryImmutableException,
+            ], 422);
         }
 
         return response()->json(array_merge(
-            $this->enrichPayload($user, $setup),
-            ['message' => 'Saved recurring profile defaults (arrears and monthly overrides were not copied).']
+            $payload,
+            ['message' => 'Saved recurring profile defaults. Monthly adjustments stay with their original period.']
         ));
     }
 

@@ -24,6 +24,7 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
     {
         parent::setUp();
         $this->assertSame('sqlite', config('database.default'));
+        $this->assertSame(':memory:', config('database.connections.sqlite.database'));
         $this->buildSchema();
         $this->seedFixtures();
         $this->admin = User::findOrFail(1);
@@ -335,6 +336,107 @@ final class PayrollStep05SalarySetupModalTest extends TestCase
         // No monthly adjustment rows should be created by recurring save.
         $this->assertSame(0, SalaryMonthlyComponentAdjustment::count());
         $this->assertEquals(0.00, $response->json('net_arrear'));
+    }
+
+    public function test_recurring_defaults_carry_current_amounts_to_december_and_preserve_october(): void
+    {
+        Schema::create('salary_generates', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->integer('salaryGenerationYear');
+            $table->integer('monthId');
+            $table->decimal('salaryTotal', 12, 2);
+        });
+        DB::table('salary_generates')->insert([
+            'user_id' => $this->employee->id,
+            'salaryGenerationYear' => 2026,
+            'monthId' => 10,
+            'salaryTotal' => 54470.00,
+        ]);
+        $octoberBill = DB::table('salary_generates')->first();
+
+        $this->actingAs($this->admin);
+        $setupUrl = route('monthly-salary-setup.show', $this->employee, false);
+        $recurringUrl = route('monthly-salary-setup.save-recurring', $this->employee, false);
+        $november = $this->postJson(route('monthly-salary-setup.save-month', $this->employee, false), [
+            'year' => 2026,
+            'month' => 11,
+            'components' => [[
+                'payroll_component_type_id' => 4,
+                'arrear_amount' => 125.50,
+                'comment' => 'November correction',
+            ]],
+        ])->assertOk()->json();
+        $monthlyAdjustment = SalaryMonthlyComponentAdjustment::sole()->getAttributes();
+
+        $components = collect([...$november['allowances'], ...$november['deductions']])
+            ->map(static fn (array $row): array => [
+                'payroll_component_type_id' => $row['payroll_component_type_id'],
+                'current_amount' => match ($row['payroll_component_type_id']) {
+                    2 => 38000.12,
+                    4 => 850.75,
+                    16 => 0,
+                    17 => 60.25,
+                    19 => 25,
+                    default => $row['current_amount'],
+                },
+            ])->all();
+        $this->assertCount(19, $components);
+
+        $profile = EmployeeInfo::findOrFail(12);
+        $profileBefore = $profile->getAttributes();
+        $this->postJson($recurringUrl, ['year' => 2026, 'month' => 10, 'components' => $components])
+            ->assertUnprocessable()
+            ->assertJsonPath('is_locked', true)
+            ->assertJsonPath('message', fn (string $message): bool => str_contains($message, 'HISTORICAL_SALARY_IMMUTABLE'));
+        $this->assertSame($profileBefore, $profile->refresh()->getAttributes());
+
+        $chargeIndex = array_search(4, array_column($components, 'payroll_component_type_id'), true);
+        $withMonthlyFields = $components;
+        $withMonthlyFields[$chargeIndex] += [
+            'arrear_amount' => 999.99,
+            'rule_override' => true,
+            'comments' => 'Request-only monthly metadata',
+        ];
+        $saved = $this->postJson($recurringUrl, ['year' => 2026, 'month' => 11, 'components' => $withMonthlyFields])
+            ->assertOk()
+            ->assertJsonPath('net_arrear', 125.50)
+            ->json();
+
+        $profile->refresh();
+        $additions = collect($profile->additionObjects)->keyBy('payroll_component_type_id');
+        $deductions = collect($profile->substractionObjects)->keyBy('payroll_component_type_id');
+        $this->assertSame([
+            'payroll_component_type_id' => 4,
+            'name' => 'Charge Allowance',
+            'calcType' => 'fixed',
+            'amount' => 850.75,
+        ], $additions[4]);
+        $this->assertSame(60.25, $deductions[17]['amount']);
+        $this->assertSame('percentage', $deductions[16]['calcType']);
+        $this->assertEquals(10.00, $deductions[16]['amount']);
+        $this->assertEquals(10.00, $deductions[19]['amount']);
+        $this->assertSame($monthlyAdjustment, SalaryMonthlyComponentAdjustment::sole()->getAttributes());
+
+        $november = $this->getJson($setupUrl.'?year=2026&month=11')->assertOk()->json();
+        $december = $this->getJson($setupUrl.'?year=2026&month=12')->assertOk()->json();
+        $this->assertSame($saved['allowances'], $november['allowances']);
+        $this->assertSame($saved['deductions'], $november['deductions']);
+        foreach ([$november, $december] as $preview) {
+            $allowances = collect($preview['allowances'])->keyBy('payroll_component_type_id');
+            $deductions = collect($preview['deductions'])->keyBy('payroll_component_type_id');
+            $this->assertSame(850.75, $allowances[4]['current_amount']);
+            $this->assertSame(3800.01, $deductions[16]['current_amount']);
+            $this->assertSame(60.25, $deductions[17]['current_amount']);
+            $this->assertEquals(10.00, $deductions[19]['current_amount']);
+        }
+        foreach ([...$december['allowances'], ...$december['deductions']] as $row) {
+            $this->assertEquals(0.00, $row['arrear_amount']);
+            $this->assertFalse($row['rule_override']);
+            $this->assertNull($row['comment']);
+        }
+        $this->assertEquals(0.00, $december['net_arrear']);
+        $this->assertEquals($octoberBill, DB::table('salary_generates')->sole());
     }
 
     public function test_estimation_index_accepts_november_2026_and_marks_october_2026_as_locked(): void
