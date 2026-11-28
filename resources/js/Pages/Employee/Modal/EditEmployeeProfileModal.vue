@@ -33,6 +33,8 @@ const religions = ['Islam', 'Christianity', 'Hinduism', 'Buddhism', 'Sikhism', '
 const activeTab = ref('account');
 const isSaving = ref(false);
 const formErrors = ref({});
+const tabBody = ref(null);
+let nextBankAccountKey = 0;
 
 const form = ref({
     id: null,
@@ -82,13 +84,42 @@ const form = ref({
     user_categories: [{ user_category_id: '' }],
     phone_numbers: [{ phoneNumber: '' }],
     addresses: [{ address: '' }],
-    bank_accounts: [{ bank_routing_no: '', bank_account_no: '', bank_type: '', bank_address: '', isSalaryAccount: false }],
+    bank_accounts: [],
     leave_statuses: [{ onLeave: false, leave_reason: '', isPaid: false, leave_isActive: false, leave_duration: 0 }],
     promotions: [{ promoted_to: '', pay_scale_id: '', payroll_group_id: '' }],
 });
 
 const addField = (field, defaultObj) => form.value[field].push({ ...defaultObj });
 const removeField = (field, index) => form.value[field].splice(index, 1);
+
+const addBankAccount = () => addField('bank_accounts', {
+    id: null,
+    key: `new-${nextBankAccountKey++}`,
+    bank_routing_no: '',
+    bank_account_no: '',
+    bank_type: '',
+    bank_address: '',
+    isSalaryAccount: false,
+});
+
+const removeBankAccount = (index) => {
+    removeField('bank_accounts', index);
+    for (const key of Object.keys(formErrors.value)) {
+        if (key === 'account_no' || key.startsWith('bank_accounts')) delete formErrors.value[key];
+    }
+};
+
+const setSalaryAccount = (selected, checked) => {
+    selected.isSalaryAccount = checked;
+    if (checked) {
+        for (const account of form.value.bank_accounts) {
+            if (account !== selected) account.isSalaryAccount = false;
+        }
+    }
+};
+
+const isEmptyBankPlaceholder = (account) => !Boolean(account.isSalaryAccount)
+    && [account.account_no, account.routing_no, account.type, account.address].every((value) => value === 'N/A');
 
 watch(() => [form.value.boy, form.value.girl], ([boy, girl]) => {
     form.value.childCount = (parseInt(boy, 10) || 0) + (parseInt(girl, 10) || 0);
@@ -304,15 +335,17 @@ watch(
                 ? emp.addresses.map((a) => ({ address: a.address || '' }))
                 : [{ address: '' }],
 
-            bank_accounts: emp.bank_accounts?.length > 0
-                ? emp.bank_accounts.map((b) => ({
+            bank_accounts: (emp.bank_accounts ?? [])
+                .filter((b) => !isEmptyBankPlaceholder(b))
+                .map((b) => ({
+                    id: b.id,
+                    key: b.id,
                     bank_routing_no: b.routing_no || '',
                     bank_account_no: b.account_no || '',
                     bank_type: b.type || '',
                     bank_address: b.address || '',
                     isSalaryAccount: Boolean(b.isSalaryAccount),
-                }))
-                : [{ bank_routing_no: '', bank_account_no: '', bank_type: '', bank_address: '', isSalaryAccount: false }],
+                })),
 
             leave_statuses: emp.leave_statuses?.length > 0
                 ? emp.leave_statuses.map((l) => ({
@@ -341,10 +374,17 @@ const closeModal = () => {
 };
 
 const saveEmployee = async () => {
+    if (isSaving.value) return;
     formErrors.value = {};
     isSaving.value = true;
     try {
-        await axios.put(route('employees.update', form.value.id), form.value);
+        const payload = {
+            ...form.value,
+            bank_accounts: form.value.bank_accounts.map(({ key, ...account }) => account),
+        };
+        await axios.put(route('employees.update', form.value.id), payload, {
+            headers: { Accept: 'application/json' },
+        });
         emit('saved');
         emit('close');
     } catch (error) {
@@ -355,6 +395,7 @@ const saveEmployee = async () => {
             const firstTabWithError = tabs.find((t) => tabErrorCounts.value[t.id] > 0);
             if (firstTabWithError) activeTab.value = firstTabWithError.id;
         }
+        tabBody.value?.scrollTo({ top: 0 });
     } finally {
         isSaving.value = false;
     }
@@ -363,7 +404,7 @@ const saveEmployee = async () => {
 
 <template>
     <Modal :show="Boolean(employee)" @close="closeModal" maxWidth="5xl">
-        <form @submit.prevent="saveEmployee" class="flex flex-col max-h-[85vh] text-gray-900 dark:text-gray-100">
+        <form novalidate @submit.prevent="saveEmployee" class="flex flex-col max-h-[85vh] text-gray-900 dark:text-gray-100">
             <!-- Fixed Modal Header & Tabs -->
             <div class="shrink-0 px-6 pt-5 pb-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-lg">
                 <div class="flex items-center justify-between pb-4">
@@ -405,9 +446,9 @@ const saveEmployee = async () => {
             </div>
 
             <!-- Scrollable Tab Body -->
-            <div class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            <div ref="tabBody" class="flex-1 overflow-y-auto px-6 py-5 space-y-5">
                 <!-- Validation Error Summary -->
-                <div v-if="hasErrors" class="p-3.5 bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 rounded-r-lg text-xs text-red-700 dark:text-red-300 space-y-1">
+                <div v-if="hasErrors" role="alert" class="p-3.5 bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 rounded-r-lg text-xs text-red-700 dark:text-red-300 space-y-1">
                     <p class="font-semibold text-sm">Please resolve the following errors:</p>
                     <ul class="list-disc list-inside space-y-0.5">
                         <li v-for="(errList, key) in formErrors" :key="key">{{ Array.isArray(errList) ? errList[0] : errList }}</li>
@@ -735,19 +776,20 @@ const saveEmployee = async () => {
                     <div class="p-5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/60 space-y-4">
                         <div class="flex items-center justify-between">
                             <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Bank Accounts</h3>
-                            <PrimaryButton type="button" @click="addField('bank_accounts', { bank_routing_no: '', bank_account_no: '', bank_type: '', bank_address: '', isSalaryAccount: false })" class="!px-2.5 !py-1 text-xs">+ Add Account</PrimaryButton>
+                            <PrimaryButton type="button" @click="addBankAccount" class="!px-2.5 !py-1 text-xs">+ Add Account</PrimaryButton>
                         </div>
                         <InputError class="mt-1" :message="formErrors.account_no?.[0]" />
                         <div class="space-y-3">
-                            <div v-for="(account, idx) in form.bank_accounts" :key="'bank_'+idx" class="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
+                            <div v-for="(account, idx) in form.bank_accounts" :key="account.key" class="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm space-y-3">
                                 <div class="flex justify-between items-center text-xs">
                                     <span class="font-semibold text-gray-600 dark:text-gray-300">Account #{{ idx + 1 }}</span>
-                                    <button v-if="form.bank_accounts.length > 1" type="button" @click="removeField('bank_accounts', idx)" class="text-red-500 hover:text-red-700 dark:text-red-400">Remove</button>
+                                    <button type="button" @click="removeBankAccount(idx)" class="text-red-500 hover:text-red-700 dark:text-red-400">Remove</button>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                                     <div>
                                         <InputLabel :for="'edit_bank_account_no_'+idx" value="Account No" />
                                         <TextInput :id="'edit_bank_account_no_'+idx" type="text" class="mt-1 block w-full text-xs" v-model="account.bank_account_no" />
+                                        <InputError class="mt-1" :message="formErrors[`bank_accounts.${idx}.bank_account_no`]?.[0]" />
                                     </div>
                                     <div>
                                         <InputLabel :for="'edit_bank_routing_no_'+idx" value="Routing No" />
@@ -764,7 +806,7 @@ const saveEmployee = async () => {
                                 </div>
                                 <div>
                                     <label class="flex items-center gap-2 cursor-pointer select-none text-xs">
-                                        <Checkbox :id="'edit_isSalaryAccount_'+idx" v-model:checked="account.isSalaryAccount" class="text-emerald-600 focus:ring-emerald-500" />
+                                        <Checkbox :id="'edit_isSalaryAccount_'+idx" :checked="account.isSalaryAccount" @update:checked="setSalaryAccount(account, $event)" class="text-emerald-600 focus:ring-emerald-500" />
                                         <span class="font-medium text-emerald-700 dark:text-emerald-400">Primary Salary Account</span>
                                     </label>
                                 </div>

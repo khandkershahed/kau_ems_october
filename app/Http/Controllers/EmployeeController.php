@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\HistoricalSalaryImmutableException;
 use App\Models\User;
 use App\Models\Role;
+use App\Services\SalaryGenerationGuards;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class EmployeeController extends Controller
@@ -611,7 +614,10 @@ class EmployeeController extends Controller
             'promotions.*.pay_scale_id' => 'nullable|exists:pay_scales,id',
             'promotions.*.payroll_group_id' => 'nullable|exists:payroll_groups,id',
             'bank_accounts' => 'nullable|array',
+            'bank_accounts.*' => 'array',
+            'bank_accounts.*.id' => 'nullable|integer|distinct',
             'bank_accounts.*.bank_account_no' => 'nullable|string|max:255',
+            'bank_accounts.*.isSalaryAccount' => 'nullable|boolean',
             'leave_statuses' => 'nullable|array',
             'leave_statuses.*.leave_reason' => 'nullable|string|max:255',
         ], [
@@ -628,6 +634,12 @@ class EmployeeController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $user, $validated) {
+            $bankAccounts = $request->input('bank_accounts');
+            $syncBankAccounts = is_array($bankAccounts);
+            if ($syncBankAccounts) {
+                User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $user->unsetRelation('employeeInfo');
+            }
             $user->update($validated);
 
             $nid = $user->nid()->updateOrCreate([], ['nid_no' => $request->nid_no ?? 'N/A', 'nid_img' => $request->nid_img]);
@@ -727,38 +739,10 @@ class EmployeeController extends Controller
             }
 
             // Sync Bank Accounts
-            $primaryBankAccountId = null;
-            $keptBankAccountIds = [];
-            $syncBankAccounts = is_array($request->input('bank_accounts'));
             if ($syncBankAccounts) {
-                foreach ($request->bank_accounts as $idx => $ba) {
-                    if (!empty($ba['bank_account_no'])) {
-                        $bankAccount = $user->bankAccounts()->updateOrCreate(
-                            ['account_no' => $ba['bank_account_no']],
-                            [
-                                'routing_no' => $ba['bank_routing_no'] ?? 'N/A',
-                                'type' => $ba['bank_type'] ?? 'N/A',
-                                'address' => $ba['bank_address'] ?? 'N/A',
-                                'isSalaryAccount' => $ba['isSalaryAccount'] ?? false
-                            ]
-                        );
-                        $keptBankAccountIds[] = $bankAccount->id;
-                        if ($idx === 0) $primaryBankAccountId = $bankAccount->id;
-                    }
-                }
-            }
-            // When saving other profile details, do not silently replace the
-            // employee's linked salary bank with the first legacy account row.
-            $previousBankAccountId = (int) ($user->employeeInfo?->bank_account_id ?? 0);
-            if ($previousBankAccountId > 0 && (!$syncBankAccounts || in_array($previousBankAccountId, $keptBankAccountIds, true))) {
-                $primaryBankAccountId = $previousBankAccountId;
-            }
-            if (!$primaryBankAccountId) {
-                $first = $user->bankAccounts()->first();
-                if ($first) {
-                    $primaryBankAccountId = $first->id;
-                    $keptBankAccountIds[] = $first->id;
-                }
+                [$primaryBankAccountId, $keptBankAccountIds] = $this->saveBankAccounts($user, $bankAccounts);
+            } else {
+                $primaryBankAccountId = $user->employeeInfo?->bank_account_id ?? $user->bankAccounts()->first()?->id;
             }
 
             // Sync Leave Statuses
@@ -830,7 +814,7 @@ class EmployeeController extends Controller
 
             // Cleanup old bank accounts that were removed, safely after employeeInfo is updated
             if ($syncBankAccounts) {
-                $user->bankAccounts()->whereNotIn('id', $keptBankAccountIds)->delete();
+                $this->deleteRemovedBankAccounts($user, $keptBankAccountIds);
             }
         });
 
@@ -859,6 +843,82 @@ class EmployeeController extends Controller
             'message' => 'Employee updated successfully',
             'data' => $user
         ]);
+    }
+
+    private function saveBankAccounts(User $user, array $accounts): array
+    {
+        $existing = $user->bankAccounts()->orderBy('id')->get()->keyBy('id');
+        $keptIds = [];
+        $primaryId = null;
+
+        foreach ($accounts as $index => $account) {
+            $id = $account['id'] ?? null;
+            $number = $account['bank_account_no'] ?? null;
+            $bankAccount = $id === null ? null : $existing->get($id);
+            if ($id !== null && $bankAccount === null) {
+                throw ValidationException::withMessages([
+                    "bank_accounts.$index.id" => 'The bank account no longer belongs to this employee. Reload the profile and try again.',
+                ]);
+            }
+            if ($number === null || $number === '') {
+                if ($id !== null || !empty($account['isSalaryAccount'])) {
+                    throw ValidationException::withMessages([
+                        "bank_accounts.$index.bank_account_no" => 'Enter a bank account number or remove the account.',
+                    ]);
+                }
+                continue;
+            }
+
+            $details = [
+                'account_no' => $number,
+                'routing_no' => $account['bank_routing_no'] ?? 'N/A',
+                'type' => $account['bank_type'] ?? 'N/A',
+                'address' => $account['bank_address'] ?? 'N/A',
+            ];
+            // Older profile clients send account numbers without IDs.
+            if (!array_key_exists('id', $account)) {
+                $bankAccount = $user->bankAccounts()->where('account_no', $number)->first();
+            }
+            $details['isSalaryAccount'] = (bool) ($account['isSalaryAccount'] ?? $bankAccount?->isSalaryAccount ?? false);
+            if ($bankAccount) {
+                $bankAccount->update($details);
+            } else {
+                $bankAccount = $user->bankAccounts()->create($details);
+            }
+            $keptIds[] = $bankAccount->id;
+            if ($details['isSalaryAccount']) {
+                $primaryId ??= $bankAccount->id;
+            }
+        }
+
+        if ($keptIds === []) {
+            // employee_infos.bank_account_id requires a row even without a bank account.
+            $keptIds[] = $user->bankAccounts()->firstOrCreate([
+                'account_no' => 'N/A',
+                'routing_no' => 'N/A',
+                'type' => 'N/A',
+                'address' => 'N/A',
+                'isSalaryAccount' => false,
+            ])->id;
+        }
+
+        $previousId = (int) $user->employeeInfo?->bank_account_id;
+        return [$primaryId ?? (in_array($previousId, $keptIds, true) ? $previousId : $keptIds[0]), $keptIds];
+    }
+
+    private function deleteRemovedBankAccounts(User $user, array $keptIds): void
+    {
+        $removed = $user->bankAccounts()->whereNotIn('id', $keptIds);
+        $postedPeriods = DB::table('salary_bill_source_links')
+            ->where('user_id', $user->id)
+            ->whereIn('bank_account_id', (clone $removed)->select('bank_accounts.id')->getQuery())
+            ->select('salary_year', 'salary_month')->distinct()->get();
+
+        foreach ($postedPeriods as $period) {
+            SalaryGenerationGuards::assertMonthMutable($period->salary_year, $period->salary_month, 'changed by removing its source bank account');
+        }
+
+        $removed->delete();
     }
 
     public function destroy(User $user)
@@ -892,6 +952,11 @@ class EmployeeController extends Controller
                 'onLeave.reason' => 'nullable|string|max:255',
                 'onLeave.isPaid' => 'nullable|boolean',
                 'onLeave.duration' => 'nullable|numeric',
+                'bank_accounts' => 'nullable|array',
+                'bank_accounts.*' => 'array',
+                'bank_accounts.*.id' => 'nullable|integer|distinct',
+                'bank_accounts.*.bank_account_no' => 'nullable|string|max:255',
+                'bank_accounts.*.isSalaryAccount' => 'nullable|boolean',
             ]);
 
             $fields = $request->input('fields', []);
@@ -899,6 +964,11 @@ class EmployeeController extends Controller
 
             DB::transaction(function () use ($request, $user, $fields, &$changesSummary) {
                 $shouldUpdateSalaryCalc = false;
+                $bankAccounts = $request->input('bank_accounts');
+                $syncBankAccounts = in_array('bank_accounts', $fields, true) && is_array($bankAccounts);
+                if ($syncBankAccounts) {
+                    User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+                }
 
                 // 1. User table core fields
                 $userUpdates = [];
@@ -987,6 +1057,10 @@ class EmployeeController extends Controller
 
                 // 5. Employee Info fields
                 $empInfoUpdates = [];
+                if ($syncBankAccounts) {
+                    [$empInfoUpdates['bank_account_id'], $keptBankAccountIds] = $this->saveBankAccounts($user, $bankAccounts);
+                    $changesSummary[] = 'Bank accounts updated';
+                }
                 if (in_array('jobStatus', $fields) && $request->filled('jobStatus')) {
                     $empInfoUpdates['jobStatus'] = $request->jobStatus;
                     $changesSummary[] = 'Job: ' . ucfirst($request->jobStatus);
@@ -1040,7 +1114,7 @@ class EmployeeController extends Controller
                         $defaultGroup = \App\Models\PayrollGroup::first();
                         $defaultPhone = $user->phoneNumbers()->first() ?? \App\Models\PhoneNumber::firstOrCreate(['phoneNumber' => 'N/A']);
                         $defaultAddress = $user->addresses()->first() ?? \App\Models\Address::firstOrCreate(['address' => 'N/A']);
-                        $defaultBank = $user->bankAccounts()->first() ?? $user->bankAccounts()->create(['routing_no' => 'N/A', 'account_no' => 'N/A', 'type' => 'N/A', 'address' => 'N/A', 'isSalaryAccount' => false]);
+                        $defaultBankId = $empInfoUpdates['bank_account_id'] ?? ($user->bankAccounts()->first() ?? $user->bankAccounts()->create(['routing_no' => 'N/A', 'account_no' => 'N/A', 'type' => 'N/A', 'address' => 'N/A', 'isSalaryAccount' => false]))->id;
                         $defaultJoining = $user->joiningDate ?? $user->joiningDate()->create(['joining_date' => now()]);
                         $defaultNid = $user->nid ?? $user->nid()->create(['nid_no' => 'N/A']);
                         $defaultBid = $user->bid ?? $user->bid()->create(['date_of_birth' => now(), 'bid_no' => 'N/A']);
@@ -1051,7 +1125,7 @@ class EmployeeController extends Controller
                             'department_office_id' => $defaultDept?->id ?? 1,
                             'phone_number_id' => $defaultPhone->id,
                             'address_id' => $defaultAddress->id,
-                            'bank_account_id' => $defaultBank->id,
+                            'bank_account_id' => $defaultBankId,
                             'joining_date_id' => $defaultJoining->id,
                             'nid_id' => $defaultNid->id,
                             'bid_id' => $defaultBid->id,
@@ -1066,6 +1140,10 @@ class EmployeeController extends Controller
                         $createdInfo = $user->employeeInfo()->create(array_merge($fullDefaults, $empInfoUpdates));
                         $createdInfo->forceFill(['gpf_exempt' => $gpfExemptUpdate ?? false])->save();
                     }
+                }
+
+                if ($syncBankAccounts) {
+                    $this->deleteRemovedBankAccounts($user, $keptBankAccountIds);
                 }
 
                 // 6. Demographics
@@ -1103,7 +1181,9 @@ class EmployeeController extends Controller
                 ]
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (HistoricalSalaryImmutableException $exception) {
+            throw $exception;
+        } catch (ValidationException $ve) {
             $allErrors = [];
             foreach ($ve->errors() as $fieldErrors) {
                 foreach ($fieldErrors as $err) {
